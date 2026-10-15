@@ -252,7 +252,7 @@ O projeto é dividido em **15 fases (Fase 0 a Fase 14)**. Você NUNCA deve avan�
 
 ### Fase 0 — Fundação do Monorepo, API Base (`/health`) e Token Secreto
 
-#### Escopo nas 4 Partes
+#### Escopo nas 4 Partes (Fase 0)
 
 - **1. Desenvolvimento:**
   - Configurar monorepo `slime-sage` com `pnpm-workspace.yaml`, `turbo.json`, TypeScript strict, ESLint, Prettier e workflow GitHub Actions (`ci.yml`).
@@ -309,7 +309,7 @@ Registre meu retorno em `feedback.md`, aplique correções se necessário e, com
 
 ### Fase 1 — Logger Local, Error Boundary, Painel Dev e Spike de Notificações + TTS
 
-#### Escopo nas 4 Partes
+#### Escopo nas 4 Partes (Fase 1)
 
 - **1. Desenvolvimento:**
   - Configurar repositório local com as tabelas/stores `app_log` (`id`, `at`, `level`, `scope`, `message`, `data`) com rotação mantendo os últimos 2.000 registros, e `kv` (`key`, `value`).
@@ -360,7 +360,7 @@ Após o retorno do usuário, registre em `feedback.md`, corrija eventuais falhas
 
 ### Fase 2 — Banco de Dados Local, Migrations e Repositórios de Projetos/Missões
 
-#### Escopo nas 4 Partes
+#### Escopo nas 4 Partes (Fase 2)
 
 - **1. Desenvolvimento:**
   - Modelar schema relacional completo em `packages/shared` / cliente local: `profile`, `area`, `class`, `class_challenge`, `skill`, `evolution_attempt`, `project`, `mission`, `mission_dep`, `mission_reward`, `daily_mission`, `focus_session`, `xp_event`, `chat_thread`, `chat_message`, `scheduled_notification`, `phrase_bank`, `app_log`, `kv`.
@@ -413,7 +413,7 @@ Atualize os arquivos de controle após o retorno do usuário.
 
 ### Fase 3 — Design System "Sistema", Navegação por Abas e CRUD Manual de Projetos/Missões
 
-#### Escopo nas 4 Partes
+#### Escopo nas 4 Partes (Fase 3)
 
 - **1. Desenvolvimento:**
   - Design System **"Sistema"** (inspirado em _Solo Leveling_ / _Tensura_): fundo `#050811`, bordas ciano neon (`#00f3ff`), superfícies translúcidas com blur de vidro (`backdrop-blur-md`), tipografia mono tech (`JetBrains Mono` / `Share Tech Mono`) e feedback sonoro/tátil leve (`navigator.vibrate` em toque).
@@ -461,7 +461,7 @@ Após o feedback, aplique correções e feche a fase nos arquivos de controle.
 
 ### Fase 4 — Motor de Jogo Puro (Parte 1): Clock/RNG, XP, Nível, Maestria, Atributos e Ledger
 
-#### Escopo nas 4 Partes
+#### Escopo nas 4 Partes (Fase 4)
 
 - **1. Desenvolvimento:**
   - Em `packages/game`:
@@ -513,7 +513,7 @@ Registre em `feedback.md` e atualize `handoff.md`, `feedback.md` e `roadmap.md`.
 
 ### Fase 5 — Voz do Mundo (Modal + Haptics + Som + Web TTS) e Telas de Status e Habilidades
 
-#### Escopo nas 4 Partes
+#### Escopo nas 4 Partes (Fase 5)
 
 - **1. Desenvolvimento:**
   - Fila e modal temático da **Voz do Mundo** (`WorldVoiceModal`):
@@ -561,7 +561,7 @@ Após validação, feche a fase nos arquivos de controle.
 
 ### Fase 6 — Backend `/chat` (Streaming + Tools Schema) e Cliente de Chat com Cartões de Prévia
 
-#### Escopo nas 4 Partes
+#### Escopo nas 4 Partes (Fase 6)
 
 - **1. Desenvolvimento:**
   - Em `packages/shared`: schemas Zod das tools de leitura (`get_profile`, `list_skills`, `list_classes`, `list_projects`, `get_project`, `search_missions`) e de escrita (`create_project_tree`, `add_missions`, `update_mission`, `reschedule_mission`, `delete_mission`, `propose_class_challenge`, `name_class`, `name_unique_skill`).
@@ -611,7 +611,7 @@ Após o retorno do usuário, atualize os arquivos de controle.
 
 ### Fase 7 — Modo Coordenador da G.S, Validação Anti-Duplicatas e Snapshot de Memória
 
-#### Escopo nas 4 Partes
+#### Escopo nas 4 Partes (Fase 7)
 
 - **1. Desenvolvimento:**
   - Snapshot Builder compacto (~500 tokens) com perfil, projeto ativo, próximas 5 missões, diárias e top 10 habilidades, enviado a cada mensagem.
@@ -658,7 +658,7 @@ Atualize os arquivos de controle após o retorno do usuário.
 
 ### Fase 8 — Onboarding: 5 Perguntas Narradas por Web TTS, Revelação de Classe e 1ª Conquista
 
-#### Escopo nas 4 Partes
+#### Escopo nas 4 Partes (Fase 8)
 
 - **1. Desenvolvimento:**
   - Fluxo de Onboarding em 4 etapas (quando `profile.onboarding_done === false`):
@@ -713,7 +713,7 @@ Atualize os arquivos de controle após o retorno do usuário.
 
 ### Fase 9 — Motor de Jogo (Parte 2): Classes por Área e Evolução com Desafio Autodeclarado
 
-#### Escopo nas 4 Partes
+#### Escopo nas 4 Partes (Fase 9)
 
 - **1. Desenvolvimento:**
   - Em `packages/game/classes.ts`:
@@ -766,7 +766,7 @@ Após validação, atualize os arquivos de controle.
 
 ### Fase 10 — Evolução de Habilidade (Extra → Única) e Roleta Animada (SVG + Framer Motion + Cooldown 24h)
 
-#### Escopo nas 4 Partes
+#### Escopo nas 4 Partes (Fase 10)
 
 - **1. Desenvolvimento:**
   - Em `packages/game/roulette.ts`:
@@ -823,7 +823,7 @@ Atualize os arquivos de controle após o retorno do usuário.
 
 ### Fase 11 — Motor de Missões Diárias, Virada às 04:00, Streak Sem Escudo e UI na Home
 
-#### Escopo nas 4 Partes
+#### Escopo nas 4 Partes (Fase 11)
 
 - **1. Desenvolvimento:**
   - Em `packages/game/daily.ts` e `streak.ts`:
@@ -874,7 +874,7 @@ Atualize os arquivos de controle após o retorno do usuário.
 
 ### Fase 12 — Rota `/generate`, `phrase_bank` Offline, Agendador 48h (`rescheduleAll`) e Service Worker Sync
 
-#### Escopo nas 4 Partes
+#### Escopo nas 4 Partes (Fase 12)
 
 - **1. Desenvolvimento:**
   - Em `packages/shared`: catálogo `phrase_bank` com >= 60 templates de provocações e avisos divididos por categoria e tom da G.S.
@@ -925,7 +925,7 @@ Atualize os arquivos de controle após o retorno do usuário.
 
 ### Fase 13 — Modo Foco (Aceleração de Pensamento): Timer, Notificação e Quebra (>30s Fora)
 
-#### Escopo nas 4 Partes
+#### Escopo nas 4 Partes (Fase 13)
 
 - **1. Desenvolvimento:**
   - Em `packages/game/focus.ts`:
@@ -977,7 +977,7 @@ Atualize os arquivos de controle após o retorno do usuário.
 
 ### Fase 14 — Backup Automático (`/backup` Vercel Blob), Export/Import JSON Manual e Release v1 (PWA Instalável)
 
-#### Escopo nas 4 Partes
+#### Escopo nas 4 Partes (Fase 14)
 
 - **1. Desenvolvimento:**
   - Em `packages/shared`: schema Zod versionado `SlimeSageBackupV1` de todo o banco de dados.

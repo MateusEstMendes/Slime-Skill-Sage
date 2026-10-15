@@ -12,21 +12,31 @@ import {
   ChevronDown,
   ChevronRight,
   ShieldAlert,
+  Database,
+  Sparkles,
+  CheckCircle2,
 } from "lucide-react";
-import type { AppLogEntry, LogLevel, LogScope } from "@slime-sage/shared";
+import {
+  type AppLogEntry,
+  type LogLevel,
+  type LogScope,
+  type TableName,
+  TABLE_NAMES,
+} from "@slime-sage/shared";
 import { logger } from "../services/logger";
 import { ttsService } from "../services/ttsService";
 import {
   notificationService,
   type NotificationStatus,
 } from "../services/notificationService";
+import { localDb } from "../services/db";
 
 interface DevPanelProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type TabKey = "logs" | "tts" | "notif";
+type TabKey = "logs" | "tts" | "notif" | "db";
 
 const GS_TEST_PHRASE = "Aviso. O Sistema Slime Sage foi inicializado com sucesso.";
 
@@ -38,6 +48,11 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
   const [levelFilter, setLevelFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedLogIds, setExpandedLogIds] = useState<Set<string>>(new Set());
+
+  // Database state
+  const [tableCounts, setTableCounts] = useState<Record<TableName, number> | null>(null);
+  const [dbLoading, setDbLoading] = useState(false);
+  const [dbActionMessage, setDbActionMessage] = useState<string>("");
 
   // TTS state
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
@@ -68,12 +83,28 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
     }
   }, [scopeFilter, levelFilter]);
 
+  const loadTableCounts = useCallback(async () => {
+    setDbLoading(true);
+    try {
+      const counts = await localDb.getTableCounts();
+      setTableCounts(counts);
+    } catch {
+      // Ignore error
+    } finally {
+      setDbLoading(false);
+    }
+  }, []);
+
   // Load logs on tab switch or filters change
   useEffect(() => {
     if (isOpen) {
-      void loadLogs();
+      if (activeTab === "logs") {
+        void loadLogs();
+      } else if (activeTab === "db") {
+        void loadTableCounts();
+      }
     }
-  }, [isOpen, loadLogs]);
+  }, [isOpen, activeTab, loadLogs, loadTableCounts]);
 
   // Subscribe to live logs
   useEffect(() => {
@@ -136,6 +167,38 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const handleSeedDatabase = async () => {
+    setDbLoading(true);
+    try {
+      await localDb.seedSampleData();
+      await loadTableCounts();
+      setDbActionMessage("Banco de dados semeado com sucesso! Projetos e missões prontos.");
+      setTimeout(() => setDbActionMessage(""), 4000);
+    } catch {
+      setDbActionMessage("Erro ao semear banco de dados.");
+      setTimeout(() => setDbActionMessage(""), 4000);
+    } finally {
+      setDbLoading(false);
+    }
+  };
+
+  const handleResetDatabase = async () => {
+    if (window.confirm("ATENÇÃO: Deseja apagar todos os dados locais? As 5 áreas base serão preservadas.")) {
+      setDbLoading(true);
+      try {
+        await localDb.resetDatabase();
+        await loadTableCounts();
+        setDbActionMessage("Banco de dados reinicializado. Todas as tabelas foram zeradas.");
+        setTimeout(() => setDbActionMessage(""), 4000);
+      } catch {
+        setDbActionMessage("Erro ao resetar banco de dados.");
+        setTimeout(() => setDbActionMessage(""), 4000);
+      } finally {
+        setDbLoading(false);
+      }
+    }
   };
 
   const handleSpeakGS = async () => {
@@ -237,6 +300,18 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
           </button>
 
           <button
+            onClick={() => setActiveTab("db")}
+            className={`px-4 py-2.5 text-xs font-mono font-medium border-b-2 flex items-center gap-2 transition-colors ${
+              activeTab === "db"
+                ? "border-cyan-400 text-cyan-300 bg-cyan-950/20"
+                : "border-transparent text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <Database className="w-3.5 h-3.5" />
+            <span>Banco de Dados Local</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab("tts")}
             className={`px-4 py-2.5 text-xs font-mono font-medium border-b-2 flex items-center gap-2 transition-colors ${
               activeTab === "tts"
@@ -263,6 +338,97 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+          {/* TAB: DATABASE */}
+          {activeTab === "db" && (
+            <div className="space-y-5 max-w-2xl mx-auto">
+              <div className="bg-[#0a1224]/70 border border-cyan-500/20 rounded-xl p-5 space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-lg bg-cyan-950/70 border border-cyan-500/40 text-cyan-400">
+                      <Database className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white">
+                        Gestão do Banco de Dados Local (IndexedDB)
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        Schema relacional v2 — 19 tabelas locais ativas.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={loadTableCounts}
+                    disabled={dbLoading}
+                    title="Atualizar Contagens"
+                    className="p-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-500/50 text-slate-300 hover:text-cyan-300 transition-colors"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${dbLoading ? "animate-spin" : ""}`} />
+                  </button>
+                </div>
+
+                {dbActionMessage && (
+                  <div className="p-3 bg-cyan-950/40 border border-cyan-500/40 rounded-lg text-xs text-cyan-300 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                    <span>{dbActionMessage}</span>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                  <button
+                    onClick={handleSeedDatabase}
+                    disabled={dbLoading}
+                    className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-medium text-xs font-mono transition-colors shadow-[0_0_15px_rgba(0,240,255,0.25)]"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>Semear Dados de Exemplo (Seed)</span>
+                  </button>
+
+                  <button
+                    onClick={handleResetDatabase}
+                    disabled={dbLoading}
+                    className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-red-950/60 border border-red-700/60 hover:bg-red-900/60 disabled:opacity-50 text-red-200 font-medium text-xs font-mono transition-colors shadow-[0_0_15px_rgba(255,0,0,0.2)]"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Apagar Tudo (Reset DB)</span>
+                  </button>
+                </div>
+
+                {/* Table Diagnostics Grid */}
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center justify-between text-xs font-mono text-slate-400 border-b border-slate-800 pb-1">
+                    <span>Tabela Relacional</span>
+                    <span>Registros</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[36vh] overflow-y-auto pr-1 text-xs font-mono">
+                    {TABLE_NAMES.map((tableName) => {
+                      const count = tableCounts?.[tableName] ?? 0;
+                      return (
+                        <div
+                          key={tableName}
+                          className="flex items-center justify-between p-2 rounded bg-slate-950/60 border border-slate-800/80"
+                        >
+                          <span className="text-slate-300">{tableName}</span>
+                          <span
+                            className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                              count > 0
+                                ? "bg-cyan-950/80 border border-cyan-500/40 text-cyan-300"
+                                : "bg-slate-900 border border-slate-800 text-slate-500"
+                            }`}
+                          >
+                            {count}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* TAB: LOGS */}
           {activeTab === "logs" && (
             <div className="space-y-4">

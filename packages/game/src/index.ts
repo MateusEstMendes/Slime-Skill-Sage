@@ -22,3 +22,6 @@ export const GAME_CONSTANTS = {
   APP_NAME: "Slime Sage",
   VERSION: "1.0.0",
 } as const;
+
+export * from "./missionGraph";
+

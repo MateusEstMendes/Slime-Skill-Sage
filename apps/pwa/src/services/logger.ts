@@ -5,6 +5,17 @@ type LogListener = (entry: AppLogEntry) => void;
 
 class LoggerService {
   private listeners: Set<LogListener> = new Set();
+  private lastTimestamp = 0;
+
+  private generateMonotonicIso(): string {
+    const now = Date.now();
+    if (now <= this.lastTimestamp) {
+      this.lastTimestamp += 1;
+    } else {
+      this.lastTimestamp = now;
+    }
+    return new Date(this.lastTimestamp).toISOString();
+  }
 
   private generateId(): string {
     return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -35,7 +46,7 @@ class LoggerService {
   ): Promise<AppLogEntry> {
     const entry: AppLogEntry = {
       id: this.generateId(),
-      at: new Date().toISOString(),
+      at: this.generateMonotonicIso(),
       level,
       scope,
       message,

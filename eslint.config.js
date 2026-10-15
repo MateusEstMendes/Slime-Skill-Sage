@@ -7,10 +7,12 @@ export default tseslint.config(
   {
     ignores: [
       "**/dist/**",
+      "**/dev-dist/**",
       "**/node_modules/**",
       "**/.turbo/**",
       "**/coverage/**",
       "apps/pwa/dist/**",
+      "apps/pwa/dev-dist/**",
       "apps/api/dist/**",
     ],
   },

@@ -137,6 +137,64 @@ describe("DevPanel & 7-Click Gesture in SettingsModal", () => {
     expect(sendNotifSpy).toHaveBeenCalled();
   });
 
+  it("renders Database tab and executes Seed Sample Data and Reset DB actions", async () => {
+    const onClose = vi.fn();
+    render(<DevPanel isOpen={true} onClose={onClose} />);
+
+    // Verify DB tab button
+    const dbTab = screen.getByText("Banco de Dados Local");
+    expect(dbTab).toBeInTheDocument();
+    fireEvent.click(dbTab);
+
+    // Verify header and action buttons
+    expect(
+      screen.getByText("Gestão do Banco de Dados Local (IndexedDB)")
+    ).toBeInTheDocument();
+    const seedBtn = screen.getByRole("button", { name: /Semear Dados de Exemplo/i });
+    const resetBtn = screen.getByRole("button", { name: /Apagar Tudo/i });
+    expect(seedBtn).toBeInTheDocument();
+    expect(resetBtn).toBeInTheDocument();
+
+    // Wait for initial table counts loading to finish
+    await waitFor(() => {
+      expect(seedBtn).not.toBeDisabled();
+    });
+
+    // Click Seed
+    fireEvent.click(seedBtn);
+    await waitFor(
+      () => {
+        expect(
+          screen.getByText("Banco de dados semeado com sucesso! Projetos e missões prontos.")
+        ).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
+
+    // Verify table diagnostics show rows
+    await waitFor(() => {
+      const counts = screen.getAllByText("project");
+      expect(counts.length).toBeGreaterThanOrEqual(1);
+    });
+
+    // Wait for button to be enabled again
+    await waitFor(() => {
+      expect(resetBtn).not.toBeDisabled();
+    });
+
+    // Click Reset
+    vi.spyOn(window, "confirm").mockReturnValueOnce(true);
+    fireEvent.click(resetBtn);
+    await waitFor(
+      () => {
+        expect(
+          screen.getByText("Banco de dados reinicializado. Todas as tabelas foram zeradas.")
+        ).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
+  });
+
   it("closes when close button is clicked", () => {
     const onClose = vi.fn();
     render(<DevPanel isOpen={true} onClose={onClose} />);

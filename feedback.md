@@ -33,4 +33,18 @@
      - O utilitário local com normalizador fonético atuará como fallback 100% offline.
 - **Status:** [x] Validado pelo Usuário
 
+## Fase 2 — Banco de Dados Local, Migrations e Repositórios de Projetos/Missões
+
+### Rodada 1 de Testes do Usuário (Painel Dev & Banco de Dados)
+
+- **Feedback do Usuário:**
+  - Testes do usuário aprovados (seed, contadores de tabelas, persistência após reload e reset total validados com sucesso).
+  - Dúvida sanada sobre a voz do TTS local (Web Speech API) vs a voz oficial neural `Kore` do Gemini (prevista no pipeline das Fases 5 e 6).
+  - Requisito adicional solicitado e definido: o sistema deve possuir falas offline prontas da Grande Sábio para momentos-chave (como missão concluída, novo nível, foco, etc.).
+- **Decisão Arquitetural de Áudio Offline (Definida pelo Usuário):**
+  - **Opção 3 — Híbrida Inteligente:**
+    1. **Falas de Impacto (Core Events):** Áudios estáticos pré-gravados em `.mp3` com a voz neural oficial **`Kore`** (Gemini) armazenados em pré-cache pelo Service Worker (`public/audio/voices/`) para eventos centrais: *"Missão concluída"*, *"Aviso do Sistema: Novo nível alcançado"*, *"Modo Foco ativado"*, *"Quebra de foco detectada"*, *"Habilidade adquirida"*, etc.
+    2. **Variáveis e Textos Dinâmicos:** Para textos customizados do usuário (títulos de missões específicas), o app utiliza a introdução solene em áudio oficial da Voz do Mundo/G.S com o texto exibido em destaque no modal visual, recorrendo ao TTS local normalizado caso offline.
+- **Status:** [x] Validado pelo Usuário
+
 

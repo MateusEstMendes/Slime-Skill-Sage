@@ -2,8 +2,8 @@
 
 ## Status Atual
 
-- **Última Fase Concluída:** Fase 1 — Logger Local, Error Boundary, Painel Dev e Spike de Notificações + TTS
-- **Próxima Fase:** Fase 2 — Banco de Dados Local, Migrations e Repositórios de Projetos/Missões
+- **Última Fase Concluída:** Fase 2 — Banco de Dados Local, Migrations e Repositórios de Projetos/Missões
+- **Próxima Fase:** Fase 3 — Design System "Sistema", Navegação por Abas e CRUD Manual de Projetos/Missões
 - **Data da Atualização:** 2026-10-15
 
 ## Histórico de Fases Concluídas
@@ -62,4 +62,35 @@
   - Modelar as tabelas/stores relacionais do banco local: `project`, `mission`, `skill`, `attribute`, `xp_event` (ledger imutável).
   - Implementar sistema de migrations versionadas determinísticas.
   - Criar repositórios tipados para operações CRUD de projetos e missões.
+
+### Fase 2 — Banco de Dados Local, Migrations e Repositórios de Projetos/Missões
+
+- **Mudanças Implementadas:**
+  - Modelagem do schema relacional Zod completo em [`packages/shared/src/index.ts`](file:///workspaces/Skill-Grinding/packages/shared/src/index.ts) para todas as 19 tabelas (`profile` com `onboarding_done`, `area` com 5 áreas base, `class`, `class_challenge`, `skill`, `evolution_attempt`, `project`, `mission`, `mission_dep`, `mission_reward`, `daily_mission`, `focus_session`, `xp_event`, `chat_thread`, `chat_message`, `scheduled_notification`, `phrase_bank`, `app_log` e `kv`).
+  - Motor de regras puro de DAG acíclico em [`packages/game/src/missionGraph.ts`](file:///workspaces/Skill-Grinding/packages/game/src/missionGraph.ts): detecção rigorosa de ciclos diretos (`A -> B -> A`), indiretos (`A -> B -> C -> A`) e auto-ciclos (`A -> A`) via DFS com classe customizada `CycleDetectedError`; ordenação topológica (Kahn); e função pura `recalculateMissionStatuses` para desbloqueio automático em cascata e reversão ao desfazer.
+  - Migração para versão 2 do IndexedDB com criação de stores relacionais e índices em [`apps/pwa/src/services/db.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/db.ts), com otimização transacional multi-store para `resetDatabase()` e `getTableCounts()`, além de seed padrão automático das 5 áreas base (`BASE_AREAS`).
+  - Monotonicidade cronológica estrita em [`apps/pwa/src/services/logger.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/logger.ts) para assegurar ordenação precisa de logs mesmo em loops assíncronos intensos.
+  - Repositório transacional completo [`apps/pwa/src/services/projectRepository.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/projectRepository.ts) com CRUD de projetos e missões, criação de árvores de dependência validadas, transições de status (`bloqueada`, `disponivel`, `feita`), recálculo automático de progresso do projeto e soft delete (`deleted_at`).
+  - Aba "Banco de Dados Local" adicionada ao [`DevPanel.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/DevPanel.tsx) com contador em tempo real das 19 tabelas, botão de **"Semear Dados de Exemplo (Seed)"** e **"Apagar Tudo (Reset DB)"**.
+- **Arquivos Criados / Modificados:**
+  - `packages/shared/src/index.ts`, `packages/shared/src/index.test.ts` — [schema relacional e campo onboarding_done]
+  - `packages/game/src/missionGraph.ts`, `packages/game/src/missionGraph.test.ts`, `packages/game/src/index.ts` — [motor puro de DAG acíclico e recálculo de status]
+  - `apps/pwa/src/services/db.ts`, `apps/pwa/src/services/db.test.ts` — [IndexedDB v2, CRUD genérico, seed, reset e contagens atômicas]
+  - `apps/pwa/src/services/projectRepository.ts`, `apps/pwa/src/services/projectRepository.test.ts` — [repositório transacional de projetos e missões]
+  - `apps/pwa/src/services/logger.ts` — [timestamp estritamente monotônico para logs]
+  - `apps/pwa/src/components/DevPanel.tsx`, `apps/pwa/src/components/DevPanel.test.tsx` — [aba de Banco de Dados Local com ações de seed e reset]
+  - `eslint.config.js` — [inclusão de dev-dist nos ignores do linter]
+  - `roadmap.md`, `feedback.md`, `handoff.md` — [governança e fechamento da fase]
+- **Estado dos Testes Automáticos:**
+  - Suítes passando: 13/13 | Testes passando: 64/64 | Lint e Typecheck: 100% OK
+    - `@slime-sage/shared`: 8/8 testes
+    - `@slime-sage/game`: 16/16 testes
+    - `@slime-sage/api`: 3/3 testes
+    - `@slime-sage/pwa`: 37/37 testes
+- **Pontos de Atenção para a Próxima Fase (Fase 3):**
+  - Implementar o Design System temático do "Sistema" (*Solo Leveling* / *Tensura*): paleta `#050811`, ciano neon `#00f3ff`, brilhos de status, tipografia e Framer Motion fluido.
+  - Implementar a navegação por abas inferior/lateral responsiva (Home, Projetos, Habilidades, Status, Chat).
+  - Integrar a listagem e o CRUD manual de Projetos e Missões (criação, edição, conclusão e exclusão) utilizando a interface visual conectada ao `ProjectRepository`.
+  - Preparar a estrutura de áudio pré-gravado para eventos chave (Opção 3 — Híbrida Inteligente) a ser consolidada na Fase 5.
+
 

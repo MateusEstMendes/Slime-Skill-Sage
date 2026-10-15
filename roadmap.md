@@ -18,10 +18,10 @@ Legenda: `[ ]` Pendente | `[/]` Em andamento | `[x]` Concluído e Aprovado pelo 
 
 ## Fase 2 — Banco de Dados Local, Migrations e Repositórios de Projetos/Missões
 
-- [ ] 2.1 Desenvolvimento
-- [ ] 2.2 Testes Automáticos
-- [ ] 2.3 Testes do Usuário
-- [ ] 2.4 Debug e Atualização de Handoff/Feedback
+- [x] 2.1 Desenvolvimento
+- [x] 2.2 Testes Automáticos
+- [x] 2.3 Testes do Usuário
+- [x] 2.4 Debug e Atualização de Handoff/Feedback
 
 ## Fase 3 — Design System "Sistema", Navegação por Abas e CRUD Manual de Projetos/Missões
 
