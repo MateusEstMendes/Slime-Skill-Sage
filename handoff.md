@@ -2,8 +2,8 @@
 
 ## Status Atual
 
-- **Última Fase Concluída:** Fase 2 — Banco de Dados Local, Migrations e Repositórios de Projetos/Missões
-- **Próxima Fase:** Fase 3 — Design System "Sistema", Navegação por Abas e CRUD Manual de Projetos/Missões
+- **Última Fase Concluída:** Fase 4 — Motor de Jogo Puro (Parte 1): Clock/RNG, XP, Nível, Maestria, Atributos e Ledger
+- **Próxima Fase:** Fase 5 — Voz do Mundo (Modal + Haptics + Som + Web TTS) e Telas de Status e Habilidades
 - **Data da Atualização:** 2026-10-15
 
 ## Histórico de Fases Concluídas
@@ -87,10 +87,48 @@
     - `@slime-sage/game`: 16/16 testes
     - `@slime-sage/api`: 3/3 testes
     - `@slime-sage/pwa`: 37/37 testes
-- **Pontos de Atenção para a Próxima Fase (Fase 3):**
-  - Implementar o Design System temático do "Sistema" (*Solo Leveling* / *Tensura*): paleta `#050811`, ciano neon `#00f3ff`, brilhos de status, tipografia e Framer Motion fluido.
-  - Implementar a navegação por abas inferior/lateral responsiva (Home, Projetos, Habilidades, Status, Chat).
-  - Integrar a listagem e o CRUD manual de Projetos e Missões (criação, edição, conclusão e exclusão) utilizando a interface visual conectada ao `ProjectRepository`.
-  - Preparar a estrutura de áudio pré-gravado para eventos chave (Opção 3 — Híbrida Inteligente) a ser consolidada na Fase 5.
+### Fase 3 — Design System "Sistema", Navegação por Abas e CRUD Manual de Projetos/Missões
+
+- **Mudanças Implementadas:**
+  - Design System temático do "Sistema" (*Solo Leveling* / *Tensura*): paleta escura `#050811`, ciano neon `#00f3ff`, tipografia mono, feedback tátil com `navigator.vibrate` e componentes reutilizáveis (`SystemButton`, `SystemBadge`, `SystemPanel`, `SystemModal`, `SystemFormControls`, `SystemHeader`).
+  - Navegação fluida por 5 abas (`TabBar`): Home, Projetos, G.S (hero central), Skills e Status, com preservação de estado no DOM eliminando efeito de piscar preto.
+  - CRUD manual completo de Projetos e Missões conectado a `projectRepository.ts`, com visualizador em árvore (DAG), desbloqueio em cascata e visualização dos 3 estados (`bloqueada`, `disponivel`, `feita`).
+  - Atualizações otimizadas de projetos e missões (`updateProject`, `updateMission`) e testes de ponta a ponta em `e2e/projects-and-missions-flow.spec.ts`.
+- **Arquivos Criados / Modificados:**
+  - `apps/pwa/src/components/system/*` — [Design System "Sistema"]
+  - `apps/pwa/src/components/navigation/TabBar.tsx` — [barra de abas responsiva]
+  - `apps/pwa/src/components/projects/*` — [componentes de projetos, missões e modais CRUD]
+  - `apps/pwa/src/components/views/*` — [views de Home, Projetos, Chat G.S, Skills e Status]
+  - `apps/pwa/src/services/haptics.ts` — [feedback tátil com vibração]
+  - `apps/pwa/src/services/projectRepository.ts` — [suporte a updateProject e updateMission]
+- **Estado dos Testes Automáticos:**
+  - Suítes passando: 18/18 | Testes passando: 82/82 | Lint e Typecheck: 100% OK
+### Fase 4 — Motor de Jogo Puro (Parte 1): Clock/RNG, XP, Nível, Maestria, Atributos e Ledger
+
+- **Mudanças Implementadas:**
+  - Em `packages/game`:
+    - Interfaces puras `Clock` (`RealClock`, `SystemClock`, `FakeClock`) e `Rng` (`RealRng`, `MathRng`, `SeededRng`, `FixedRng`) com injeção de dependência e suporte a modo de fluxo contínuo em tempo real (`isTicking`).
+    - Constantes do Sistema: XP por dificuldade (`10, 20, 35, 55, 80`), curva de nível `round(100 * n^1.5)`, limiar Comum → Extra em **100 de maestria** e teto de **300 de maestria**.
+    - Normalizador puro de nomes de habilidades (`normalizeSkillName`) para fusão/deduplicação.
+    - Funções puras de cálculo e ranqueamento de atributos (`INT`, `FOR`, `DIS`, `CRI`, `SOC`) baseadas em maestria de habilidades e no ledger.
+    - Auditor de integridade do ledger (`auditLedger`, `calculateLedgerTotals`).
+  - No cliente PWA:
+    - `gameService.ts`: Transações atômicas `completeMission` e `undoMissionCompletion` integradas ao ledger imutável `xp_event`, com recálculo de perfil, disparo de eventos do motor (`LEVEL_UP`, `SKILL_EVOLVED_EXTRA`) e compensação estrita no undo.
+    - Telas `HomeView.tsx` e `StatusView.tsx` atualizadas com barra de progresso de nível, ranques de caçador dinâmicos e status de conformidade da auditoria do ledger.
+    - `DevPanel.tsx`: Novas abas **"Ledger de XP"** (com auditoria em tempo real, visualização das transações e reconciliação) e **"Viagem no Tempo"** (com `FakeClock` ativo avançando segundos ao vivo em tempo real, luz pulsante ciano e selo de deslocamento relativo).
+    - Proteção assíncrona com `isMountedRef` em `ProjectsView.tsx` e `StatusView.tsx`.
+- **Arquivos Criados / Modificados:**
+  - `packages/game/src/clock.ts`, `packages/game/src/rng.ts`, `packages/game/src/config.ts`, `packages/game/src/skills.ts`, `packages/game/src/attributes.ts`, `packages/game/src/ledger.ts`, `packages/game/src/index.ts`, `packages/game/src/gameEngine.test.ts`
+  - `apps/pwa/src/services/gameService.ts`, `apps/pwa/src/services/gameService.test.ts`
+  - `apps/pwa/src/components/DevPanel.tsx`, `apps/pwa/src/components/views/HomeView.tsx`, `apps/pwa/src/components/views/StatusView.tsx`, `apps/pwa/src/components/projects/ProjectsView.tsx`
+  - `e2e/projects-and-missions-flow.spec.ts`
+  - `plan.md`, `roadmap.md`, `feedback.md`, `handoff.md`
+- **Estado dos Testes Automáticos:**
+  - Suítes passando: 20/20 | Testes passando: 110/110 | Lint e Typecheck: 100% OK
+  - Cobertura em `@slime-sage/game`: 98.92% statements, 93.28% branches, 100% functions, 98.92% lines (acima da meta de 90%).
+- **Pontos de Atenção para a Próxima Fase (Fase 5):**
+  - Implementar o modal solene da **Voz do Mundo** (`VoiceOfTheWorldModal.tsx`) para anúncios épicos de evolução (`LEVEL_UP`, `SKILL_ACQUIRED`, `SKILL_EVOLVED_EXTRA`, `RANK_UP`), com áudio pré-gravado oficial da voz `Kore` do Gemini e fallback para Web Speech API normalizado.
+  - Tela completa de **Status do Caçador** (atributos pentagonais radar/barras, ranques F a S).
+  - Tela completa da **Árvore de Habilidades (Tensura)** agrupadas por área e tier (Comum / Extra).
 
 

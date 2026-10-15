@@ -102,7 +102,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
       icon={isEditing ? <Edit3 className="w-5 h-5" /> : <FolderPlus className="w-5 h-5" />}
       maxWidth="md"
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} noValidate data-testid="project-form" className="space-y-4">
         <SystemInput
           label="Título do Projeto"
           placeholder="Ex: Dominar Algoritmos e Grafos"

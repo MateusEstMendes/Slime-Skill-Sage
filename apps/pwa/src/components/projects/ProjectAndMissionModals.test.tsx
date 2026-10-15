@@ -110,17 +110,16 @@ describe("Project and Mission Modals", () => {
       const depBtn = screen.getByText("Requisito Prévia 1");
       fireEvent.click(depBtn);
 
-      const submitBtn = screen.getByRole("button", { name: /adicionar missão/i });
-      fireEvent.click(submitBtn);
+      // Submit form
+      const form = screen.getByTestId("mission-form");
+      fireEvent.submit(form);
 
-      await waitFor(() => {
-        expect(handleSave).toHaveBeenCalledWith({
-          title: "Missão Final do Módulo",
-          description: "",
-          xp_reward: 50,
-          order_index: 1,
-          depends_on_ids: ["cand_1"],
-        });
+      expect(handleSave).toHaveBeenCalledWith({
+        title: "Missão Final do Módulo",
+        description: "",
+        xp_reward: 50,
+        order_index: 1,
+        depends_on_ids: ["cand_1"],
       });
     });
   });

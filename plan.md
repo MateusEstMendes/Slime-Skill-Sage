@@ -20,7 +20,7 @@
 | **Roleta na v1**                | Aplicada na transição **Extra → Única**: exige **300 de maestria** + **1 projeto concluído** que concedeu a habilidade. Chance inicial de **30%**, **+15%** por falha, teto de **95%**, cooldown de **24h**. Habilidade **Suprema** fica para a v2                                                                                                                                                                                                                                                                                         |
 | **Valores Numéricos (Seção 8)** | XP por missão (dif. 1–5): **10 / 20 / 35 / 55 / 80** · Curva de nível: `round(100 * n^1.5)` · Comum→Extra: **100** maestria · Extra→Única: **300** maestria + projeto · Classes (patamares 2 a 5): **150 / 500 / 1200 / 3000** maestria na área · Diárias: 3 a 5 por dia (+50% XP ao completar todas) · Streak sem escudo (≥ 3 diárias/dia, +2% XP/dia até +30%) · Modo Foco: bônus até +25% (mín. 50% do tempo estimado), penalidade -10% a cada 25% excedido (piso 50%), quebra ao sair da aba/PWA por **> 30s** via Page Visibility API |
 | **Virada do Dia**               | **04:00 da manhã** por padrão (configurável em Ajustes)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| **Escopo v1 vs. v2**            | **v1:** Onboarding (5 perguntas + TTS), Chat G.S Coordenador com confirmação, Projetos/Árvore de Missões, Habilidades até Única com Roleta, Classes + Desafio Autodeclarado, Diárias + Streak sem escudo, Notificações locais/Web Push 48h + Voz do Mundo, Modo Foco e Backup JSON/Cloud. **v2:** Magicules, Drops/Gifts, Debuffs, Festival da Colheita + Suprema                                                                                                                                                                          |
+| **Escopo v1 vs. v2**            | **v1:** Onboarding (5 perguntas + TTS), Chat G.S Coordenador com confirmação, Projetos/Árvore de Missões, Habilidades até Única com Roleta, Classes + Desafio Autodeclarado, Diárias + Streak sem escudo, Notificações locais/Web Push 48h + Voz do Mundo, Modo Foco e Backup JSON/Cloud. **v2:** Agendamento de Fim de Projetos/Atividades (Deadlines/Due Dates, Missões *Time-Attack* com bônus de pontualidade/debuff de atraso e Milestones cronológicos no calendário), Magicules, Drops/Gifts, Debuffs, Festival da Colheita + Suprema |
 | **Arquivos de Controle**        | `roadmap.md` (progresso geral das fases e sub-etapas), `handoff.md` (mudanças da fase, arquivos tocados, estado dos testes automáticos e contexto para a próxima fase) e `feedback.md` (histórico de feedbacks dos testes do usuário e correções de debug)                                                                                                                                                                                                                                                                                 |
 
 ## 2. Estrutura dos 3 Arquivos de Controle na Raiz do Projeto
@@ -459,57 +459,7 @@ Após o feedback, aplique correções e feche a fase nos arquivos de controle.
 
 ---
 
-### Fase 4 — Motor de Jogo Puro (Parte 1): Clock/RNG, XP, Nível, Maestria, Atributos e Ledger
 
-#### Escopo nas 4 Partes (Fase 4)
-
-- **1. Desenvolvimento:**
-  - Em `packages/game`:
-    - Interfaces puras `Clock` (`RealClock`, `FakeClock`) e `Rng` (`RealRng`, `SeededRng`, `FixedRng`);
-    - Constantes: XP por dificuldade (`10, 20, 35, 55, 80`), curva de nível `round(100 * n^1.5)`, limiar Comum → Extra em **100 de maestria**, normalizador `normalizeSkillName`;
-    - Atributos (`INT`, `FOR`, `DIS`, `CRI`, `SOC`) calculados pela soma de maestria nas áreas;
-  - No cliente PWA:
-    - Funções transacionais `completeMission` e `undoMissionCompletion` integradas ao ledger imutável `xp_event`;
-    - Disparo de eventos de evolução (`LEVEL_UP`, `SKILL_ACQUIRED`, `SKILL_EVOLVED_EXTRA`);
-    - No Painel Dev: visualizador do Ledger, recálculo de auditoria e controles de Viagem no Tempo (`FakeClock`).
-- **2. Testes Automáticos:**
-  - Vitest + `fast-check` em `packages/game` (cobertura >= 90%):
-    - Curva de nível e limites de transição Comum → Extra (99 vs 100);
-    - Propriedade: `total_xp` é estritamente igual à soma do ledger `xp_event`;
-    - Propriedade: `completeMission` seguido de `undoMissionCompletion` restaura perfeitamente o estado anterior.
-- **3. Testes do Usuário:**
-  - Concluir missões, auditar o ledger no Painel Dev, testar o botão "Desfazer conclusão" e verificar consistência.
-- **4. Debug e Fechamento:**
-  - Ajustar cálculos de maestria/XP e atualizar arquivos de controle.
-
-#### Prompt da Fase 4
-
-```markdown
-Leia `handoff.md`, `roadmap.md` e `feedback.md`. Vamos iniciar a **Fase 4 — Motor de Jogo Puro (Parte 1): Clock/RNG, XP, Nível, Maestria, Atributos e Ledger**.
-
-### Passo 1 — Desenvolvimento (Etapa 4.1)
-
-Marque `[/] 4.1 Desenvolvimento` em `roadmap.md` e implemente:
-
-1. Em `packages/game`: `clock.ts`, `rng.ts`, `config.ts`, `skills.ts`, `attributes.ts`.
-2. No cliente PWA: transações `completeMission` e `undoMissionCompletion` com gravação no ledger `xp_event`.
-3. Controles no Painel Dev: inspetor de ledger, auditoria e controles de `FakeClock`.
-
-### Passo 2 — Testes Automáticos (Etapa 4.2)
-
-1. Testes unitários e baseados em propriedade (`fast-check`) em `packages/game` com cobertura >= 90%.
-2. Execute `pnpm lint`, `pnpm typecheck` e `pnpm test --coverage`.
-
-### Passo 3 — Pausa Obrigatória para Testes do Usuário (Etapa 4.3)
-
-Marque `[x]` nas etapas 4.1 e 4.2 em `roadmap.md` e **PARE**. Apresente o roteiro de testes do ledger ao usuário.
-
-### Passo 4 — Debug e Fechamento (Etapa 4.4 — Somente após meu retorno)
-
-Registre em `feedback.md` e atualize `handoff.md`, `feedback.md` e `roadmap.md`.
-```
-
----
 
 ### Fase 5 — Voz do Mundo (Modal + Haptics + Som + Web TTS) e Telas de Status e Habilidades
 
@@ -1023,3 +973,16 @@ Marque `[x]` nas etapas 14.1 e 14.2 em `roadmap.md` e **PARE**. Apresente o rote
 
 Após a aprovação final, atualize `handoff.md`, `feedback.md` e `roadmap.md` declarando a **v1 do Slime Sage PWA concluída**.
 ```
+
+## 15. Planejamento do Escopo da v2 (Pós-Release v1)
+
+A versão 2 (`v2`) do Slime Sage expandirá a profundidade da gamificação e a gestão temporal com os seguintes módulos:
+
+1. **Agendamento de Prazos e Término de Projetos/Atividades:**
+   - **`deadline` / `due_date`:** Definição opcional de data e hora limite para conclusão de projetos inteiros ou missões específicas.
+   - **Missões *Time-Attack* (Contrarrelógio do Sistema):** Missões com prazo crítico gerando alerta urgente da Grande Sábio. Conclusão dentro do prazo concede bônus de XP/Maestria e título comemorativo; estouro do prazo gera status de "Atrasada" e acúmulo de debuff de procrastinação.
+   - **Milestones (Marcos Cronológicos):** Visualização em linha do tempo / calendário distribuindo missões da árvore DAG até a data final de entrega do projeto.
+2. **Magicules (Energia Mágica / Mana):** Recurso consumível para buffs de concentração e invocações analíticas da G.S.
+3. **Drops & Gifts:** Saques e recompensas materiais/digitais especiais por projetos concluídos com louvor.
+4. **Debuffs do Sistema:** Penalidades temporárias aplicadas quando prazos expiram sucessivamente.
+5. **Festival da Colheita & Habilidade Suprema (*Ultimate Skill*):** O despertar definitivo com rituais de fusão e sacrifício de habilidades únicas.

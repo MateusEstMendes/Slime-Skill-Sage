@@ -50,10 +50,10 @@ export const MissionModal: React.FC<MissionModalProps> = ({
       setDescription("");
       setXpReward(50);
       setOrderIndex(existingMissions.length);
-      setSelectedDeps([]);
+      setSelectedDeps(initialDependsOnIds);
     }
     setError("");
-  }, [missionToEdit, initialDependsOnIds, existingMissions.length, isOpen]);
+  }, [missionToEdit, existingMissions.length, isOpen]);
 
   // Candidates for dependencies (cannot depend on itself)
   const candidateMissions = existingMissions.filter(
@@ -107,7 +107,7 @@ export const MissionModal: React.FC<MissionModalProps> = ({
       icon={isEditing ? <Edit3 className="w-5 h-5" /> : <Target className="w-5 h-5" />}
       maxWidth="lg"
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} noValidate data-testid="mission-form" className="space-y-4">
         <SystemInput
           label="Título da Missão"
           placeholder="Ex: Resolver 5 problemas de Grafos / DFS"

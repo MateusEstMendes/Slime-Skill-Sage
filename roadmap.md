@@ -27,15 +27,15 @@ Legenda: `[ ]` Pendente | `[/]` Em andamento | `[x]` Concluído e Aprovado pelo 
 
 - [x] 3.1 Desenvolvimento
 - [x] 3.2 Testes Automáticos
-- [ ] 3.3 Testes do Usuário
-- [ ] 3.4 Debug e Atualização de Handoff/Feedback
+- [x] 3.3 Testes do Usuário
+- [x] 3.4 Debug e Atualização de Handoff/Feedback
 
 ## Fase 4 — Motor de Jogo Puro (Parte 1): Clock/RNG, XP, Nível, Maestria, Atributos e Ledger
 
-- [ ] 4.1 Desenvolvimento
-- [ ] 4.2 Testes Automáticos
-- [ ] 4.3 Testes do Usuário
-- [ ] 4.4 Debug e Atualização de Handoff/Feedback
+- [x] 4.1 Desenvolvimento
+- [x] 4.2 Testes Automáticos
+- [x] 4.3 Testes do Usuário
+- [x] 4.4 Debug e Atualização de Handoff/Feedback
 
 ## Fase 5 — Voz do Mundo (Modal + Haptics + Som + Web TTS) e Telas de Status e Habilidades
 

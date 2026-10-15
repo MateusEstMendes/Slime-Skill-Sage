@@ -195,6 +195,81 @@ describe("DevPanel & 7-Click Gesture in SettingsModal", () => {
     );
   });
 
+  it("renders Ledger tab, audits integrity, and displays transactions", async () => {
+    // Add sample xp_event
+    await localDb.put("xp_event", {
+      id: "xpe_test_1",
+      entity_type: "mission",
+      entity_id: "m_test",
+      area_id: "INT",
+      xp_amount: 50,
+      mastery_amount: 10,
+      description: "Missão Teste DevPanel",
+      created_at: new Date().toISOString(),
+    });
+
+    const onClose = vi.fn();
+    render(<DevPanel isOpen={true} onClose={onClose} />);
+
+    // Click Ledger tab
+    const ledgerTab = screen.getByText("Ledger de XP");
+    fireEvent.click(ledgerTab);
+
+    // Verify title and transactions
+    await waitFor(() => {
+      expect(
+        screen.getByText("Ledger Imutável // Auditoria Total (xp_event)")
+      ).toBeInTheDocument();
+      expect(screen.getByText("Missão Teste DevPanel")).toBeInTheDocument();
+      expect(screen.getByText("+50 XP")).toBeInTheDocument();
+    });
+
+    // Test reconcile / audit button
+    const auditBtn = screen.getByText("Auditar e Recalcular Perfil");
+    fireEvent.click(auditBtn);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Perfil recalculado e reconciliado 100% com o Ledger!")
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("renders Time Travel tab and operates FakeClock controls", async () => {
+    const onClose = vi.fn();
+    render(<DevPanel isOpen={true} onClose={onClose} />);
+
+    // Click Time Travel tab
+    const timeTab = screen.getByText("Viagem no Tempo");
+    fireEvent.click(timeTab);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Viagem no Tempo // Controles de Clock")
+      ).toBeInTheDocument();
+    });
+
+    // Test advance +1 Hour
+    const advance1hBtn = screen.getByText("+1 Hora");
+    fireEvent.click(advance1hBtn);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Tempo avançado em 1 hora(s)!")
+      ).toBeInTheDocument();
+    });
+
+    // Test reset time
+    const resetTimeBtn = screen.getByText("Resetar para Momento Real");
+    fireEvent.click(resetTimeBtn);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Tempo simulado resetado para o momento atual!")
+      ).toBeInTheDocument();
+    });
+  });
+
   it("closes when close button is clicked", () => {
     const onClose = vi.fn();
     render(<DevPanel isOpen={true} onClose={onClose} />);

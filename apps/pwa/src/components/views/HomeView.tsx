@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { type Project, type Mission } from "@slime-sage/shared";
+import { type Project, type Mission, type Profile } from "@slime-sage/shared";
 import { projectRepository } from "../../services/projectRepository";
+import { gameService } from "../../services/gameService";
+import { calculateLevelFromTotalXp } from "@slime-sage/game";
 import { logger } from "../../services/logger";
 import { SystemPanel } from "../system/SystemPanel";
 import { SystemBadge } from "../system/SystemBadge";
@@ -25,6 +27,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onNavigateToProjects,
   onNavigateToGs,
 }) => {
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [nextMission, setNextMission] = useState<Mission | null>(null);
   const [totalProjectsCount, setTotalProjectsCount] = useState(0);
@@ -36,7 +39,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const loadHomeData = useCallback(async () => {
     try {
       setLoading(true);
-      const allProjects = await projectRepository.listProjects();
+      const [allProjects, prof] = await Promise.all([
+        projectRepository.listProjects(),
+        gameService.getProfile(),
+      ]);
+      setProfile(prof);
       setTotalProjectsCount(allProjects.length);
 
       const activeProjects = allProjects.filter((p) => p.status === "ativo");
@@ -73,8 +80,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const handleCompleteMission = async (missionId: string) => {
     try {
       setActionLoading(true);
-      await projectRepository.updateMissionStatus(missionId, "feita");
-      void logger.info("game", "Missão rápida concluída na Home", { missionId });
+      await gameService.completeMission(missionId);
       await loadHomeData();
     } catch (err) {
       void logger.error("game", "Erro ao concluir missão na Home", { err, missionId });
@@ -82,6 +88,20 @@ export const HomeView: React.FC<HomeViewProps> = ({
       setActionLoading(false);
     }
   };
+
+  const handleReopenMission = async (missionId: string) => {
+    try {
+      setActionLoading(true);
+      await gameService.undoMissionCompletion(missionId);
+      await loadHomeData();
+    } catch (err) {
+      void logger.error("game", "Erro ao desfazer missão na Home", { err, missionId });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const levelProgress = calculateLevelFromTotalXp(profile?.total_xp ?? 0);
 
   return (
     <div className="space-y-6">
@@ -105,6 +125,47 @@ export const HomeView: React.FC<HomeViewProps> = ({
         >
           Consultar G.S
         </SystemButton>
+      </div>
+
+      {/* Hunter Status Banner (Level & XP) */}
+      <div className="p-4 bg-gradient-to-r from-[#061226] via-[#091838] to-[#061226] border border-cyan-500/30 rounded-xl shadow-[0_0_20px_rgba(0,240,255,0.08)] font-mono">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-cyan-950/80 border border-cyan-400/50 flex items-center justify-center font-bold text-cyan-300 text-sm">
+              L{levelProgress.level}
+            </div>
+            <div>
+              <div className="text-xs font-bold text-white tracking-wide">
+                {profile?.name ?? "Rimuru Tempest"}
+              </div>
+              <div className="text-[10px] text-cyan-400/80">
+                {profile?.title ?? "Aspirante a Desperto"}
+              </div>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-[10px] text-slate-400 uppercase">XP Acumulado</div>
+            <div className="text-sm font-bold text-cyan-300">
+              {profile?.total_xp ?? 0} <span className="text-[10px] text-slate-500">XP</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Level XP Bar */}
+        <div className="space-y-1">
+          <div className="flex justify-between text-[10px] text-slate-400">
+            <span>Progresso do Nível {levelProgress.level}</span>
+            <span>
+              {levelProgress.currentXp} / {levelProgress.xpForNextLevel} XP ({levelProgress.progressPercentage}%)
+            </span>
+          </div>
+          <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-cyan-500/20">
+            <div
+              className="bg-gradient-to-r from-cyan-500 to-cyan-300 h-full transition-all duration-500"
+              style={{ width: `${levelProgress.progressPercentage}%` }}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Quick Stats Grid */}
@@ -202,6 +263,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               <MissionCard
                 mission={nextMission}
                 onComplete={handleCompleteMission}
+                onReopen={handleReopenMission}
                 loading={actionLoading}
               />
             ) : (

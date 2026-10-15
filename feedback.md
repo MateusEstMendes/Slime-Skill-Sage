@@ -47,4 +47,35 @@
     2. **Variáveis e Textos Dinâmicos:** Para textos customizados do usuário (títulos de missões específicas), o app utiliza a introdução solene em áudio oficial da Voz do Mundo/G.S com o texto exibido em destaque no modal visual, recorrendo ao TTS local normalizado caso offline.
 - **Status:** [x] Validado pelo Usuário
 
+## Fase 3 — Design System "Sistema", Navegação por Abas e CRUD Manual de Projetos/Missões
+
+### Rodada 1 de Testes do Usuário (Navegação, Design System e CRUD)
+
+- **Feedback do Usuário:**
+  - Componentes piscavam preto ao alternar entre abas, precisando de transição sutil e instantânea sem piscar.
+  - Conclusão da Fase 3 validada após otimização da renderização.
+- **Causa Raiz Identificada (Debug):**
+  - `SystemPanel.tsx` utilizava animação inicial de opacidade zero (`initial={{ opacity: 0, y: 10 }}`) revelando o fundo escuro.
+  - `HomeScreen.tsx` desmontava e remontava views condicionalmente, forçando recarregamentos do zero.
+- **Correção Aplicada + Teste de Regressão Criado:**
+  - Remoção de opacidade zero na montagem do `SystemPanel.tsx`.
+  - Preservação das abas no DOM com controle de visibilidade via CSS (`hidden`/`block`) em `HomeScreen.tsx`.
+  - Testes de renderização de abas e componentes adicionados e validados.
+- **Status:** [x] Validado pelo Usuário
+
+## Fase 4 — Motor de Jogo Puro (Parte 1): Clock/RNG, XP, Nível, Maestria, Atributos e Ledger
+
+### Rodada 1 de Testes do Usuário (Ledger, Auditoria, Viagem no Tempo e FakeClock em Tempo Real)
+
+- **Feedback do Usuário:**
+  - O usuário solicitou que o `FakeClock` na aba "Viagem no Tempo" do Painel Dev atualizasse os segundos em tempo real na interface para proporcionar certeza visual imediata de que a simulação temporal está viva e ativa.
+  - Solicitação adicional esclarecida e adicionada ao plano da v2: suporte a agendamento de data de término (`deadline` / `due_date`) para projetos e atividades (missões *Time-Attack* e Milestones).
+  - Testes do usuário do Ledger imutável, cálculo de auditoria de XP, conclusão/reversão de missões e controles de tempo aprovados.
+- **Causa Raiz & Melhoria Aplicada:**
+  - O `FakeClock` foi aprimorado com suporte a modo contínuo de fluxo (`isTicking`) preservando o deslocamento temporal em relação ao relógio real.
+  - Adicionado `setInterval` de 1 segundo dedicado na aba "Viagem no Tempo" do `DevPanel.tsx`, além de luz de pulso em tempo real (`animate-ping`) e selo de deslocamento relativo (ex: `(+1h de deslocamento)`).
+  - `loadProjects` e `loadStatusData` foram protegidos com referências de ciclo de vida (`isMountedRef`) para garantir robustez assíncrona.
+- **Status:** [x] Validado pelo Usuário
+
+
 

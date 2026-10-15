@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { type Mission, type MissionDep, type Project } from "@slime-sage/shared";
 import { projectRepository } from "../../services/projectRepository";
+import { gameService } from "../../services/gameService";
 import { logger } from "../../services/logger";
 import { SystemPanel } from "../system/SystemPanel";
 import { SystemBadge } from "../system/SystemBadge";
@@ -63,8 +64,7 @@ export const ProjectTreeViewer: React.FC<ProjectTreeViewerProps> = ({
   const handleCompleteMission = async (missionId: string) => {
     try {
       setActionLoading(true);
-      await projectRepository.updateMissionStatus(missionId, "feita");
-      void logger.info("game", "Missão concluída", { missionId, projectId });
+      await gameService.completeMission(missionId);
       await loadTreeData();
       onProjectUpdated?.();
     } catch (err) {
@@ -77,8 +77,7 @@ export const ProjectTreeViewer: React.FC<ProjectTreeViewerProps> = ({
   const handleReopenMission = async (missionId: string) => {
     try {
       setActionLoading(true);
-      await projectRepository.updateMissionStatus(missionId, "disponivel");
-      void logger.info("game", "Missão reaberta", { missionId, projectId });
+      await gameService.undoMissionCompletion(missionId);
       await loadTreeData();
       onProjectUpdated?.();
     } catch (err) {

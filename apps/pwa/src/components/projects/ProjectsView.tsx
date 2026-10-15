@@ -32,15 +32,28 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
 
+  const isMountedRef = React.useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   const loadProjects = useCallback(async () => {
     try {
       setLoading(true);
       const list = await projectRepository.listProjects();
-      setProjects(list);
+      if (isMountedRef.current) {
+        setProjects(list);
+      }
     } catch (err) {
       void logger.error("db", "Falha ao carregar lista de projetos", { err });
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
