@@ -25,8 +25,8 @@ Legenda: `[ ]` Pendente | `[/]` Em andamento | `[x]` Concluído e Aprovado pelo 
 
 ## Fase 3 — Design System "Sistema", Navegação por Abas e CRUD Manual de Projetos/Missões
 
-- [ ] 3.1 Desenvolvimento
-- [ ] 3.2 Testes Automáticos
+- [x] 3.1 Desenvolvimento
+- [x] 3.2 Testes Automáticos
 - [ ] 3.3 Testes do Usuário
 - [ ] 3.4 Debug e Atualização de Handoff/Feedback
 

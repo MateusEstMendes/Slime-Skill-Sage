@@ -247,6 +247,86 @@ export class ProjectRepository {
     };
   }
 
+  public async updateMission(
+    missionId: string,
+    updates: Partial<Omit<Mission, "id" | "project_id" | "created_at">>,
+    newDependsOnIds?: string[],
+  ): Promise<{ updatedMission: Mission; affectedMissions: Mission[] }> {
+    const now = new Date().toISOString();
+    const mission = await this.db.get<Mission>("mission", missionId);
+    if (!mission || mission.deleted_at !== null) {
+      throw new Error(`Missão com id ${missionId} não encontrada ou excluída`);
+    }
+
+    const updated: Mission = {
+      ...mission,
+      ...updates,
+      updated_at: now,
+    };
+
+    const projectMissions = await this.listMissions({ projectId: mission.project_id, includeDeleted: true });
+    const missionMap = new Map(projectMissions.map((m) => [m.id, m]));
+    missionMap.set(updated.id, updated);
+
+    let allDeps = await this.db.getAll<MissionDep>("mission_dep");
+
+    if (newDependsOnIds !== undefined) {
+      const otherDeps = allDeps.filter((d) => d.mission_id !== missionId);
+      const newDeps: MissionDep[] = newDependsOnIds.map((depId, idx) => ({
+        id: `dep_${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 6)}`,
+        mission_id: missionId,
+        depends_on_mission_id: depId,
+        created_at: now,
+      }));
+
+      const projectDepsCandidate = [
+        ...otherDeps.filter((d) => missionMap.has(d.mission_id) && missionMap.has(d.depends_on_mission_id)),
+        ...newDeps,
+      ];
+
+      validateAcyclicGraph(
+        Array.from(missionMap.keys()),
+        projectDepsCandidate.map((d) => ({
+          mission_id: d.mission_id,
+          depends_on_mission_id: d.depends_on_mission_id,
+        })),
+      );
+
+      const existingMissionDeps = allDeps.filter((d) => d.mission_id === missionId);
+      for (const d of existingMissionDeps) {
+        await this.db.delete("mission_dep", d.id);
+      }
+      if (newDeps.length > 0) {
+        await this.db.putBatch("mission_dep", newDeps);
+      }
+
+      allDeps = [...otherDeps, ...newDeps];
+    }
+
+    const projectDeps = allDeps.filter(
+      (d) => missionMap.has(d.mission_id) && missionMap.has(d.depends_on_mission_id),
+    );
+
+    const recalculated = recalculateMissionStatuses(Array.from(missionMap.values()), projectDeps, now);
+
+    const affectedMissions: Mission[] = [];
+    for (const m of recalculated) {
+      const prev = missionMap.get(m.id);
+      if (prev && (prev.status !== m.status || prev.completed_at !== m.completed_at)) {
+        affectedMissions.push(m);
+      }
+    }
+
+    await this.db.putBatch("mission", recalculated);
+    await this.recalculateProjectProgress(mission.project_id);
+
+    const finalMission = recalculated.find((m) => m.id === missionId) || updated;
+    return {
+      updatedMission: finalMission,
+      affectedMissions,
+    };
+  }
+
   public async updateMissionStatus(
     missionId: string,
     status: MissionStatus,
