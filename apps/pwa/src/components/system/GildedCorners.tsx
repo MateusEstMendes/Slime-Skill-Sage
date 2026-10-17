@@ -7,6 +7,9 @@ export interface GildedCornersProps {
   glow?: boolean;
   withInnerFrame?: boolean;
   withCenterNotches?: boolean;
+  withRunes?: boolean;
+  runicTop?: string;
+  runicBottom?: string;
   className?: string;
 }
 
@@ -17,6 +20,9 @@ export const GildedCorners: React.FC<GildedCornersProps> = ({
   glow = true,
   withInnerFrame = true,
   withCenterNotches = false,
+  withRunes = false,
+  runicTop,
+  runicBottom,
   className = "",
 }) => {
   const sizeConfig = {
@@ -169,6 +175,45 @@ export const GildedCorners: React.FC<GildedCornersProps> = ({
               background: `linear-gradient(to right, transparent, ${color}90, transparent)`,
             }}
           />
+        </>
+      )}
+
+      {/* Runic Inscriptions on Borders */}
+      {withRunes && (
+        <>
+          {/* Top Runic Inscription */}
+          <div
+            className="absolute top-[1.5px] left-1/2 -translate-x-1/2 flex items-center justify-center gap-1.5 opacity-45 group-hover:opacity-90 transition-all duration-300 pointer-events-none select-none text-[8px] font-mono tracking-[0.28em] drop-shadow-[0_0_4px_currentColor] px-2 bg-[#060e20]/80"
+            style={{ color: diamondColor }}
+          >
+            <span className="text-[7px] opacity-70">᚛</span>
+            <span>{runicTop || "ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ"}</span>
+            <span className="text-[7px] opacity-70">᚜</span>
+          </div>
+
+          {/* Bottom Runic Inscription */}
+          <div
+            className="absolute bottom-[1.5px] left-1/2 -translate-x-1/2 flex items-center justify-center gap-1.5 opacity-40 group-hover:opacity-85 transition-all duration-300 pointer-events-none select-none text-[7.5px] font-mono tracking-[0.25em] drop-shadow-[0_0_4px_currentColor] px-2 bg-[#060e20]/80"
+            style={{ color }}
+          >
+            <span className="text-[6px] opacity-75">✦</span>
+            <span>{runicBottom || "ᛋ ᛚ ᛁ ᛗ ᛖ · ᛋ ᚨ ᚷ ᛖ"}</span>
+            <span className="text-[6px] opacity-75">✦</span>
+          </div>
+
+          {/* Side Glyphs */}
+          <div
+            className="absolute left-[1.5px] top-1/2 -translate-y-1/2 text-[7px] opacity-35 group-hover:opacity-75 transition-opacity duration-300 pointer-events-none select-none font-mono"
+            style={{ color }}
+          >
+            ✦
+          </div>
+          <div
+            className="absolute right-[1.5px] top-1/2 -translate-y-1/2 text-[7px] opacity-35 group-hover:opacity-75 transition-opacity duration-300 pointer-events-none select-none font-mono"
+            style={{ color }}
+          >
+            ✦
+          </div>
         </>
       )}
     </div>

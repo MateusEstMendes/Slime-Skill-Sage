@@ -92,3 +92,17 @@
   - Adicionado mock para `HTMLMediaElement.prototype.play`, `pause` e `load` no arquivo de setup dos testes (`setup.ts`).
   - A suíte de testes de `WorldVoiceModal.test.tsx` e todos os testes da PWA (80/80) foram executados e aprovados com 100% de sucesso.
 - **Status:** [x] Validado pelo Usuário
+
+### Rodada 2 de Testes do Usuário (Bordas Retas rounded-none, Inscrições Rúnicas e Padding dos Skill Cards)
+
+- **Feedback do Usuário:**
+  1. *"os skill cards precisam de um padding, tá muito perto da borda, e as divs relative bg, não devem usar bordas arredondadas, e coloque mais efeitos de magia nas bordas, como se fossem inscrições magicas"*
+  2. *"mas o banner de status do caçador, conforme o nome odo usuario?"*
+- **Causa Raiz & Melhoria Aplicada:**
+  1. **Bordas Retas (`rounded-none`)**: `SystemPanel.tsx`, `ProjectModal.tsx`, `DevPanel.tsx`, cartões de missões e projetos ainda continham classes residuais de cantos arredondados (`rounded-xl` / `rounded-lg`). Foram todos convertidos estritamente para `rounded-none`, mantendo cantos arredondados/chanfrados apenas em botões menores (`SystemButton`) por ergonomia.
+  2. **Padding nos Skill Cards**: A classe `p-4.5` não fazia parte do Tailwind padrão gerando inconsistência. Foi atualizada para `p-[18px]` exatos com separação vertical estendida `space-y-5`.
+  3. **Inscrições Rúnicas Arcanas**: O componente [`GildedCorners.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/system/GildedCorners.tsx) foi enriquecido com inscrições nórdicas em Elder Futhark (`withRunes`, `runicTop`, `runicBottom`), entalhes centrais luminosos no topo e base (`withCenterNotches`), glifos `✦` nas laterais e brilho intensificado ao foco/hover (`opacity-45 group-hover:opacity-90 drop-shadow-[0_0_4px_currentColor]`).
+  4. **Runas Dinâmicas por Tier de Habilidade**: Comum (`᚛ ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚜` / `✦ ᛋ ᛚ ᛁ ᛗ ᛖ · ᛋ ᚨ ᚷ ᛖ ✦`), Extra (`᚛ ✦ ᛖ ᛪ ᛏ ᚱ ᚨ ✦ ᚜` / `✦ ᛈ ᛟ ᚹ ᛖ ᚱ ✦`) e Única (`᚛ ✦ ᚢ ᚾ ᛁ ᚲ ᚨ ✦ ᚜` / `✦ ᚨ ᚱ ᚲ ᚨ ᚾ ᚢ ᛗ ✦`).
+  5. **Banner do Caçador com Transliteração Dinâmica**: Criada função pura `toElderFuthark` em [`HomeView.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/views/HomeView.tsx) que translitera em tempo real o nome do caçador no perfil para o alfabeto rúnico nórdico na borda superior do banner de status.
+  6. **Decreto Rúnico em Modais**: [`SystemModal.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/system/SystemModal.tsx) atualizado com moldura rúnica sagrada `✦ ᛋ ᚨ ᚲ ᚱ ᛖ ᛞ · ᛟ ᚱ ᛞ ᛖ ᚱ ✦`.
+- **Status:** [x] Validado pelo Usuário

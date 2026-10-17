@@ -87,20 +87,26 @@
     - `@slime-sage/game`: 16/16 testes
     - `@slime-sage/api`: 3/3 testes
     - `@slime-sage/pwa`: 37/37 testes
-### Fase 3 — Design System "Sistema" (Dark Fantasy Gilded RPG), Navegação por Abas e CRUD Manual de Projetos/Missões
+### Fase 3 — Design System "Sistema" (Dark Fantasy Gilded RPG — Runas, Linhas Retas e Cantoneiras Góticas), Navegação por Abas e CRUD Manual de Projetos/Missões
 
 - **Mudanças Implementadas:**
-  - Design System temático do "Sistema" redesenhado com estética **Dark Fantasy Gilded RPG** (baseada em `docs/design.png`): paleta obsidiana cósmica `#040814` / `#060e20`, ouro antigo e brilhante (`#dfa86c`, `#fde047`, `#c89b55`, `#966422`), tipografia serifada épica `Cinzel` para títulos/cabeçalhos combinada com `JetBrains Mono` para dados/telemetria, molduras duplas ornamentadas com cantoneiras góticas e losangos nos cantos, círculos mágicos esotéricos em SVG, feedback tátil com `navigator.vibrate` e componentes reutilizáveis (`SystemButton`, `SystemBadge`, `SystemPanel`, `SystemModal`, `SystemFormControls`, `SystemHeader`).
+  - Design System temático do "Sistema" com estética **Dark Fantasy Gilded RPG** (baseada em `docs/design.png`): paleta obsidiana cósmica `#040814` / `#060e20`, ouro antigo e brilhante (`#dfa86c`, `#fde047`, `#c89b55`, `#966422`), tipografia serifada épica `Cinzel` para títulos/cabeçalhos combinada com `JetBrains Mono` para dados/telemetria.
+  - **Bordas Retas (`rounded-none`)**: Eliminação de cantos arredondados em todos os containers, painéis (`SystemPanel`), cartões (skills, missões, projetos) e modais, mantendo cantos chanfrados/ergonômicos apenas nos botões menores (`SystemButton`).
+  - **Inscrições Mágicas Rúnicas**: Componente [`GildedCorners.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/system/GildedCorners.tsx) enriquecido com inscrições nórdicas em Elder Futhark (`withRunes`, `runicTop`, `runicBottom`), entalhes centrais luminosos no topo e base (`withCenterNotches`), glifos `✦` nas laterais e brilho reativo ao foco/hover (`group-hover:opacity-90 transition-all drop-shadow-[0_0_4px_currentColor]`).
+  - **Skill Cards Aprimorados**: Espaçamento e respiro expandidos com padding exato de `p-[18px]` e separação vertical de `space-y-5`. Runas arcanas temáticas por grau: Comum (`᚛ ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚜` / `✦ ᛋ ᛚ ᛁ ᛗ ᛖ · ᛋ ᚨ ᚷ ᛖ ✦`), Extra (`᚛ ✦ ᛖ ᛪ ᛏ ᚱ ᚨ ✦ ᚜` / `✦ ᛈ ᛟ ᚹ ᛖ ᚱ ✦`), Única (`᚛ ✦ ᚢ ᚾ ᛁ ᚲ ᚨ ✦ ᚜` / `✦ ᚨ ᚱ ᚲ ᚨ ᚾ ᚢ ᛗ ✦`).
+  - **Banner de Status do Caçador**: Transliteração dinâmica do nome do usuário para caracteres rúnicos Elder Futhark (`toElderFuthark`), sincronizada em tempo real com alterações no perfil.
+  - **Modais com Decreto Rúnico**: Inscrição sagrada superior `✦ ᛋ ᚨ ᚲ ᚱ ᛖ ᛞ · ᛟ ᚱ ᛞ ᛖ ᚱ ✦`, cantoneiras góticas e cantos retos.
   - Proteção global contra transbordo de nomes longos de atividades, missões, habilidades e projetos (`min-w-0`, `overflow-hidden`, `flex-wrap`, `break-words [overflow-wrap:anywhere]`) em todas as views e cartões.
   - Navegação fluida por 5 abas (`TabBar`): Home, Projetos, G.S (medalhão central dourado com círculo mágico esotérico), Skills e Status, com preservação de estado no DOM eliminando efeito de piscar preto.
   - CRUD manual completo de Projetos e Missões conectado a `projectRepository.ts`, com visualizador em árvore (DAG), desbloqueio em cascata e visualização dos 3 estados (`bloqueada`, `disponivel`, `feita`).
   - Atualizações otimizadas de projetos e missões (`updateProject`, `updateMission`) e testes de ponta a ponta em `e2e/projects-and-missions-flow.spec.ts`.
 - **Arquivos Criados / Modificados:**
   - `apps/pwa/index.html`, `apps/pwa/tailwind.config.js`, `apps/pwa/src/index.css` — [tokens Dark Fantasy Gilded RPG, fonte `Cinzel`, fundo cósmico e utilitários de moldura dourada]
-  - `apps/pwa/src/components/system/*` — [Design System "Sistema" Dark Fantasy Gilded RPG]
+  - `apps/pwa/src/components/system/GildedCorners.tsx` — [cantoneiras góticas facetadas, entalhes centrais e inscrições rúnicas arcanas reativas]
+  - `apps/pwa/src/components/system/*` — [Design System "Sistema" Dark Fantasy Gilded RPG com bordas retas rounded-none]
   - `apps/pwa/src/components/navigation/TabBar.tsx` — [barra de abas ornamentada com medalhão esotérico G.S]
-  - `apps/pwa/src/components/projects/*` — [componentes de projetos, missões e modais CRUD com proteção anti-overflow]
-  - `apps/pwa/src/components/views/*` — [views de Home, Projetos, Chat G.S, Skills, Vozes e Status com estética Dark Fantasy]
+  - `apps/pwa/src/components/projects/*` — [componentes de projetos, missões e modais CRUD com proteção anti-overflow, cantos retos e runas]
+  - `apps/pwa/src/components/views/*` — [views de Home, Projetos, Chat G.S, Skills com p-[18px], Vozes e Status com estética Dark Fantasy e transliteração rúnica]
   - `apps/pwa/src/services/haptics.ts` — [feedback tátil com vibração]
   - `apps/pwa/src/services/projectRepository.ts` — [suporte a updateProject e updateMission]
 - **Estado dos Testes Automáticos:**
@@ -154,15 +160,27 @@
     - `@slime-sage/shared`: 8/8 testes (1 arquivo)
     - `@slime-sage/api`: 3/3 testes (1 arquivo)
 
-- **Pontos de Atenção para a Fase 6 e Subsequentes (Diretrizes Grill-Me Consolidadas):**
-  - **Fase 6 — Backend `/chat`, Síntese de Voz G.S, Cartões de Prévia e Pop-up de Pendências:**
-    - Criar rota `POST /chat` em `apps/api` usando `@ai-sdk/google` (Gemini 2.0 Flash) com streaming de resposta e ferramenta para proposição estruturada de projetos/missões (cartões de prévia interativos).
-    - Criar rota `POST /tts` em `apps/api` sintetizando falas dinâmicas da G.S com a voz neural oficial `Kore` e cache local em IndexedDB no PWA.
-    - Componente de Chat da G.S: texto rápido em streaming, botão de ouvir voz gerada, e pop-up/toast discreto para notificações proativas sem tirar o caçador da tela atual.
-    - Verificação de itens atrasados/pendentes ao abrir a aba da Grande Sábio.
-  - **Diretrizes Arquiteturais Firmadas:**
-    - Zero TTS local do navegador.
-    - Ascensão de nível online com estado 'Elegível para Ascensão' offline.
-    - Agenda independente da árvore de projetos com barra de maestria de hábitos (0 a 100%) e estado 'Enferrujada' a 75%.
+- **Pontos de Atenção para a Fase 6 e Subsequentes (Diretrizes Grill-Me Consolidadas e Fechadas):**
+  - **1. Escopo Incremental de Tools na Fase 6:**
+    - A Fase 6 expõe apenas ferramentas de Projetos, Missões e Perfil/Skills (`get_profile`, `list_skills`, `list_projects`, `get_project`, `search_missions`, `create_project_tree`, `add_missions`, `update_mission`, `delete_mission`), pois já contam com repositórios e stores locais funcionais. As tools de Classes entram na Fase 9 e as de Agenda/Hábitos na Fase 11.
+  - **2. Síntese de Voz G.S (`POST /tts`) & Redundância de Chaves:**
+    - Endpoint `POST /tts` no Hono com formato `{ audioBase64: string, mimeType: string }` utilizando a API REST do Gemini (voz oficial `Kore`).
+    - Redundância inteligente: chave primária (`GEMINI_API_KEY`) com failover automático em caso de cota (429) para a chave reserva (`GEMINI_API_KEY_FALLBACK`).
+    - Cache local no PWA em IndexedDB (`tts_cache_<hash>`) com reprodução instantânea.
+    - Modo offline / falha de rede: Notificação solene informando que a Grande Sábio entrou em *modo de hibernação neural*, mantendo a operação em processamento estritamente local.
+  - **3. Pop-up / Toast Proativo de Pendências:**
+    - Toast estilizado no PWA com badge *"Aviso da G.S"*, resumo das pendências imediatas e botão *"Ouvir Mensagem"*, complementado por opção em Configurações para reprodução automática condicionada à interação prévia.
+  - **4. Curva de Nível e XP:**
+    - Motor de jogo atualizado e testado com a curva íngreme `round(300 * n^1.5)` (subida 3x mais lenta e desafiadora).
+  - **5. Matriz de Títulos por Atributo (10 Grandes Patamares & Sub-Graus de 1.000 pts até 50.000+):**
+    - Implementada em `packages/game/src/attributes.ts`: Cada Grande Patamar abrange 5.000 pontos de maestria, subdividido em **5 Sub-Graus Rúnicos de 1.000 pontos (Graus I a V)**. O título se transforma lentamente indicando o rumo para a próxima ascensão (ex: `Aprendiz da Lógica [Grau III] · Rumo a Analista Metódico`), culminando aos 50.000+ no Grau V do Tier X como a **Perfeição Inatingível**:
+      - **INT:** 1. Aprendiz da Lógica -> 2. Analista Metódico -> 3. Arquiteto Cognitivo -> 4. Decifrador de Padrões -> 5. Sábio Investigador -> 6. Arquimago da Cognição -> 7. Singularidade Teórica -> 8. Demiurgo do Pensamento -> 9. A Mente Infinita -> 10. A Onisciência Absoluta
+      - **FOR:** 1. Corpo Desperto -> 2. Guarda de Aço -> 3. Escudo Vivo -> 4. Muralha de Bronze -> 5. Baluarte da Vontade -> 6. Monolito Vivo -> 7. Entidade Inabalável -> 8. Guardião Inquebrantável -> 9. Pilar da Existência -> 10. Muralha Cósmica Inquebrável
+      - **DIS:** 1. Iniciante da Vontade -> 2. Mente Vigilante -> 3. Disciplinado em Aço -> 4. Vontade de Titânio -> 5. Firme como Diamante -> 6. Asceta Marcial -> 7. Transcendência Estoica -> 8. Monolito Perpétuo -> 9. Entidade Sem Flutuação -> 10. A Vontade Eterna
+      - **CRI:** 1. Discípulo do Traço -> 2. Gravador de Conceitos -> 3. Escultor de Ideias -> 4. Manifestador de Formas -> 5. Engenheiro da Imaginação -> 6. Mestre das Formas -> 7. Arquiteto da Existência -> 8. Criador de Dimensões -> 9. Demiurgo Cósmico -> 10. Primordial da Criação
+      - **SOC:** 1. Ouvinte Atento -> 2. Tecedor de Laços -> 3. Mediador de Conflitos -> 4. Orador Magnético -> 5. Pacificador das Tribos -> 6. Farol Coletivo -> 7. Mentor de Povos -> 8. Conciliador de Mundos -> 9. Voz do Éter -> 10. A Harmonia Primordial
+  - **6. Navegação da Agenda Independente (Fase 11):**
+    - Modelo híbrido: Resumo "Hoje" na Home com botão de acesso "Abrir Agenda Completa" (visão dedicada, Hábitos e Festival da Colheita), mantendo intactas as 5 abas principais na `TabBar`.
+
 
 

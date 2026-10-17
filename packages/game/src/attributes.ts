@@ -55,18 +55,169 @@ export function calculateAttributesFromLedger(
   return result;
 }
 
-/**
- * Maps attribute value to Hunter rank tier (Tensura / Solo Leveling style).
- */
-export function getAttributeRank(value: number): {
-  rank: "F" | "E" | "D" | "C" | "B" | "A" | "S";
+export const GRAND_TIER_POINTS = 5000;
+export const SUB_GRADE_POINTS = 1000;
+export const SUB_GRADES_PER_TIER = 5;
+export const MAX_MASTERY_CEILING = 50000;
+
+export const ROMAN_TIERS = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"] as const;
+export const ROMAN_SUB_GRADES = ["I", "II", "III", "IV", "V"] as const;
+
+export const ATTRIBUTE_TITLES: Record<AreaCode, readonly string[]> = {
+  INT: [
+    "Aprendiz da Lógica",
+    "Analista Metódico",
+    "Arquiteto Cognitivo",
+    "Decifrador de Padrões",
+    "Sábio Investigador",
+    "Arquimago da Cognição",
+    "Singularidade Teórica",
+    "Demiurgo do Pensamento",
+    "A Mente Infinita",
+    "A Onisciência Absoluta",
+  ],
+  FOR: [
+    "Corpo Desperto",
+    "Guarda de Aço",
+    "Escudo Vivo",
+    "Muralha de Bronze",
+    "Baluarte da Vontade",
+    "Monolito Vivo",
+    "Entidade Inabalável",
+    "Guardião Inquebrantável",
+    "Pilar da Existência",
+    "Muralha Cósmica Inquebrável",
+  ],
+  DIS: [
+    "Iniciante da Vontade",
+    "Mente Vigilante",
+    "Disciplinado em Aço",
+    "Vontade de Titânio",
+    "Firme como Diamante",
+    "Asceta Marcial",
+    "Transcendência Estoica",
+    "Monolito Perpétuo",
+    "Entidade Sem Flutuação",
+    "A Vontade Eterna",
+  ],
+  CRI: [
+    "Discípulo do Traço",
+    "Gravador de Conceitos",
+    "Escultor de Ideias",
+    "Manifestador de Formas",
+    "Engenheiro da Imaginação",
+    "Mestre das Formas",
+    "Arquiteto da Existência",
+    "Criador de Dimensões",
+    "Demiurgo Cósmico",
+    "Primordial da Criação",
+  ],
+  SOC: [
+    "Ouvinte Atento",
+    "Tecedor de Laços",
+    "Mediador de Conflitos",
+    "Orador Magnético",
+    "Pacificador das Tribos",
+    "Farol Coletivo",
+    "Mentor de Povos",
+    "Conciliador de Mundos",
+    "Voz do Éter",
+    "A Harmonia Primordial",
+  ],
+};
+
+export const OVERALL_HUNTER_TITLES: readonly string[] = [
+  "Iniciado do Sistema",
+  "Caçador Praticante",
+  "Guerreiro Consagrado",
+  "Vanguarda de Elite",
+  "Mestre Caçador",
+  "Lorde da Fenda",
+  "Transcendental",
+  "Soberano Cósmico",
+  "Monarca Primordial",
+  "O Absoluto",
+];
+
+export interface AttributeRankInfo {
+  tier: number;
+  tierRoman: string;
+  subGrade: number;
+  subGradeRoman: string;
+  rank: string;
+  subRank: string;
+  title: string;
+  nextTitle: string;
   label: string;
-} {
-  if (value >= 500) return { rank: "S", label: "Rank S — Monarca" };
-  if (value >= 300) return { rank: "A", label: "Rank A — Mestre" };
-  if (value >= 180) return { rank: "B", label: "Rank B — Veterano" };
-  if (value >= 100) return { rank: "C", label: "Rank C — Intermediário" };
-  if (value >= 50) return { rank: "D", label: "Rank D — Iniciado" };
-  if (value >= 15) return { rank: "E", label: "Rank E — Recruta" };
-  return { rank: "F", label: "Rank F — Novato" };
+  shortLabel: string;
+  currentMastery: number;
+  pointsInTier: number;
+  pointsInSubGrade: number;
+  ptsToNextGrade: number;
+  ptsToNextTier: number;
+  subGradeProgressPct: number;
+}
+
+/**
+ * Maps attribute value to 10 Grand Tiers with 1,000-point sub-grades (Graus I a V).
+ * Progression: Each 1,000 pts advances a sub-grade that slowly transforms into the next tier.
+ */
+export function getAttributeRank(value: number, areaId?: AreaCode): AttributeRankInfo {
+  const safeVal = Math.max(0, value);
+  const isCapped = safeVal >= MAX_MASTERY_CEILING;
+
+  const tierIndex = isCapped ? 9 : Math.min(9, Math.floor(safeVal / GRAND_TIER_POINTS));
+  const tier = tierIndex + 1;
+  const tierRoman = ROMAN_TIERS[tierIndex];
+
+  const pointsInTier = isCapped ? GRAND_TIER_POINTS : safeVal - tierIndex * GRAND_TIER_POINTS;
+  const subGradeIndex = isCapped
+    ? 4
+    : Math.min(4, Math.floor(pointsInTier / SUB_GRADE_POINTS));
+  const subGrade = subGradeIndex + 1;
+  const subGradeRoman = ROMAN_SUB_GRADES[subGradeIndex];
+
+  const pointsInSubGrade = isCapped ? SUB_GRADE_POINTS : pointsInTier % SUB_GRADE_POINTS;
+  const ptsToNextGrade = isCapped ? 0 : SUB_GRADE_POINTS - pointsInSubGrade;
+  const ptsToNextTier = isCapped ? 0 : GRAND_TIER_POINTS - pointsInTier;
+  const subGradeProgressPct = isCapped
+    ? 100
+    : Math.floor((pointsInSubGrade / SUB_GRADE_POINTS) * 100);
+
+  const titleList =
+    areaId && areaId in ATTRIBUTE_TITLES
+      ? ATTRIBUTE_TITLES[areaId]
+      : OVERALL_HUNTER_TITLES;
+  const title = titleList[tierIndex];
+  const nextTitle =
+    tierIndex < 9 ? titleList[tierIndex + 1] : "Perfeição Inatingível";
+
+  const label =
+    tier < 10
+      ? `${title} [Grau ${subGradeRoman}] · Rumo a ${nextTitle}`
+      : subGrade < 5
+      ? `${title} [Grau ${subGradeRoman}] · Rumo à Perfeição Inatingível`
+      : `${title} [Grau V] · Perfeição Inatingível`;
+
+  const shortLabel = `Tier ${tierRoman} [Grau ${subGradeRoman}] — ${title}`;
+  const subRank = `${tierRoman}-${subGradeRoman}`;
+
+  return {
+    tier,
+    tierRoman,
+    subGrade,
+    subGradeRoman,
+    rank: tierRoman,
+    subRank,
+    title,
+    nextTitle,
+    label,
+    shortLabel,
+    currentMastery: safeVal,
+    pointsInTier,
+    pointsInSubGrade,
+    ptsToNextGrade,
+    ptsToNextTier,
+    subGradeProgressPct,
+  };
 }

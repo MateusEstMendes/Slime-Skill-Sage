@@ -23,7 +23,7 @@ Legenda: `[ ]` Pendente | `[/]` Em andamento | `[x]` Concluído e Aprovado pelo 
 - [x] 2.3 Testes do Usuário
 - [x] 2.4 Debug e Atualização de Handoff/Feedback
 
-## Fase 3 — Design System "Sistema" (Dark Fantasy Gilded RPG — `docs/design.png`), Navegação por Abas e CRUD Manual de Projetos/Missões
+## Fase 3 — Design System "Sistema" (Dark Fantasy Gilded RPG — Runas Arcanas, Linhas Retas `rounded-none` e Cantoneiras Góticas), Navegação por Abas e CRUD Manual de Projetos/Missões
 
 - [x] 3.1 Desenvolvimento
 - [x] 3.2 Testes Automáticos

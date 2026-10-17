@@ -124,58 +124,58 @@ describe("Game Engine: Config & Level Progression", () => {
     expect(MAX_SKILL_MASTERY).toBe(300);
   });
 
-  it("evaluates xpRequiredForLevel according to round(100 * n^1.5)", () => {
-    expect(xpRequiredForLevel(1)).toBe(100); // 100 * 1 = 100
-    expect(xpRequiredForLevel(2)).toBe(283); // 100 * 2^1.5 = 282.84 -> 283
-    expect(xpRequiredForLevel(3)).toBe(520); // 100 * 3^1.5 = 519.61 -> 520
-    expect(xpRequiredForLevel(4)).toBe(800); // 100 * 4^1.5 = 800
+  it("evaluates xpRequiredForLevel according to round(300 * n^1.5)", () => {
+    expect(xpRequiredForLevel(1)).toBe(300); // 300 * 1 = 300
+    expect(xpRequiredForLevel(2)).toBe(849); // 300 * 2^1.5 = 848.52 -> 849
+    expect(xpRequiredForLevel(3)).toBe(1559); // 300 * 3^1.5 = 1558.84 -> 1559
+    expect(xpRequiredForLevel(4)).toBe(2400); // 300 * 4^1.5 = 2400
     expect(() => xpRequiredForLevel(0)).toThrow();
   });
 
   it("calculates total XP needed to reach a level", () => {
     expect(getTotalXpForLevel(1)).toBe(0);
-    expect(getTotalXpForLevel(2)).toBe(100);
-    expect(getTotalXpForLevel(3)).toBe(100 + 283);
-    expect(getTotalXpForLevel(4)).toBe(100 + 283 + 520);
+    expect(getTotalXpForLevel(2)).toBe(300);
+    expect(getTotalXpForLevel(3)).toBe(300 + 849);
+    expect(getTotalXpForLevel(4)).toBe(300 + 849 + 1559);
   });
 
   it("calculates level progression accurately around boundary values", () => {
-    // Level 1: 0 to 99 XP
+    // Level 1: 0 to 299 XP
     expect(calculateLevelFromTotalXp(0)).toEqual({
       level: 1,
       currentXp: 0,
-      xpForNextLevel: 100,
+      xpForNextLevel: 300,
       progressPercentage: 0,
     });
 
-    expect(calculateLevelFromTotalXp(99)).toEqual({
+    expect(calculateLevelFromTotalXp(299)).toEqual({
       level: 1,
-      currentXp: 99,
-      xpForNextLevel: 100,
+      currentXp: 299,
+      xpForNextLevel: 300,
       progressPercentage: 99,
     });
 
-    // Level 2 starts at exactly 100 XP
-    expect(calculateLevelFromTotalXp(100)).toEqual({
+    // Level 2 starts at exactly 300 XP
+    expect(calculateLevelFromTotalXp(300)).toEqual({
       level: 2,
       currentXp: 0,
-      xpForNextLevel: 283,
+      xpForNextLevel: 849,
       progressPercentage: 0,
     });
 
-    // Level 2 ends at 100 + 282 = 382 XP
-    expect(calculateLevelFromTotalXp(382)).toEqual({
+    // Level 2 ends at 300 + 848 = 1148 XP
+    expect(calculateLevelFromTotalXp(1148)).toEqual({
       level: 2,
-      currentXp: 282,
-      xpForNextLevel: 283,
-      progressPercentage: Math.floor((282 / 283) * 100),
+      currentXp: 848,
+      xpForNextLevel: 849,
+      progressPercentage: Math.floor((848 / 849) * 100),
     });
 
-    // Level 3 starts at 383 XP
-    expect(calculateLevelFromTotalXp(383)).toEqual({
+    // Level 3 starts at 1149 XP
+    expect(calculateLevelFromTotalXp(1149)).toEqual({
       level: 3,
       currentXp: 0,
-      xpForNextLevel: 520,
+      xpForNextLevel: 1559,
       progressPercentage: 0,
     });
 
@@ -308,20 +308,67 @@ describe("Game Engine: Attributes", () => {
     expect(attrs.INT).toBe(0);
   });
 
-  it("assigns Hunter ranks correctly according to thresholds", () => {
-    expect(getAttributeRank(0).rank).toBe("F");
-    expect(getAttributeRank(14).rank).toBe("F");
-    expect(getAttributeRank(15).rank).toBe("E");
-    expect(getAttributeRank(49).rank).toBe("E");
-    expect(getAttributeRank(50).rank).toBe("D");
-    expect(getAttributeRank(99).rank).toBe("D");
-    expect(getAttributeRank(100).rank).toBe("C");
-    expect(getAttributeRank(179).rank).toBe("C");
-    expect(getAttributeRank(180).rank).toBe("B");
-    expect(getAttributeRank(299).rank).toBe("B");
-    expect(getAttributeRank(300).rank).toBe("A");
-    expect(getAttributeRank(499).rank).toBe("A");
-    expect(getAttributeRank(500).rank).toBe("S");
+  it("assigns Hunter ranks correctly according to 10 Grand Tiers with 1,000-pt Sub-Grades and canonical titles", () => {
+    // Sub-grades within Tier I (0 to 4,999)
+    const r0 = getAttributeRank(0, "INT");
+    expect(r0.tier).toBe(1);
+    expect(r0.rank).toBe("I");
+    expect(r0.subGrade).toBe(1);
+    expect(r0.subGradeRoman).toBe("I");
+    expect(r0.subRank).toBe("I-I");
+    expect(r0.title).toBe("Aprendiz da Lógica");
+    expect(r0.nextTitle).toBe("Analista Metódico");
+    expect(r0.label).toBe("Aprendiz da Lógica [Grau I] · Rumo a Analista Metódico");
+
+    const r2500 = getAttributeRank(2500, "INT");
+    expect(r2500.tier).toBe(1);
+    expect(r2500.subGrade).toBe(3);
+    expect(r2500.subRank).toBe("I-III");
+    expect(r2500.label).toBe("Aprendiz da Lógica [Grau III] · Rumo a Analista Metódico");
+
+    const r4999 = getAttributeRank(4999, "INT");
+    expect(r4999.tier).toBe(1);
+    expect(r4999.subGrade).toBe(5);
+    expect(r4999.subRank).toBe("I-V");
+
+    // Tier II ascensao at 5,000
+    const r5000 = getAttributeRank(5000, "INT");
+    expect(r5000.tier).toBe(2);
+    expect(r5000.rank).toBe("II");
+    expect(r5000.subGrade).toBe(1);
+    expect(r5000.subRank).toBe("II-I");
+    expect(r5000.title).toBe("Analista Metódico");
+    expect(r5000.nextTitle).toBe("Arquiteto Cognitivo");
+    expect(r5000.label).toBe("Analista Metódico [Grau I] · Rumo a Arquiteto Cognitivo");
+
+    // Progression checkpoints
+    expect(getAttributeRank(10000).rank).toBe("III");
+    expect(getAttributeRank(15000).rank).toBe("IV");
+    expect(getAttributeRank(20000).rank).toBe("V");
+    expect(getAttributeRank(25000).rank).toBe("VI");
+    expect(getAttributeRank(30000).rank).toBe("VII");
+    expect(getAttributeRank(35000).rank).toBe("VIII");
+    expect(getAttributeRank(40000).rank).toBe("IX");
+    expect(getAttributeRank(45000).rank).toBe("X");
+
+    // Tier X (50,000+ pts) - Perfeição Inatingível
+    const r50000 = getAttributeRank(50000, "INT");
+    expect(r50000.tier).toBe(10);
+    expect(r50000.rank).toBe("X");
+    expect(r50000.subGrade).toBe(5);
+    expect(r50000.subRank).toBe("X-V");
+    expect(r50000.title).toBe("A Onisciência Absoluta");
+    expect(r50000.label).toBe("A Onisciência Absoluta [Grau V] · Perfeição Inatingível");
+
+    // Canonical attribute titles across all 5 areas
+    expect(getAttributeRank(0, "FOR").title).toBe("Corpo Desperto");
+    expect(getAttributeRank(50000, "FOR").title).toBe("Muralha Cósmica Inquebrável");
+    expect(getAttributeRank(0, "DIS").title).toBe("Iniciante da Vontade");
+    expect(getAttributeRank(50000, "DIS").title).toBe("A Vontade Eterna");
+    expect(getAttributeRank(0, "CRI").title).toBe("Discípulo do Traço");
+    expect(getAttributeRank(50000, "CRI").title).toBe("Primordial da Criação");
+    expect(getAttributeRank(0, "SOC").title).toBe("Ouvinte Atento");
+    expect(getAttributeRank(50000, "SOC").title).toBe("A Harmonia Primordial");
   });
 });
 

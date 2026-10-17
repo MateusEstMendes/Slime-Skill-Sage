@@ -137,7 +137,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
         )}
 
         {error && (
-          <div className="p-3 bg-red-950/40 border border-red-500/50 rounded-lg text-red-300 font-mono text-xs">
+          <div className="p-3 bg-red-950/40 border border-red-500/50 rounded-none text-red-300 font-mono text-xs">
             [ERRO DO SISTEMA]: {error}
           </div>
         )}

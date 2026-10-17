@@ -20,7 +20,7 @@ describe("GameService & Transactional Ledger", () => {
 
     const { mission } = await projectRepository.addMission(project.id, {
       title: "Missão Alpha",
-      xp_reward: 120, // Enough to jump from level 1 to level 2 (> 100)
+      xp_reward: 350, // Enough to jump from level 1 to level 2 (> 300)
     });
 
     // 2. Track events
@@ -33,14 +33,14 @@ describe("GameService & Transactional Ledger", () => {
     const res = await gameService.completeMission(mission.id);
 
     expect(res.mission.status).toBe("feita");
-    expect(res.xpEvent.xp_amount).toBe(120);
+    expect(res.xpEvent.xp_amount).toBe(350);
     expect(res.xpEvent.entity_id).toBe(mission.id);
     expect(res.xpEvent.entity_type).toBe("mission");
 
-    // Profile should have 120 total_xp and leveled up to level 2
-    expect(res.profile.total_xp).toBe(120);
+    // Profile should have 350 total_xp and leveled up to level 2
+    expect(res.profile.total_xp).toBe(350);
     expect(res.profile.level).toBe(2);
-    expect(res.profile.current_xp).toBe(20); // 120 - 100
+    expect(res.profile.current_xp).toBe(50); // 350 - 300
 
     // Dispatched LEVEL_UP event
     expect(receivedEvents).toHaveLength(1);
@@ -53,8 +53,8 @@ describe("GameService & Transactional Ledger", () => {
     // Ledger audit should be 100% consistent
     const audit = await gameService.auditLedger();
     expect(audit.isConsistent).toBe(true);
-    expect(audit.ledgerTotalXp).toBe(120);
-    expect(audit.profileTotalXp).toBe(120);
+    expect(audit.ledgerTotalXp).toBe(350);
+    expect(audit.profileTotalXp).toBe(350);
 
     unsubscribe();
   });

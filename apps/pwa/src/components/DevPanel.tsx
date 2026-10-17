@@ -455,7 +455,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                 {/* Audit Integrity Status Banner */}
                 {auditResult && (
                   <div
-                    className={`p-4 rounded-xl border flex items-center justify-between text-xs ${
+                    className={`p-4 rounded-none border flex items-center justify-between text-xs ${
                       auditResult.isConsistent
                         ? "bg-emerald-950/30 border-emerald-500/40 text-emerald-300"
                         : "bg-red-950/40 border-red-500/50 text-red-300"
@@ -487,7 +487,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                     {!auditResult.isConsistent && (
                       <button
                         onClick={handleReconcileLedger}
-                        className="py-1.5 px-3 rounded bg-red-600 hover:bg-red-500 text-white font-bold text-xs"
+                        className="py-1.5 px-3 rounded-none bg-red-600 hover:bg-red-500 text-white font-bold text-xs"
                       >
                         Reconciliar Perfil
                       </button>
@@ -496,7 +496,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                 )}
 
                 {ledgerMessage && (
-                  <div className="p-3 bg-cyan-950/40 border border-cyan-500/40 rounded-lg text-xs text-cyan-300 flex items-center gap-2">
+                  <div className="p-3 bg-cyan-950/40 border border-cyan-500/40 rounded-none text-xs text-cyan-300 flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-cyan-400 flex-shrink-0" />
                     <span>{ledgerMessage}</span>
                   </div>
@@ -507,7 +507,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                   <button
                     onClick={handleReconcileLedger}
                     disabled={ledgerLoading}
-                    className="py-2 px-3.5 rounded-lg bg-slate-900 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 text-xs font-mono transition-colors"
+                    className="py-2 px-3.5 rounded-none bg-slate-900 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 text-xs font-mono transition-colors"
                   >
                     Auditar e Recalcular Perfil
                   </button>
@@ -522,7 +522,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 {ledgerEvents.length === 0 ? (
-                  <div className="p-8 text-center border border-dashed border-slate-800 rounded-xl text-slate-500 text-xs">
+                  <div className="p-8 text-center border border-dashed border-slate-800 rounded-none text-slate-500 text-xs">
                     Nenhum evento registrado no Ledger até o momento.
                   </div>
                 ) : (
@@ -530,7 +530,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                     {ledgerEvents.map((ev) => (
                       <div
                         key={ev.id}
-                        className="p-3 bg-slate-950/70 border border-slate-800 rounded-lg flex items-center justify-between gap-3 text-xs min-w-0"
+                        className="p-3 bg-slate-950/70 border border-slate-800 rounded-none flex items-center justify-between gap-3 text-xs min-w-0"
                       >
                         <div className="space-y-1 min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap min-w-0">
@@ -652,7 +652,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                     <button
                       onClick={() => handleAdvanceTime(1)}
-                      className="p-2.5 rounded-lg bg-slate-900 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 text-xs transition-colors flex items-center justify-center gap-1.5"
+                      className="p-2.5 rounded-none bg-slate-900 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 text-xs transition-colors flex items-center justify-center gap-1.5"
                     >
                       <FastForward className="w-3.5 h-3.5" />
                       <span>+1 Hora</span>
@@ -660,7 +660,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
 
                     <button
                       onClick={() => handleAdvanceTime(24)}
-                      className="p-2.5 rounded-lg bg-slate-900 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 text-xs transition-colors flex items-center justify-center gap-1.5"
+                      className="p-2.5 rounded-none bg-slate-900 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 text-xs transition-colors flex items-center justify-center gap-1.5"
                     >
                       <FastForward className="w-3.5 h-3.5" />
                       <span>+24h (1 Dia)</span>
@@ -668,7 +668,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
 
                     <button
                       onClick={() => handleAdvanceTime(48)}
-                      className="p-2.5 rounded-lg bg-slate-900 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 text-xs transition-colors flex items-center justify-center gap-1.5"
+                      className="p-2.5 rounded-none bg-slate-900 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 text-xs transition-colors flex items-center justify-center gap-1.5"
                     >
                       <FastForward className="w-3.5 h-3.5" />
                       <span>+48 Horas</span>
@@ -676,7 +676,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
 
                     <button
                       onClick={() => handleAdvanceTime(168)}
-                      className="p-2.5 rounded-lg bg-slate-900 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 text-xs transition-colors flex items-center justify-center gap-1.5"
+                      className="p-2.5 rounded-none bg-slate-900 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 text-xs transition-colors flex items-center justify-center gap-1.5"
                     >
                       <FastForward className="w-3.5 h-3.5" />
                       <span>+7 Dias</span>
@@ -686,7 +686,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                     <button
                       onClick={handleResetTime}
-                      className="py-2.5 px-4 rounded-lg bg-slate-900 border border-slate-700 hover:border-slate-500 text-slate-300 text-xs transition-colors flex items-center justify-center gap-2"
+                      className="py-2.5 px-4 rounded-none bg-slate-900 border border-slate-700 hover:border-slate-500 text-slate-300 text-xs transition-colors flex items-center justify-center gap-2"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
                       <span>Resetar para Momento Real</span>
@@ -694,7 +694,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
 
                     <button
                       onClick={handleToggleFakeClock}
-                      className={`py-2.5 px-4 rounded-lg font-medium text-xs transition-colors flex items-center justify-center gap-2 ${
+                      className={`py-2.5 px-4 rounded-none font-medium text-xs transition-colors flex items-center justify-center gap-2 ${
                         isFakeClock
                           ? "bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600"
                           : "bg-cyan-600 hover:bg-cyan-500 text-white shadow-[0_0_15px_rgba(0,240,255,0.25)]"
@@ -751,7 +751,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                   <button
                     onClick={handleSeedDatabase}
                     disabled={dbLoading}
-                    className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs font-mono transition-colors shadow-[0_0_15px_rgba(0,240,255,0.25)]"
+                    className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-none bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs font-mono transition-colors shadow-[0_0_15px_rgba(0,240,255,0.25)]"
                   >
                     <Sparkles className="w-4 h-4" />
                     <span>Semear Dados de Exemplo (Seed)</span>
@@ -760,7 +760,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                   <button
                     onClick={handleResetDatabase}
                     disabled={dbLoading}
-                    className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-red-950/40 border border-red-500/40 hover:bg-red-900/60 text-red-300 font-medium text-xs font-mono transition-colors"
+                    className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-none bg-red-950/40 border border-red-500/40 hover:bg-red-900/60 text-red-300 font-medium text-xs font-mono transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                     <span>Apagar Tudo (Reset DB)</span>
@@ -780,7 +780,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                     return (
                       <div
                         key={name}
-                        className="p-2.5 bg-slate-950/80 border border-slate-800 rounded-lg flex items-center justify-between"
+                        className="p-2.5 bg-slate-950/80 border border-slate-800 rounded-none flex items-center justify-between"
                       >
                         <span className="text-slate-400 truncate pr-2">{name}</span>
                         <span
@@ -851,7 +851,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                     onClick={loadLogs}
                     disabled={loadingLogs}
                     title="Recarregar logs"
-                    className="p-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-500/50 text-slate-300 hover:text-cyan-300 transition-colors"
+                    className="p-1.5 rounded-none bg-slate-900 border border-slate-700 hover:border-cyan-500/50 text-slate-300 hover:text-cyan-300 transition-colors"
                   >
                     <RefreshCw
                       className={`w-4 h-4 ${loadingLogs ? "animate-spin" : ""}`}
@@ -860,7 +860,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                   <button
                     onClick={handleExportLogs}
                     title="Exportar logs como JSON"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-900/40 text-xs font-mono transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-none bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-900/40 text-xs font-mono transition-colors"
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>Exportar</span>
@@ -868,7 +868,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                   <button
                     onClick={handleClearLogs}
                     title="Limpar logs"
-                    className="p-1.5 rounded-lg bg-red-950/40 border border-red-500/30 text-red-300 hover:bg-red-900/50 transition-colors"
+                    className="p-1.5 rounded-none bg-red-950/40 border border-red-500/30 text-red-300 hover:bg-red-900/50 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -878,7 +878,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
               {/* Logs list */}
               <div className="space-y-2 font-mono text-xs">
                 {filteredLogs.length === 0 ? (
-                  <div className="p-8 text-center text-slate-500 bg-slate-950/40 rounded-xl border border-slate-800">
+                  <div className="p-8 text-center text-slate-500 bg-slate-950/40 rounded-none border border-slate-800">
                     Nenhum log encontrado para os filtros selecionados.
                   </div>
                 ) : (
@@ -902,7 +902,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                     return (
                       <div
                         key={log.id}
-                        className="bg-slate-950/80 border border-slate-800/80 hover:border-cyan-500/30 rounded-lg p-2.5 transition-colors"
+                        className="bg-slate-950/80 border border-slate-800/80 hover:border-cyan-500/30 rounded-none p-2.5 transition-colors"
                       >
                         <div
                           className="flex items-start justify-between gap-2 cursor-pointer"
@@ -988,7 +988,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="space-y-3 font-mono text-xs">
-                  <div className="bg-slate-950/80 p-3 rounded-lg border border-slate-800 flex items-center justify-between">
+                  <div className="bg-slate-950/80 p-3 rounded-none border border-slate-800 flex items-center justify-between">
                     <span className="text-slate-400">Permissão Atual:</span>
                     <span
                       className={`font-bold px-2 py-0.5 rounded text-[11px] uppercase ${
@@ -1004,7 +1004,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                   </div>
 
                   {notifMessage && (
-                    <div className="p-2.5 bg-cyan-950/40 border border-cyan-500/30 rounded-lg text-cyan-300 text-xs">
+                    <div className="p-2.5 bg-cyan-950/40 border border-cyan-500/30 rounded-none text-cyan-300 text-xs">
                       {notifMessage}
                     </div>
                   )}
@@ -1012,7 +1012,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                   <div className="flex flex-col gap-2.5 pt-2">
                     <button
                       onClick={handleRequestNotifPermission}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-slate-900 border border-cyan-500/40 hover:bg-slate-800 text-cyan-300 text-xs font-mono transition-colors"
+                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-none bg-slate-900 border border-cyan-500/40 hover:bg-slate-800 text-cyan-300 text-xs font-mono transition-colors"
                     >
                       <Bell className="w-4 h-4" />
                       <span>Solicitar Permissão de Notificação Web</span>
@@ -1020,7 +1020,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
 
                     <button
                       onClick={handleTriggerTestNotif}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs font-mono transition-colors shadow-[0_0_15px_rgba(0,240,255,0.25)]"
+                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-none bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs font-mono transition-colors shadow-[0_0_15px_rgba(0,240,255,0.25)]"
                     >
                       <Play className="w-3.5 h-3.5 fill-current" />
                       <span>Disparar Notificação Imediata</span>

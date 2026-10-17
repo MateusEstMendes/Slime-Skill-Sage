@@ -16,13 +16,13 @@ export const MAX_SKILL_MASTERY = 300;
 
 /**
  * Calculates XP required to advance from `level` to `level + 1`.
- * Formula: round(100 * n^1.5)
+ * Formula: round(300 * n^1.5)
  */
 export function xpRequiredForLevel(level: number): number {
   if (level < 1) {
     throw new Error("Level must be an integer >= 1");
   }
-  return Math.round(100 * Math.pow(level, 1.5));
+  return Math.round(300 * Math.pow(level, 1.5));
 }
 
 /**

@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { hapticFeedback } from "../../services/haptics";
+import { GildedCorners } from "./GildedCorners";
 
 export interface SystemModalProps {
   isOpen: boolean;
@@ -63,22 +64,15 @@ export const SystemModal: React.FC<SystemModalProps> = ({
             aria-modal="true"
             className={`relative w-full ${maxWidthClasses} bg-[#060e20]/95 border border-[#c89b55]/75 rounded-none shadow-[0_0_45px_rgba(223,168,108,0.28)] p-5 md:p-6 z-10 text-[#f3e5cc] max-h-[90vh] flex flex-col`}
           >
-            {/* Inner gilded hairline frame */}
-            <div className="absolute inset-[4px] border border-[#dfa86c]/25 pointer-events-none" />
-
-            {/* Gothic Corner Brackets & Diamonds */}
-            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#dfa86c] pointer-events-none">
-              <div className="absolute top-[2px] left-[2px] w-1.5 h-1.5 bg-[#fde047] rotate-45 shadow-[0_0_6px_rgba(253,224,71,0.9)]" />
-            </div>
-            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#dfa86c] pointer-events-none">
-              <div className="absolute top-[2px] right-[2px] w-1.5 h-1.5 bg-[#fde047] rotate-45 shadow-[0_0_6px_rgba(253,224,71,0.9)]" />
-            </div>
-            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#dfa86c] pointer-events-none">
-              <div className="absolute bottom-[2px] left-[2px] w-1.5 h-1.5 bg-[#fde047] rotate-45 shadow-[0_0_6px_rgba(253,224,71,0.9)]" />
-            </div>
-            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#dfa86c] pointer-events-none">
-              <div className="absolute bottom-[2px] right-[2px] w-1.5 h-1.5 bg-[#fde047] rotate-45 shadow-[0_0_6px_rgba(253,224,71,0.9)]" />
-            </div>
+            {/* Dark Fantasy Gilded Corners, Inscriptions & Inner Hairline Frame */}
+            <GildedCorners
+              size="lg"
+              glow
+              withCenterNotches
+              withRunes
+              runicTop="✦ ᛋ ᚨ ᚲ ᚱ ᛖ ᛞ · ᛟ ᚱ ᛞ ᛖ ᚱ ✦"
+              runicBottom="ᛋ ᛁ ᛋ ᛏ ᛖ ᛗ ᚨ"
+            />
 
             {/* Header */}
             <div className="relative z-10 flex items-start justify-between gap-4 border-b border-[#966422]/45 pb-4 shrink-0 min-w-0">

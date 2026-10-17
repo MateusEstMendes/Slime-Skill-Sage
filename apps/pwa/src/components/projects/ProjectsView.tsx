@@ -235,6 +235,9 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
           {filteredProjects.map((p) => (
             <SystemPanel
               key={p.id}
+              withRunes={true}
+              runicTop="ᛈ ᚱ ᛟ ᛃ ᛖ ᚲ ᛏ ᛟ"
+              runicBottom="ᛋ ᛁ ᛋ ᛏ ᛖ ᛗ ᚨ"
               className="flex flex-col justify-between hover:border-[#fde047]/80 transition-all group"
             >
               <div className="min-w-0">

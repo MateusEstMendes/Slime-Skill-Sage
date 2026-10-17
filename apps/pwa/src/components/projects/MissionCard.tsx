@@ -55,14 +55,18 @@ export const MissionCard: React.FC<MissionCardProps> = ({
     <div
       data-testid={`mission-card-${mission.id}`}
       data-status={mission.status}
-      className={`relative rounded-none border p-4 transition-all duration-200 flex flex-col justify-between gap-3 min-w-0 overflow-hidden ${borderClasses}`}
+      className={`group relative rounded-none border p-4 transition-all duration-200 flex flex-col justify-between gap-3 min-w-0 overflow-hidden ${borderClasses}`}
     >
-      {/* Magic Gilded Corners and Inner Hairline Frame */}
+      {/* Magic Gilded Corners, Inscriptions and Inner Hairline Frame */}
       <GildedCorners
         size="sm"
         color={cornerColor}
         diamondColor={diamondColor}
         glow={isAvailable}
+        withRunes={isAvailable || isDone}
+        withCenterNotches={true}
+        runicTop={isDone ? "ᚲ ᛟ ᚾ ᚲ ᛚ ᚢ ᛁ ᛞ ᚨ" : "ᛗ ᛁ ᛋ ᛋ ᚨ ᛟ"}
+        runicBottom={isDone ? "ᚢ ᛁ ᚲ ᛏ ᛟ ᚱ ᛁ ᚨ" : "ᛞ ᛖ ᛋ ᚨ ᚠ ᛁ ᛟ"}
       />
 
       {/* Top row: Badges and Quick Actions */}

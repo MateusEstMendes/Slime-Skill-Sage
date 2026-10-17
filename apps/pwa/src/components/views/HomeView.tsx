@@ -151,6 +151,26 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
   const levelProgress = calculateLevelFromTotalXp(profile?.total_xp ?? 0);
 
+  // Transliteração simples para alfabeto Rúnico Nórdico (Elder Futhark)
+  const toElderFuthark = (text: string): string => {
+    const runeMap: Record<string, string> = {
+      a: "ᚨ", b: "ᛒ", c: "ᚲ", d: "ᛞ", e: "ᛖ", f: "ᚠ", g: "ᚷ", h: "ᚺ",
+      i: "ᛁ", j: "ᛃ", k: "ᚲ", l: "ᛚ", m: "ᛗ", n: "ᚾ", o: "ᛟ", p: "ᛈ",
+      q: "ᚲ", r: "ᚱ", s: "ᛋ", t: "ᛏ", u: "ᚢ", v: "ᚹ", w: "ᚹ", x: "ᛪ",
+      y: "ᛁ", z: "ᛉ",
+    };
+    return text
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .split("")
+      .map((char) => runeMap[char] || (char === " " ? "·" : char))
+      .filter((char) => char.trim().length > 0)
+      .join(" ");
+  };
+
+  const hunterRunicName = profile?.name ? toElderFuthark(profile.name) : "ᚱ ᛁ ᛗ ᚢ ᚱ ᚢ · ᛏ ᛖ ᛗ ᛈ ᛖ ᛋ ᛏ";
+
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
@@ -177,8 +197,14 @@ export const HomeView: React.FC<HomeViewProps> = ({
       </div>
 
       {/* Hunter Status Banner (Level & XP) */}
-      <div className="relative p-4 bg-gradient-to-r from-[#050c1a] via-[#0a162f] to-[#050c1a] border border-[#c89b55]/60 rounded-none shadow-[0_0_24px_rgba(223,168,108,0.14)] font-mono overflow-hidden">
-        <GildedCorners size="md" withCenterNotches />
+      <div className="group relative p-4 bg-gradient-to-r from-[#050c1a] via-[#0a162f] to-[#050c1a] border border-[#c89b55]/60 rounded-none shadow-[0_0_24px_rgba(223,168,108,0.14)] font-mono overflow-hidden">
+        <GildedCorners
+          size="md"
+          withCenterNotches
+          withRunes
+          runicTop={hunterRunicName}
+          runicBottom="ᚾ ᛁ ᚹ ᛖ ᛚ · ᛋ ᛁ ᛋ ᛏ ᛖ ᛗ ᚨ"
+        />
         <div className="relative z-10 flex items-center justify-between mb-2">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <div className="w-9 h-9 bg-[#1c1308] border border-[#dfa86c] flex items-center justify-center font-bold font-fantasy text-[#fde047] text-sm shrink-0 shadow-[0_0_12px_rgba(223,168,108,0.3)]">

@@ -226,13 +226,17 @@ export const SkillsView: React.FC<SkillsViewProps> = ({ isActive }) => {
               <div
                 key={skill.id}
                 data-testid={`skill-card-${skill.id}`}
-                className="relative bg-[#060e20]/95 border border-[#c89b55]/55 hover:border-[#fde047]/80 transition-all rounded-none p-4.5 flex flex-col justify-between space-y-4 min-w-0 overflow-hidden shadow-[0_6px_24px_rgba(0,0,0,0.65)]"
+                className="group relative bg-[#060e20]/95 border border-[#c89b55]/55 hover:border-[#fde047]/80 transition-all rounded-none p-[18px] flex flex-col justify-between space-y-5 min-w-0 overflow-hidden shadow-[0_6px_24px_rgba(0,0,0,0.65)]"
               >
                 <GildedCorners
                   size="sm"
                   color={isUnica ? "#a855f7" : isExtra ? "#dfa86c" : "#966422"}
                   diamondColor={isUnica ? "#c084fc" : isExtra ? "#fde047" : "#dfa86c"}
                   glow={isExtra || isUnica}
+                  withRunes={true}
+                  withCenterNotches={true}
+                  runicTop={isUnica ? "✦ ᚢ ᚾ ᛁ ᚲ ᚨ ✦" : isExtra ? "✦ ᛖ ᛪ ᛏ ᚱ ᚨ ✦" : "ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ"}
+                  runicBottom={isUnica ? "ᚨ ᚱ ᚲ ᚨ ᚾ ᚢ ᛗ" : isExtra ? "ᛈ ᛟ ᚹ ᛖ ᚱ" : "ᛋ ᛚ ᛁ ᛗ ᛖ · ᛋ ᚨ ᚷ ᛖ"}
                 />
 
                 {/* Top Badge & Tier */}

@@ -126,8 +126,8 @@ export const StatusView: React.FC<StatusViewProps> = ({ isActive }) => {
           <div className="relative p-3 bg-[#040814]/85 border border-[#c89b55]/45 overflow-hidden shadow-[inset_0_0_10px_rgba(223,168,108,0.04)]">
             <GildedCorners size="xs" withInnerFrame={false} />
             <div className="relative z-10 text-[10px] font-fantasy tracking-widest text-[#c5b08f] uppercase">Rank Hunter</div>
-            <div className="relative z-10 text-sm font-bold font-fantasy text-emerald-400 mt-1 truncate">
-              {overallRank.rank}
+            <div className="relative z-10 text-xs font-bold font-fantasy text-emerald-400 mt-1 truncate" title={overallRank.label}>
+              Tier {overallRank.tierRoman} [{overallRank.subGradeRoman}] · {overallRank.title}
             </div>
           </div>
         </div>
@@ -174,7 +174,7 @@ export const StatusView: React.FC<StatusViewProps> = ({ isActive }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {BASE_AREAS.map((area) => {
               const masteryVal = attributes[area.code as AreaCode] ?? 0;
-              const rank = getAttributeRank(masteryVal);
+              const rank = getAttributeRank(masteryVal, area.code as AreaCode);
               return (
                 <div
                   key={area.id}
@@ -185,16 +185,16 @@ export const StatusView: React.FC<StatusViewProps> = ({ isActive }) => {
                     <div className="flex items-center gap-2 flex-wrap min-w-0">
                       <SystemBadge type="area" areaId={area.code} size="sm" className="shrink-0" />
                       <span className="text-[10px] font-fantasy font-bold px-1.5 py-0.5 bg-[#1c1308] text-[#fde047] border border-[#dfa86c]/60 shrink-0">
-                        Rank {rank.rank}
+                        Tier {rank.tierRoman} [Grau {rank.subGradeRoman}]
                       </span>
                     </div>
-                    <p className="text-[11px] text-[#c5b08f] font-sans mt-0.5 line-clamp-1 break-words [overflow-wrap:anywhere]">
-                      {area.description}
+                    <p className="text-[11px] text-[#c5b08f] font-sans mt-0.5 line-clamp-1 break-words [overflow-wrap:anywhere]" title={rank.label}>
+                      {rank.label}
                     </p>
                   </div>
                   <div className="relative z-10 text-right font-mono shrink-0 pl-2">
                     <div className="text-sm text-[#fde047] font-bold">{masteryVal} pts</div>
-                    <div className="text-[10px] text-[#a39171] font-fantasy">{rank.label}</div>
+                    <div className="text-[10px] text-[#a39171] font-fantasy">{rank.title}</div>
                   </div>
                 </div>
               );
