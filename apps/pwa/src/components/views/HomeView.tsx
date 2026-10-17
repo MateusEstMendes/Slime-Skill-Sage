@@ -74,7 +74,54 @@ export const HomeView: React.FC<HomeViewProps> = ({
   }, []);
 
   useEffect(() => {
-    void loadHomeData();
+    let isMounted = true;
+    const fetchHomeData = async () => {
+      try {
+        setLoading(true);
+        const [allProjects, prof] = await Promise.all([
+          projectRepository.listProjects(),
+          gameService.getProfile(),
+        ]);
+        if (!isMounted) return;
+        setProfile(prof);
+        setTotalProjectsCount(allProjects.length);
+
+        const activeProjects = allProjects.filter((p) => p.status === "ativo");
+        const current = activeProjects[0] || allProjects[0] || null;
+        setActiveProject(current);
+
+        const allMissions = await projectRepository.listMissions();
+        if (!isMounted) return;
+        const available = allMissions.filter((m) => m.status === "disponivel");
+        const done = allMissions.filter((m) => m.status === "feita");
+
+        setTotalAvailableMissions(available.length);
+        setTotalDoneMissions(done.length);
+
+        if (current) {
+          const projectMissions = await projectRepository.listMissions({
+            projectId: current.id,
+          });
+          if (!isMounted) return;
+          const next = projectMissions.find((m) => m.status === "disponivel") || null;
+          setNextMission(next);
+        } else {
+          setNextMission(null);
+        }
+      } catch (err) {
+        void logger.error("db", "Falha ao carregar dados da Home", { err });
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void fetchHomeData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [loadHomeData]);
 
   const handleCompleteMission = async (missionId: string) => {
