@@ -142,7 +142,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
           </div>
         )}
 
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-cyan-500/20">
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#966422]/40">
           <SystemButton
             type="button"
             variant="secondary"

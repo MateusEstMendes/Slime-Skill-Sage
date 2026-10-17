@@ -4,12 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Slime Sage</title>
-    <meta name="theme-color" content="#050811" />
+    <meta name="theme-color" content="#040814" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
     <script>
       (function () {
         // Controle de versão do PWA para auto-limpeza silenciosa de Service Workers e Workbox
-        var CURRENT_VERSION = "0.1.2";
+        var CURRENT_VERSION = "0.1.3";
         var VERSION_KEY = "slime_sage_app_version";
         var RELOAD_GUARD = "slime_sage_sw_cleaned_v" + CURRENT_VERSION;
 
@@ -88,7 +94,7 @@
       })();
     </script>
   </head>
-  <body class="bg-[#050811] text-slate-100 min-h-screen selection:bg-cyan-500/30 selection:text-cyan-200">
+  <body class="bg-[#040814] text-slate-100 min-h-screen selection:bg-[#dfa86c]/30 selection:text-[#fde047]">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

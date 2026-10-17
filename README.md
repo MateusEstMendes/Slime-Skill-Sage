@@ -2,7 +2,7 @@
 
 > *"Aviso. O Sistema Slime Sage foi inicializado com sucesso."*
 
-**Slime Sage** é um gestor de projetos pessoal gamificado com Inteligência Artificial em formato **Progressive Web App (PWA)** instalável e *offline-first*. Inspirado nos sistemas de evolução de habilidades de *Tensura* (Grande Sábio / Voz do Mundo) e na interface de "Sistema" de *Solo Leveling* (`#050811` / `#00f3ff`).
+**Slime Sage** é um gestor de projetos pessoal gamificado com Inteligência Artificial em formato **Progressive Web App (PWA)** instalável e *offline-first*. Inspirado nos sistemas de evolução de habilidades de *Tensura* (Grande Sábio / Voz do Mundo) e com identidade visual **Dark Fantasy Gilded RPG** (baseada em `docs/design.png`: obsidiana cósmica `#040814`, ouro antigo e brilhante `#dfa86c` / `#fde047`, tipografia serifada épica `Cinzel`, molduras duplas góticas com diamantes e círculos mágicos esotéricos).
 
 ---
 

@@ -45,7 +45,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onDisconnect }) => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#050811] text-slate-100 flex flex-col font-sans select-none pb-24 md:pb-28">
+    <div className="min-h-screen w-full bg-transparent text-[#f3e5cc] flex flex-col font-sans select-none pb-24 md:pb-28">
       {/* System Sticky Header */}
       <SystemHeader
         onOpenSettings={() => setIsSettingsOpen(true)}

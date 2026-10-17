@@ -16,12 +16,12 @@
 | :------------------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Nome do App / Monorepo**      | **Slime Sage** (`slime-sage`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | **Plataforma e Stack**          | **Progressive Web App (PWA)** instalável e responsivo via **Vite + React 19** + React Router + Tailwind CSS + Framer Motion + Lucide React + `vite-plugin-pwa` (Service Worker Workbox com suporte offline completo). Banco local relacional e auditável via IndexedDB/SQLite-WASM + Drizzle ORM. Backend **Hono na Vercel** (`/health`, `/chat`, `/generate`, `/backup`) + `@ai-sdk/google` (Gemini Flash e Pro)                                                                                                                          |
-| **Onboarding e Voz (TTS)**      | **5 perguntas fixas offline** (pontuando traços localmente). **Todas as 5 perguntas e a revelação da classe inicial são narradas pela G.S** usando a **Web Speech API nativa (`window.speechSynthesis`)** em `pt-BR` (voz gratuita e integrada do sistema operacional/navegador)                                                                                                                                                                                                                                                           |
-| **Roleta na v1**                | Aplicada na transição **Extra → Única**: exige **300 de maestria** + **1 projeto concluído** que concedeu a habilidade. Chance inicial de **30%**, **+15%** por falha, teto de **95%**, cooldown de **24h**. Habilidade **Suprema** fica para a v2                                                                                                                                                                                                                                                                                         |
-| **Valores Numéricos (Seção 8)** | XP por missão (dif. 1–5): **10 / 20 / 35 / 55 / 80** · Curva de nível: `round(100 * n^1.5)` · Comum→Extra: **100** maestria · Extra→Única: **300** maestria + projeto · Classes (patamares 2 a 5): **150 / 500 / 1200 / 3000** maestria na área · Diárias: 3 a 5 por dia (+50% XP ao completar todas) · Streak sem escudo (≥ 3 diárias/dia, +2% XP/dia até +30%) · Modo Foco: bônus até +25% (mín. 50% do tempo estimado), penalidade -10% a cada 25% excedido (piso 50%), quebra ao sair da aba/PWA por **> 30s** via Page Visibility API |
-| **Virada do Dia**               | **04:00 da manhã** por padrão (configurável em Ajustes)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| **Escopo v1 vs. v2**            | **v1:** Onboarding (5 perguntas + TTS), Chat G.S Coordenador com confirmação, Projetos/Árvore de Missões, Habilidades até Única com Roleta, Classes + Desafio Autodeclarado, Diárias + Streak sem escudo, Notificações locais/Web Push 48h + Voz do Mundo, Modo Foco e Backup JSON/Cloud. **v2:** Agendamento de Fim de Projetos/Atividades (Deadlines/Due Dates, Missões *Time-Attack* com bônus de pontualidade/debuff de atraso e Milestones cronológicos no calendário), Magicules, Drops/Gifts, Debuffs, Festival da Colheita + Suprema |
-| **Arquivos de Controle**        | `roadmap.md` (progresso geral das fases e sub-etapas), `handoff.md` (mudanças da fase, arquivos tocados, estado dos testes automáticos e contexto para a próxima fase) e `feedback.md` (histórico de feedbacks dos testes do usuário e correções de debug)                                                                                                                                                                                                                                                                                 |
+| **Voz e Áudio (Sem TTS)**       | **TTS do navegador descartado**. Falas estáticas e solenes usam **MP3 pré-gravados em alta fidelidade** (`/audio/voice/`). Falas dinâmicas com dados customizados (nomes de habilidades, nível do caçador, congratulações da G.S) são sintetizadas via **API do Gemini (Gemini 2.0 Flash Audio — voz `Kore`)** no backend Hono com cache local no IndexedDB. Conclusão de missões individuais não toca áudio falado (apenas efeito sonoro sintético suave); **conclusão de projetos completos toca áudio solene**. Se o XP acumulado atingir o nível offline, o caçador entra em **'Elegível para Ascensão'** e a consagração em voz com a G.S ocorre assim que reconectar à internet. Atividades cotidianas e foco operam 100% offline. |
+| **Agenda Independente & Hábitos** | **Dois sistemas independentes**: a **Aba Projetos** gerencia árvores de metas de longo prazo (DAG) sem hora marcada; a **Agenda** gerencia rotinas diárias com horário fixo e prazo limite (*due date*). Conclusões de tarefas na agenda preenchem uma **Barra de Maestria de Hábito (0 a 100%)**. Ao atingir 100%, consolida-se em **Habilidade Passiva permanente**. O Sistema realiza um **check-in semanal**: se o usuário responder que não praticou, a barra recua para 75% e a habilidade entra no estado **'Enferrujada'** (bônus pausado até recuperar 100%). Snapshot "Hoje" na Home + Visão dedicada de Agenda. Virada às **04:00**. Streak avança com 100% das tarefas do dia cumpridas; dias sem tarefas agendadas **congelam o streak sem quebra**. |
+| **Curva de Nível & Títulos G.S** | **Curva de nível 3x mais íngreme**: `round(300 * n^1.5)` (Nível 1→2: ~850 XP; Nível 2→3: ~1.560 XP). O ranque genérico F a S é substituído por **Títulos Temáticos por Atributo com múltiplos níveis** (ex: INT: *Aprendiz*, *Erudito*, *Sábio*; FOR: *Combatente*, *Colosso*), gerados e proclamados dinamicamente pela Grande Sábio com base na trajetória do caçador. |
+| **Festival da Colheita**        | Ativado manualmente pelo usuário quando **100% das metas da semana ou mês forem batidas na Agenda**, deflagrando um ritual épico de celebração com áudio estático de abertura (*"O Festival da Colheita foi iniciado!"*), bônus de XP dobrado (2x) e oportunidades de ascensão de habilidades com decretos dinâmicos da G.S via API. |
+| **Escopo v1**                   | **v1:** Onboarding (áudios oficiais da G.S + revelação via API), Chat G.S Coordenador (com botão "Ouvir G.S" e pop-up em voz para pendências), Projetos (DAG) + Sistema de Agenda Independente com Hábitos/Passivas e Check-in Semanal, Habilidades com Roleta Esotérica, Festival da Colheita ao bater 100% da Agenda, Títulos Temáticos por Atributo gerados pela G.S, Modo Foco com áudios offline, Notificações 48h e Backup JSON/Cloud. |
+| **Arquivos de Controle**        | `roadmap.md` (progresso geral das fases e sub-etapas), `handoff.md` (mudanças da fase, arquivos tocados, estado dos testes automáticos e contexto para a próxima fase) e `feedback.md` (histórico de feedbacks dos testes do usuário e correções de debug). |
 
 ## 2. Estrutura dos 3 Arquivos de Controle na Raiz do Projeto
 
@@ -192,7 +192,7 @@ Legenda: `[ ]` Pendente | `[/]` Em andamento | `[x]` Concluído e Aprovado pelo 
 ```markdown
 # PROMPT MESTRE — PROJETO SLIME SAGE (v1 — PWA)
 
-Você é o Engenheiro Principal responsável por construir o aplicativo **Slime Sage Skill** (`S.S.S`), um gestor de projetos pessoal gamificado em formato **Progressive Web App (PWA)** instalável e responsivo para mobile/desktop, inspirado no sistema de habilidades de _Tensura_ (Grande Sábio / Voz do Mundo) e visual de "Sistema" (_Solo Leveling_).
+Você é o Engenheiro Principal responsável por construir o aplicativo **Slime Sage Skill** (`S.S.S`), um gestor de projetos pessoal gamificado em formato **Progressive Web App (PWA)** instalável e responsivo para mobile/desktop, inspirado no sistema de habilidades de _Tensura_ (Grande Sábio / Voz do Mundo) e com identidade visual **Dark Fantasy Gilded RPG** (baseada em `docs/design.png`).
 
 ## 1. ARQUITETURA E STACK OBRIGATÓRIA
 
@@ -200,13 +200,14 @@ Você é o Engenheiro Principal responsável por construir o aplicativo **Slime 
 - **PWA Client (`apps/pwa`):**
   - Vite + React 19 + TypeScript strict.
   - Tailwind CSS + Framer Motion (animações de Sistema fluidas a 60fps/120fps) + Lucide React.
-  - `vite-plugin-pwa` (Workbox) com manifesto completo (`display: standalone`, tema `#050811`, ícones adaptativos) e Service Worker para operação 100% offline.
+  - `vite-plugin-pwa` (Workbox) com manifesto completo (`display: standalone`, tema obsidiana cósmica `#040814` e ouro antigo `#dfa86c`, ícones adaptativos) e Service Worker para operação 100% offline.
+  - Estética **Dark Fantasy Gilded RPG** (`docs/design.png`): superfícies em obsidiana profunda (`#040814` / `#060e20`), molduras duplas ornamentadas em ouro antigo (`#dfa86c`, `#fde047`, `#c89b55`, `#966422`), cantoneiras góticas com diamantes, círculos mágicos esotéricos em SVG e tipografia serifada épica `Cinzel` para títulos combinada com `JetBrains Mono` para dados/telemetria.
   - Armazenamento local: IndexedDB / SQLite-WASM com schema relacional e auditoria total.
-  - Web Speech API (`window.speechSynthesis`) nativa em `pt-BR` para narração pela G.S e Voz do Mundo.
+  - Sistema de Áudio da G.S e Voz do Mundo (Sem TTS do navegador): MP3 pré-gravados em alta fidelidade (`/audio/voice/`) para eventos estáticos e rituais; síntese neural via API do Gemini (Gemini 2.0 Flash Audio — voz `Kore`) no backend Hono para falas dinâmicas (habilidades, níveis, decretos), com cache no IndexedDB.
   - Web Audio API para efeitos sonoros e `navigator.vibrate` para feedback tátil em dispositivos móveis compatíveis.
   - Web Notifications API para alertas do sistema e Service Worker notifications.
   - Page Visibility API (`document.visibilityState`) para detecção precisa de quebra de foco (>30s fora).
-- **Backend (`apps/api`):** Hono na Vercel com 4 rotas (`/health`, `POST /chat`, `POST /generate`, `PUT/GET /backup`), middleware Bearer Token (`APP_SECRET`), Vercel AI SDK (`@ai-sdk/google` com Gemini Flash e Pro) e `@vercel/blob`.
+- **Backend (`apps/api`):** Hono na Vercel com rotas (`/health`, `POST /chat`, `POST /generate`, `PUT/GET /backup`, `POST /tts`), middleware Bearer Token (`APP_SECRET`), Vercel AI SDK (`@ai-sdk/google` com Gemini Flash e Pro) e `@vercel/blob`.
 - **Pacotes Compartilhados:**
   - `packages/shared`: Schemas Zod de todas as tools, payloads, snapshot de memória, prompts da G.S e banco de frases offline (`phrase_bank`).
   - `packages/game`: Motor de regras 100% puro (zero dependências de DOM ou banco), recebendo `Clock` (`now`) e `Rng` (`nextFloat`) por injeção de dependência. Cobertura de testes obrigatória >= 90%.
@@ -215,12 +216,15 @@ Você é o Engenheiro Principal responsável por construir o aplicativo **Slime 
 
 1. **A IA propõe, o Motor decide:** A G.S nunca concede XP, níveis ou maestria diretamente. Toda escrita proposta pela IA no chat exige aprovação explícita do usuário em um **Cartão de Prévia (Aceitar / Recusar / Pedir ajuste)**.
 2. **Auditabilidade Total (Ledger):** Toda alteração de XP ou maestria gera um registro imutável na tabela `xp_event`. O XP total e a maestria devem sempre bater com a soma do ledger.
-3. **Offline-First e Injeção de Tempo/Sorte:** O app funciona offline (exceto chat e geração com IA, que possuem fallbacks determinísticos locais). Nunca use `Date.now()` ou `Math.random()` diretamente nas regras de negócio: use sempre `Clock` e `Rng` injetáveis.
+3. **Offline-First e Injeção de Tempo/Sorte:** O app funciona offline (exceto chat e geração de áudios dinâmicos com IA, que possuem fallbacks determinísticos locais). Nunca use `Date.now()` ou `Math.random()` diretamente nas regras de negócio: use sempre `Clock` e `Rng` injetáveis.
 4. **Código Limpo e Autoexplicativo:** Escreva código modular, fortemente tipado (TypeScript strict, sem `any`) e sem comentários óbvios.
 5. **Escopo Congelado da v1:**
-   - Questionário de Onboarding com **5 perguntas fixas offline**, narradas via Web Speech API (`speechSynthesis` em `pt-BR`), seguido da revelação da classe inicial.
+   - **Voz da G.S (Sem TTS do navegador):** Áudios estáticos em MP3 + síntese neural via API Gemini 2.0 Flash Audio (voz `Kore`) para falas dinâmicas com cache local. Conclusão de missão isolada não toca fala (apenas som sintético); conclusão de projetos completos toca áudio solene. Subida de nível e eventos dinâmicos ocorrem online; tarefas e foco operam 100% offline.
+   - **Sistema de Agenda Integrado:** Tarefas com horário e due date; tarefas recorrentes (diárias ou dias específicos até data limite); tarefas com constância evoluem para Hábitos / Habilidades Passivas. Snapshot "Hoje" na Home + Visão dedicada de Agenda. Virada do dia lógico às **04:00 da manhã**.
+   - **Progressão & Títulos:** Curva de nível íngreme/desafiadora; Títulos por Atributo (*Iniciante em Inteligência*, *Adepto em Força*, etc.) no lugar de letras F a S (patamares em aberto).
+   - **Festival da Colheita:** Ativado manualmente quando 100% das metas da semana/mês forem batidas na Agenda, concedendo 2x XP e celebração com a G.S.
+   - Questionário de Onboarding com **5 perguntas fixas com áudio oficial da G.S**, digitação mágica typewriter, seguido da revelação inicial via API.
    - Evolução de habilidades na v1 vai de **Comum (0) → Extra (100 maestria) → Única (300 maestria + 1 projeto concluído + Roleta com 30% base, +15% por falha, teto 95%, cooldown 24h)**.
-   - Virada do dia padrão às **04:00 da manhã**. Streak sem escudo (exige >= 3 missões diárias concluídas no dia lógico).
    - Modo Foco: quebra se o usuário sair da aba/PWA por **mais de 30 segundos** (via Page Visibility API).
 
 ## 3. PROTOCOLO RÍGIDO DE EXECUÇÃO POR FASES (4 ETAPAS + 3 ARQUIVOS)
@@ -258,8 +262,8 @@ O projeto é dividido em **15 fases (Fase 0 a Fase 14)**. Você NUNCA deve avan�
   - Configurar monorepo `slime-sage` com `pnpm-workspace.yaml`, `turbo.json`, TypeScript strict, ESLint, Prettier e workflow GitHub Actions (`ci.yml`).
   - Criar `packages/shared` (schemas Zod básicos, tipos de resposta da API) e `packages/game` (estrutura inicial pura com Vitest).
   - Criar `apps/api` (Hono na Vercel) com rota `GET /health` e middleware Bearer Token validando `APP_SECRET`.
-  - Criar `apps/pwa` (Vite + React 19 + TypeScript + Tailwind CSS + `vite-plugin-pwa` configurado com manifesto e ícones de tema escuro).
-  - Criar a tela de **Primeiro Acesso (Token Secreto)** na PWA: input seguro estilizado no tema "Sistema", campo para URL da API (padrão local ou prod), botão "Conectar ao Sistema" que valida em `GET /health`, salva o token em storage local seguro e redireciona para a Home placeholder.
+  - Criar `apps/pwa` (Vite + React 19 + TypeScript + Tailwind CSS + `vite-plugin-pwa` configurado com manifesto e ícones de tema Dark Fantasy `#040814`).
+  - Criar a tela de **Primeiro Acesso (Token Secreto)** na PWA: input seguro estilizado no tema "Sistema" Dark Fantasy Gilded RPG (`#040814` / `#dfa86c`), campo para URL da API (padrão local ou prod), botão "Conectar ao Sistema" que valida em `GET /health`, salva o token em storage local seguro e redireciona para a Home placeholder.
   - Criar os arquivos iniciais `roadmap.md`, `handoff.md` e `feedback.md` na raiz.
 - **2. Testes Automáticos:**
   - Vitest em `apps/api`: testar `GET /health` sem header `Authorization` (`401`), com token inválido (`401`) e com token correto (`200 OK` + `{ status: "ok", app: "slime-sage" }`).
@@ -284,8 +288,8 @@ Implemente:
 
 1. Estrutura do monorepo `pnpm` + `Turborepo` (`apps/pwa`, `apps/api`, `packages/shared`, `packages/game`, `e2e`, `evals`) com TypeScript strict, ESLint/Prettier e `.github/workflows/ci.yml`.
 2. `apps/api`: servidor Hono compatível com Vercel contendo middleware de autenticação Bearer (`APP_SECRET`) e rota `GET /health` retornando `{ status: "ok", app: "slime-sage", timestamp }`.
-3. `apps/pwa`: aplicação Vite + React 19 + Tailwind CSS + `vite-plugin-pwa` (manifesto PWA com `display: standalone` e tema escuro `#050811`).
-4. Fluxo de autenticação na PWA: ao abrir, verifica se há token salvo no storage. Se não houver, exibe a tela "Conexão com o Sistema" (tema escuro ciano/azul) que testa o token contra `GET /health`, salva em caso de sucesso e navega para a tela inicial placeholder.
+3. `apps/pwa`: aplicação Vite + React 19 + Tailwind CSS + `vite-plugin-pwa` (manifesto PWA com `display: standalone` e tema escuro obsidiana `#040814`).
+4. Fluxo de autenticação na PWA: ao abrir, verifica se há token salvo no storage. Se não houver, exibe a tela "Conexão com o Sistema" (tema Dark Fantasy Gilded RPG com moldura dourada `#dfa86c` e fundo `#040814`) que testa o token contra `GET /health`, salva em caso de sucesso e navega para a tela inicial placeholder.
 
 ### Passo 3 — Testes Automáticos (Etapa 0.2)
 
@@ -411,34 +415,34 @@ Atualize os arquivos de controle após o retorno do usuário.
 
 ---
 
-### Fase 3 — Design System "Sistema", Navegação por Abas e CRUD Manual de Projetos/Missões
+### Fase 3 — Design System "Sistema" (Dark Fantasy Gilded RPG — `docs/design.png`), Navegação por Abas e CRUD Manual de Projetos/Missões
 
 #### Escopo nas 4 Partes (Fase 3)
 
 - **1. Desenvolvimento:**
-  - Design System **"Sistema"** (inspirado em _Solo Leveling_ / _Tensura_): fundo `#050811`, bordas ciano neon (`#00f3ff`), superfícies translúcidas com blur de vidro (`backdrop-blur-md`), tipografia mono tech (`JetBrains Mono` / `Share Tech Mono`) e feedback sonoro/tátil leve (`navigator.vibrate` em toque).
+  - Design System **"Sistema" (Dark Fantasy Gilded RPG — baseado em `docs/design.png`)**: fundo obsidiana cósmica `#040814` / `#060e20`, molduras duplas e ornamentos em ouro antigo e brilhante (`#dfa86c`, `#fde047`, `#c89b55`, `#966422`), cantoneiras góticas com diamantes, superfícies translúcidas com blur (`backdrop-blur-md`), tipografia serifada épica `Cinzel` para títulos/cabeçalhos e `JetBrains Mono` para dados/telemetria, proteção universal contra transbordo de nomes longos (`min-w-0`, `overflow-hidden`, `break-words [overflow-wrap:anywhere]`) e feedback sonoro/tátil leve (`navigator.vibrate` em toque).
   - Componentes base: `SystemPanel`, `SystemButton`, `SystemBadge`, `SystemModal`, `SystemInput`, `SystemHeader`.
-  - Navegação pelas 5 abas principais: **Home · Projetos · Habilidades · Status · G.S** (com botão flutuante rápido para a G.S).
-  - Telas completas da aba **Projetos**: listagem por área com progresso percentual, visualizador de **Árvore de Missões** (com status `bloqueada` com cadeado, `disponivel` brilhante e `feita`), modal de detalhe da missão e formulário de criação/edição com seleção de dependências.
+  - Navegação pelas 5 abas principais: **Home · Projetos · Habilidades · Status · G.S** (com medalhão central dourado da G.S inscrito em círculo mágico esotérico SVG).
+  - Telas completas da aba **Projetos**: listagem por área com progresso percentual dourado, visualizador de **Árvore de Missões** (com status `bloqueada` com cadeado, `disponivel` em ouro radiante e `feita` em esmeralda), modal de detalhe da missão e formulário de criação/edição com seleção de dependências.
 - **2. Testes Automáticos:**
-  - Vitest + Testing Library: renderização do card de missão nos 3 estados, bloqueio do botão de concluir em missões bloqueadas, formulários de criação.
+  - Vitest + Testing Library: renderização do card de missão nos 3 estados, bloqueio do botão de concluir em missões bloqueadas, proteção contra overflow de nomes longos e formulários de criação.
   - Playwright (`e2e/phase3-projects.spec.ts`): fluxo completo no navegador criando projeto, missões dependentes e verificando desbloqueio.
 - **3. Testes do Usuário:**
-  - Navegar pelas 5 abas conferindo tema visual dark neon, criar um projeto manualmente com missões dependentes e validar desbloqueio.
+  - Navegar pelas 5 abas conferindo tema visual Dark Fantasy Gilded RPG (`docs/design.png`), criar um projeto manualmente com missões dependentes e validar desbloqueio.
 - **4. Debug e Fechamento:**
   - Ajustes de layout, responsividade mobile/desktop e fechamento da fase.
 
 #### Prompt da Fase 3
 
 ```markdown
-Leia `handoff.md`, `roadmap.md` e `feedback.md`. Vamos iniciar a **Fase 3 — Design System "Sistema", Navegação por Abas e CRUD Manual de Projetos/Missões**.
+Leia `handoff.md`, `roadmap.md` e `feedback.md`. Vamos iniciar a **Fase 3 — Design System "Sistema" (Dark Fantasy Gilded RPG), Navegação por Abas e CRUD Manual de Projetos/Missões**.
 
 ### Passo 1 — Desenvolvimento (Etapa 3.1)
 
 Marque `[/] 3.1 Desenvolvimento` em `roadmap.md` e implemente:
 
-1. Componentes do Design System "Sistema" com Tailwind CSS e Framer Motion.
-2. Navegação de 5 abas (Home, Projetos, Habilidades, Status, G.S) + botão flutuante.
+1. Componentes do Design System "Sistema" (Dark Fantasy Gilded RPG — `docs/design.png`: fundo `#040814`, molduras duplas douradas `#dfa86c`/`#fde047`, fonte `Cinzel` e losangos ornamentais) com Tailwind CSS e Framer Motion.
+2. Navegação de 5 abas (Home, Projetos, Habilidades, Status, G.S) + medalhão central com círculo mágico esotérico.
 3. Telas de Projetos com listagem, árvore de missões e formulários de criação/edição.
 4. Card na Home com Projeto Ativo e Próxima Missão Desbloqueada.
 
@@ -461,40 +465,46 @@ Após o feedback, aplique correções e feche a fase nos arquivos de controle.
 
 
 
-### Fase 5 — Voz do Mundo (Modal + Haptics + Som + Web TTS) e Telas de Status e Habilidades
+### Fase 5 — Voz do Mundo & G.S (Modal Dourado + Círculo Mágico + Áudios Oficiais/API Sem TTS) e Telas de Status e Habilidades
 
 #### Escopo nas 4 Partes (Fase 5)
 
 - **1. Desenvolvimento:**
-  - Fila e modal temático da **Voz do Mundo** (`WorldVoiceModal`):
-    - Dispara em `SKILL_ACQUIRED`, `SKILL_EVOLVED_EXTRA` e `LEVEL_UP`;
-    - Modal animado com Framer Motion (efeitos de partículas e glow ciano/dourado), som de sistema via Web Audio API, vibração tátil via `navigator.vibrate` e narração automática via **Web Speech API (`speechSynthesis`)** em `pt-BR` (com toggle em Ajustes);
-  - Aba **Habilidades**: listagem por área, badge de nível (`Comum`, `Extra`, `Única`), progresso de maestria e modal de histórico de missões vinculadas.
-  - Aba **Status**: nível geral, barra de XP, gráfico radar em SVG com os 5 atributos (`INT`, `FOR`, `DIS`, `CRI`, `SOC`), título atual e extrato recente do ledger.
+  - Fila e modal temático da **Voz do Mundo & Grande Sábio** (`WorldVoiceModal`):
+    - **Descarte Total do TTS do Navegador (`speechSynthesis`)**: uso de MP3 estáticos pré-gravados em alta qualidade para rituais fixos e sintetizador via API do Gemini (Gemini 2.0 Flash Audio — voz `Kore`) para falas dinâmicas com cache local no IndexedDB;
+    - **Regras de Áudio dos Eventos:**
+      - **Conclusão de Missão Individual (`completeMission`):** NÃO toca fala falada (apenas efeito sonoro sintético leve via Web Audio API e vibração tátil para evitar fadiga sonora);
+      - **Conclusão de Projeto (`PROJECT_COMPLETE`):** Toca áudio cerimonial solene de conquista de projeto;
+      - **Subida de Nível (`LEVEL_UP`):** Chamada à API com a voz oficial da G.S quando online anunciando o novo nível alcançado e parâmetros calibrados;
+      - **Aquisição e Evolução de Habilidades (`SKILL_ACQUIRED`, `SKILL_EVOLVED_EXTRA`):** Chamada à API quando online com o nome personalizado da habilidade;
+      - **Conectividade:** Subida de nível e eventos dinâmicos dependem de conexão online; atividades diárias e foco operam 100% offline;
+    - Modal animado com Framer Motion no estilo **Dark Fantasy Gilded RPG (`docs/design.png`)**: moldura dupla dourada, cantoneiras com diamantes e medalhão central com círculo mágico esotérico concêntrico rotativo em SVG.
+  - Aba **Habilidades**: listagem por área com cartelas douradas, badge de nível (`Comum`, `Extra`, `Única`), barras de progresso de maestria com gema losangular na ponta e modal de aquisição/detalhe.
+  - Aba **Status**: nível geral, barra de XP dourada com **curva de nível mais difícil/íngreme**, gráfico radar em SVG com os 5 atributos (`INT`, `FOR`, `DIS`, `CRI`, `SOC`), **Títulos por Atributo** (*Iniciante em Inteligência*, *Adepto em Força*, etc., no lugar de letras F a S — patamares em aberto) e extrato recente do ledger.
 - **2. Testes Automáticos:**
-  - Vitest + Testing Library: fila da Voz do Mundo, chamada ao `speechSynthesis` e renderização do radar SVG.
-  - Playwright (`e2e/phase5-world-voice.spec.ts`): concluir missão → verificar aparição do modal da Voz do Mundo → verificar atualização das abas Habilidades e Status.
+  - Vitest + Testing Library: fila de anúncios da Voz do Mundo, reprodução de MP3 e cache de áudio da API, ausência de fala em missões isoladas e acionamento em projetos concluídos, renderização do radar SVG e títulos por atributo.
+  - Playwright (`e2e/phase5-world-voice.spec.ts`): concluir projeto → verificar aparição do modal e áudio cerimonial → verificar atualização das abas Habilidades e Status.
 - **3. Testes do Usuário:**
-  - Concluir missões no navegador, ouvir a narração em português, ver a animação e inspecionar as abas de Habilidades e Status.
+  - Concluir projetos e evoluir habilidades no navegador, ouvir os áudios oficiais da G.S em alta qualidade, validar o modal visual com círculo mágico e inspecionar os títulos por atributo na aba Status.
 - **4. Debug e Fechamento:**
-  - Ajustar entonação da voz ou animação e atualizar arquivos de controle.
+  - Calibrar volume, cache de áudio e fechar a fase nos arquivos de controle.
 
 #### Prompt da Fase 5
 
 ```markdown
-Leia `handoff.md`, `roadmap.md` e `feedback.md`. Vamos iniciar a **Fase 5 — Voz do Mundo (Modal + Haptics + Som + Web TTS) e Telas de Status e Habilidades**.
+Leia `handoff.md`, `roadmap.md` e `feedback.md`. Vamos iniciar a **Fase 5 — Voz do Mundo & G.S (Modal Dourado + Círculo Mágico + Áudios Oficiais/API Sem TTS) e Telas de Status e Habilidades**.
 
 ### Passo 1 — Desenvolvimento (Etapa 5.1)
 
 Marque `[/] 5.1 Desenvolvimento` em `roadmap.md` e implemente:
 
-1. Sistema de fila e modal dramático da **Voz do Mundo** com Framer Motion, Web Audio API, `navigator.vibrate` e narração via Web Speech API (`pt-BR`).
-2. Aba Habilidades com barras de maestria e filtro por área.
-3. Aba Status com gráfico radar SVG dos 5 atributos e extrato do ledger.
+1. Sistema de fila e modal dramático da **Voz do Mundo & G.S** (Dark Fantasy Gilded RPG — `docs/design.png` com círculo mágico esotérico em SVG) sem TTS do navegador: áudios estáticos em MP3 + síntese via API do Gemini com cache IndexedDB. Áudio em conclusão de projeto e remoção de fala em missões isoladas.
+2. Aba Habilidades com barras de maestria douradas e filtro por área.
+3. Aba Status com gráfico radar SVG esotérico, curva de nível íngreme, Títulos por Atributo (patamares em aberto) e extrato do ledger.
 
 ### Passo 2 — Testes Automáticos (Etapa 5.2)
 
-1. Testes de componentes para a fila da Voz do Mundo e telas de Status/Habilidades.
+1. Testes de componentes para a fila de eventos, reprodução de áudios e telas de Status/Habilidades.
 2. Teste E2E Playwright `e2e/phase5-world-voice.spec.ts`.
 3. Execute `pnpm lint`, `pnpm typecheck` e `pnpm test`.
 
@@ -509,43 +519,47 @@ Após validação, feche a fase nos arquivos de controle.
 
 ---
 
-### Fase 6 — Backend `/chat` (Streaming + Tools Schema) e Cliente de Chat com Cartões de Prévia
+### Fase 6 — Backend `/chat` (Streaming + Tools Schema), Síntese de Voz G.S e Pop-up de Pendências
 
 #### Escopo nas 4 Partes (Fase 6)
 
 - **1. Desenvolvimento:**
-  - Em `packages/shared`: schemas Zod das tools de leitura (`get_profile`, `list_skills`, `list_classes`, `list_projects`, `get_project`, `search_missions`) e de escrita (`create_project_tree`, `add_missions`, `update_mission`, `reschedule_mission`, `delete_mission`, `propose_class_challenge`, `name_class`, `name_unique_skill`).
-  - Em `apps/api`: rota `POST /chat` com `streamText` (`@ai-sdk/google`), tools sem execução no backend, proteção por token Bearer e limites de payload.
+  - Em `packages/shared`: schemas Zod das tools de leitura (`get_profile`, `list_skills`, `list_classes`, `list_projects`, `get_project`, `search_missions`, `list_agenda_tasks`) e de escrita (`create_project_tree`, `add_missions`, `update_mission`, `schedule_agenda_task`, `create_recurring_habit`, `delete_mission`, `propose_class_challenge`, `name_class`, `name_unique_skill`).
+  - Em `apps/api`:
+    - Rota `POST /chat` com `streamText` (`@ai-sdk/google`), tools sem execução no backend, proteção por token Bearer;
+    - Rota `POST /tts`: recebe texto gerado pela G.S e devolve áudio sintetizado em alta qualidade (Gemini 2.0 Flash Audio — voz `Kore`);
   - No cliente PWA:
     - Persistência de threads em `chat_thread` e `chat_message`;
     - Cliente de chat com streaming real via `fetch` e Vercel AI SDK;
     - Execução silenciosa de tools de leitura no banco local;
-    - **Cartões de Prévia Interativos** para tools de escrita com botões **Aceitar**, **Recusar** e **Pedir Ajuste**.
+    - **Cartões de Prévia Interativos** para tools de escrita com botões **Aceitar**, **Recusar** e **Pedir Ajuste**;
+    - Botão opcional **"Ouvir G.S" (play)** em cada mensagem da Grande Sábio para tocar o áudio sob demanda gerado pela API com cache no IndexedDB;
+    - **Avisos Proativos da G.S:** se houver pendências (tarefas da agenda próximas, diárias por vencer ou cartões pendentes), a G.S emite um **pop-up discreto/toast em voz** na tela sem tirar o usuário da navegação nem abrir novas janelas.
 - **2. Testes Automáticos:**
-  - Vitest na API com modelo mockado (`ai/test`): streaming, emissão de tool calls e validação de token (401).
-  - Vitest + Testing Library no PWA: teste dos 3 fluxos do Cartão de Confirmação (Aceitar grava no banco; Recusar não grava; Pedir Ajuste devolve justificativa na tool result).
+  - Vitest na API com modelo mockado (`ai/test`): streaming, emissão de tool calls e rota de áudio.
+  - Vitest + Testing Library no PWA: teste dos 3 fluxos do Cartão de Confirmação, botão de áudio opcional e toast proativo de pendências.
 - **3. Testes do Usuário:**
-  - Conversar com a G.S pedindo para adicionar uma missão, verificar a exibição do Cartão de Prévia, testar Pedir Ajuste e Aceitar.
+  - Conversar com a G.S pedindo para criar tarefas/projetos, testar o botão "Ouvir G.S" e conferir os pop-ups discretos de pendência.
 - **4. Debug e Fechamento:**
-  - Ajustar streaming e serialização e atualizar arquivos de controle.
+  - Ajustar streaming, latência de áudio e atualizar arquivos de controle.
 
 #### Prompt da Fase 6
 
 ```markdown
-Leia `handoff.md`, `roadmap.md` e `feedback.md`. Vamos iniciar a **Fase 6 — Backend `/chat` (Streaming + Tools Schema) e Cliente de Chat com Cartões de Prévia**.
+Leia `handoff.md`, `roadmap.md` e `feedback.md`. Vamos iniciar a **Fase 6 — Backend `/chat` (Streaming + Tools Schema), Síntese de Voz G.S e Pop-up de Pendências**.
 
 ### Passo 1 — Desenvolvimento (Etapa 6.1)
 
 Marque `[/] 6.1 Desenvolvimento` em `roadmap.md` e implemente:
 
-1. Schemas Zod de todas as tools em `packages/shared`.
-2. Rota `POST /chat` em `apps/api` com streaming e tools sem execução no servidor.
-3. Cliente de chat no PWA com suporte a streaming, execução local de tools de leitura e Cartão de Prévia interativo para tools de escrita (Aceitar / Recusar / Pedir Ajuste).
+1. Schemas Zod de todas as tools (incluindo tarefas de agenda e hábitos) em `packages/shared`.
+2. Rotas `POST /chat` e `POST /tts` em `apps/api` com streaming e síntese neural da G.S.
+3. Cliente de chat no PWA com streaming, Cartão de Prévia interativo, botão opcional "Ouvir G.S" e toast proativo em voz para pendências sem troca de tela.
 
 ### Passo 2 — Testes Automáticos (Etapa 6.2)
 
-1. Testes Vitest na API para streaming e tool calls.
-2. Testes de componentes no PWA para o Cartão de Prévia.
+1. Testes Vitest na API para streaming e áudio.
+2. Testes de componentes no PWA para o Cartão de Prévia e toasts proativos.
 3. Execute `pnpm lint`, `pnpm typecheck` e `pnpm test`.
 
 ### Passo 3 — Pausa Obrigatória para Testes do Usuário (Etapa 6.3)
@@ -606,47 +620,47 @@ Atualize os arquivos de controle após o retorno do usuário.
 
 ---
 
-### Fase 8 — Onboarding: 5 Perguntas Narradas por Web TTS, Revelação de Classe e 1ª Conquista
+### Fase 8 — Onboarding: Apresentação da G.S com Áudios Oficiais, Efeito Typewriter e Revelação Inicial via API
 
 #### Escopo nas 4 Partes (Fase 8)
 
 - **1. Desenvolvimento:**
   - Fluxo de Onboarding em 4 etapas (quando `profile.onboarding_done === false`):
-    1. **Questionário de Personalidade (5 Perguntas Fixas Offline + Web TTS):**
-       - 5 perguntas avaliando traços, área inicial e tom da G.S. Cada pergunta é narrada em voz alta pela Web Speech API em `pt-BR`.
-    2. **Revelação da Classe Inicial (Voz do Mundo + Web TTS):**
-       - Cálculo determinístico da Área e Classe inicial (Patamar 1 — Aprendiz) com narração épica da Voz do Mundo.
+    1. **Questionário de Personalidade (5 Perguntas com Áudios Oficiais da G.S):**
+       - 5 perguntas avaliando traços, área inicial e tom da G.S, narradas com **áudios pré-gravados em alta fidelidade da G.S** acompanhados por efeito de digitação mágica (*typewriter* no estilo RPG).
+    2. **Revelação Inicial e Título de Aprendiz (Chamada à API do Gemini):**
+       - Cálculo determinístico dos atributos e revelação com chamada à rota de áudio da API (`POST /tts`) gerando a proclamação personalizada com o nome/título do caçador.
     3. **Objetivo de Uso e Permissões:**
-       - Escolha de objetivo e solicitação guiada de permissão de notificações no navegador.
+       - Escolha de objetivo e solicitação guiada de permissão de notificações locais no navegador.
     4. **Primeira Conquista:**
-       - Tela da G.S perguntando (e narrando): _"Qual é a primeira coisa que você deseja conquistar?"_, abrindo a primeira entrevista no Modo Coordenador e marcando `onboarding_done = true`.
+       - Fala oficial da G.S perguntando: _"Qual é a primeira coisa que você deseja conquistar?"_, abrindo a primeira entrevista no Modo Coordenador e marcando `onboarding_done = true`.
   - Botão "Resetar Onboarding" no Painel Dev.
 - **2. Testes Automáticos:**
-  - Vitest: matriz determinística das 5 perguntas e fallback offline.
-  - Testing Library: renderização das 5 perguntas e disparo do `speechSynthesis`.
+  - Vitest: matriz determinística das 5 perguntas e atribuição inicial de atributos.
+  - Testing Library: renderização do typewriter, disparo dos áudios oficiais e transição entre as etapas.
   - Playwright (`e2e/phase8-onboarding.spec.ts`): fluxo completo do onboarding de ponta a ponta.
 - **3. Testes do Usuário:**
-  - Resetar onboarding pelo Painel Dev, completar as 5 perguntas ouvindo a voz do navegador, conferir a revelação da classe e iniciar o primeiro projeto.
+  - Resetar onboarding pelo Painel Dev, completar as 5 perguntas ouvindo a voz oficial da G.S, validar a revelação e iniciar o primeiro projeto.
 - **4. Debug e Fechamento:**
-  - Ajustar cadência da voz ou textos e atualizar arquivos de controle.
+  - Ajustar cadência da digitação e atualizar arquivos de controle.
 
 #### Prompt da Fase 8
 
 ```markdown
-Leia `handoff.md`, `roadmap.md` e `feedback.md`. Vamos iniciar a **Fase 8 — Onboarding: 5 Perguntas Narradas por Web TTS, Revelação de Classe e 1ª Conquista**.
+Leia `handoff.md`, `roadmap.md` e `feedback.md`. Vamos iniciar a **Fase 8 — Onboarding: Apresentação da G.S com Áudios Oficiais, Efeito Typewriter e Revelação Inicial via API**.
 
 ### Passo 1 — Desenvolvimento (Etapa 8.1)
 
 Marque `[/] 8.1 Desenvolvimento` em `roadmap.md` e implemente:
 
 1. Motor determinístico das 5 perguntas de personalidade em `packages/game`.
-2. Fluxo de 4 telas de onboarding no PWA com narração por Web Speech API (`pt-BR`).
+2. Fluxo de 4 telas de onboarding no PWA com áudios oficiais da G.S, efeito typewriter e chamada à API para revelação cerimonial.
 3. Botão "Resetar Onboarding" no Painel Dev.
 
 ### Passo 2 — Testes Automáticos (Etapa 8.2)
 
 1. Testes Vitest do motor determinístico.
-2. Testes de componentes para disparo de áudio TTS e navegação.
+2. Testes de componentes para disparo de áudio da G.S, typewriter e navegação.
 3. Teste E2E Playwright `e2e/phase8-onboarding.spec.ts`.
 4. Execute `pnpm lint`, `pnpm typecheck` e `pnpm test`.
 
@@ -714,7 +728,7 @@ Após validação, atualize os arquivos de controle.
 
 ---
 
-### Fase 10 — Evolução de Habilidade (Extra → Única) e Roleta Animada (SVG + Framer Motion + Cooldown 24h)
+### Fase 10 — Evolução de Habilidade (Extra → Única), Roleta Esotérica e Festival da Colheita
 
 #### Escopo nas 4 Partes (Fase 10)
 
@@ -724,45 +738,49 @@ Após validação, atualize os arquivos de controle.
     - Cálculo de chance da roleta: base **30%**, **+15% por falha anterior**, **teto de 95%**;
     - Cooldown de **24 horas** após falha (`Clock` injetável);
     - Histórico registrado em `evolution_attempt`.
-  - Tela/Modal da Roleta no PWA:
-    - Roda gráfica circular em SVG animada com Framer Motion a 60fps/120fps com setores proporcionais à chance atual;
+  - Tela/Modal da Roleta no PWA (inspirado nos círculos mágicos concêntricos de `docs/design.png`):
+    - Roda gráfica circular de círculo mágico esotérico em SVG dourado (`#dfa86c` / `#fde047`) animada com Framer Motion com setores proporcionais à chance atual;
     - Efeito de desaceleração suave, som via Web Audio API e vibração via `navigator.vibrate`;
     - Falha: cooldown de 24h e chance ampliada anunciada pela Voz do Mundo;
-    - Sucesso: nome épico via `name_unique_skill`, promoção para `unica` e grande celebração da Voz do Mundo via Web TTS.
-  - Painel Dev: RNG Fixo ("Forçar Sucesso" / "Forçar Falha") e botão "Zerar Cooldown".
+    - Sucesso: nome épico via `name_unique_skill`, promoção para `unica` e grande celebração da G.S via áudio neural da API.
+  - **Festival da Colheita (Ritual Épico de Celebração):**
+    - Desbloqueado para ativação manual pelo caçador quando **100% das metas da semana ou mês forem concluídas na Agenda**;
+    - Toca áudio cerimonial estático pré-gravado: *"O Festival da Colheita foi iniciado! Todos os frutos de seu esforço foram reconhecidos pelo Sistema."*;
+    - Multiplicador de **XP dobrado (2x)** para atividades do período e desbloqueio de rituais de ascensão de atributos com falas dedicadas da G.S via API.
+  - Painel Dev: RNG Fixo ("Forçar Sucesso" / "Forçar Falha"), botão "Zerar Cooldown" e botão "Simular Metas 100% e Desbloquear Festival da Colheita".
 - **2. Testes Automáticos:**
   - Vitest + `fast-check`: monotonicidade da chance (30→45→...→95%), cooldown exato e exigência de projeto concluído.
-  - Testing Library: estados da roleta (`inelegivel`, `pronta`, `girando`, `em_cooldown`, `sucesso`).
-  - Playwright (`e2e/phase10-roulette.spec.ts`): teste de falha (30%→45% + cooldown) e sucesso após avançar 24h.
+  - Testing Library: estados da roleta (`inelegivel`, `pronta`, `girando`, `em_cooldown`, `sucesso`) e fluxo de ativação do Festival da Colheita com bônus 2x.
+  - Playwright (`e2e/phase10-roulette.spec.ts`): teste de falha, sucesso após 24h e ativação do Festival da Colheita.
 - **3. Testes do Usuário:**
-  - Tornar uma habilidade elegível, girar a roleta, testar falha e sucesso forçados e conquistar a primeira Habilidade Única.
+  - Tornar uma habilidade elegível, girar a roleta, testar falha/sucesso forçados e ativar o Festival da Colheita no navegador.
 - **4. Debug e Fechamento:**
   - Ajustar curva de animação e haptics e atualizar arquivos de controle.
 
 #### Prompt da Fase 10
 
 ```markdown
-Leia `handoff.md`, `roadmap.md` e `feedback.md`. Vamos iniciar a **Fase 10 — Evolução de Habilidade (Extra → Única) e Roleta Animada (SVG + Framer Motion + Cooldown 24h)**.
+Leia `handoff.md`, `roadmap.md` e `feedback.md`. Vamos iniciar a **Fase 10 — Evolução de Habilidade (Extra → Única), Roleta Esotérica e Festival da Colheita**.
 
 ### Passo 1 — Desenvolvimento (Etapa 10.1)
 
 Marque `[/] 10.1 Desenvolvimento` em `roadmap.md` e implemente:
 
 1. Regras puras da roleta em `packages/game/roulette.ts` (300 maestria + projeto concluído, 30% + 15% até 95%, cooldown 24h).
-2. Modal da Roleta de Evolução no PWA em SVG + Framer Motion com som Web Audio API e vibração.
-3. Integração com `name_unique_skill` e celebração na Voz do Mundo.
-4. Controles de RNG e cooldown no Painel Dev.
+2. Modal da Roleta de Evolução no PWA em SVG dourado com anéis de círculo mágico esotérico (`docs/design.png`) + Framer Motion.
+3. Mecânica do **Festival da Colheita**: ativação manual com 100% das metas batidas na Agenda, áudio estático de abertura, 2x XP e celebração com a G.S.
+4. Controles de RNG, cooldown e atalho do Festival da Colheita no Painel Dev.
 
 ### Passo 2 — Testes Automáticos (Etapa 10.2)
 
-1. Testes Vitest + `fast-check` para regras da roleta e cooldown.
-2. Testes de componentes para a roleta.
+1. Testes Vitest + `fast-check` para regras da roleta, cooldown e multiplicador do Festival da Colheita.
+2. Testes de componentes para a roleta e banner do Festival.
 3. Teste E2E Playwright `e2e/phase10-roulette.spec.ts`.
 4. Execute `pnpm lint`, `pnpm typecheck` e `pnpm test`.
 
 ### Passo 3 — Pausa Obrigatória para Testes do Usuário (Etapa 10.3)
 
-Marque `[x]` nas etapas 10.1 e 10.2 em `roadmap.md` e **PARE**. Apresente o roteiro de testes da roleta ao usuário.
+Marque `[x]` nas etapas 10.1 e 10.2 em `roadmap.md` e **PARE**. Apresente o roteiro de testes da roleta e colheita ao usuário.
 
 ### Passo 4 — Debug e Fechamento (Etapa 10.4 — Somente após meu retorno)
 
@@ -771,49 +789,59 @@ Atualize os arquivos de controle após o retorno do usuário.
 
 ---
 
-### Fase 11 — Motor de Missões Diárias, Virada às 04:00, Streak Sem Escudo e UI na Home
+### Fase 11 — Sistema de Agenda Independente, Tarefas Recorrentes, Hábitos (Barra 0-100% e Check-in Semanal) e Passivas
 
 #### Escopo nas 4 Partes (Fase 11)
 
 - **1. Desenvolvimento:**
-  - Em `packages/game/daily.ts` e `streak.ts`:
-    - Dia lógico `getLogicalDay(now, 4)` com virada padrão às 04:00 da manhã;
-    - Gerador determinístico offline de 3 a 5 missões diárias balanceadas;
-    - Bônus de diárias completas: **+50% do XP** das diárias do dia ao concluir 100%;
-    - Streak sem escudo: exige **>= 3 diárias concluídas** no dia lógico; se virar com < 3, `streak_days` **zera para 0**;
-    - Bônus de streak: **+2% de XP por dia de streak**, com **teto de +30%** (15+ dias).
-  - Na tela Home do PWA:
-    - Seção de Missões Diárias com checklist rápido, progresso do bônus de +50% e chama de Streak;
-    - Banner de risco de perda de streak à noite.
+  - Em `packages/game/agenda.ts` e `habits.ts`:
+    - **Dois Sistemas Independentes:** Separação estrita entre a **Aba Projetos** (árvores de metas de longo prazo sem hora marcada) e a **Agenda** (rotinas diárias com horário fixo e due date);
+    - Modelo de tarefas de agenda com data/horário marcado e prazo final (*due date*);
+    - Tarefas recorrentes com frequência diária ou dias específicos da semana (ex: Seg/Qua/Sex) e prazo limite (*repeat_until*);
+    - **Barra de Maestria de Hábito (0 a 100%):** Cada conclusão da tarefa da agenda acumula pontos na barra de maestria do hábito correspondente. Ao atingir 100%, consolida-se em **Habilidade Passiva permanente** (concedendo bônus perpétuo no atributo associado);
+    - **Check-in Semanal de Manutenção da G.S:** A cada 7 dias, a G.S questiona o caçador se o hábito continua sendo praticado. Se o usuário responder que não, a barra de maestria recua para **75%** e o hábito entra no estado **'Enferrujada'** (bônus passivo pausado temporariamente até recuperar os 100% com novas repetições);
+    - Dia lógico `getLogicalDay(now, 4)` com virada às 04:00 da manhã;
+    - **Regra de Streak Diário:** O streak avança ao concluir 100% das tarefas/hábitos agendados para aquele dia na Agenda (mínimo de 1 tarefa). Se não houver nenhuma tarefa agendada no dia (dia de descanso planejado), o streak é **congelado e preservado sem quebra**. Se houver tarefas e ficarem pendentes, o streak zera às 04:00 sem escudos.
+  - No PWA:
+    - **UI da Agenda (Híbrido Home + Visão Completa):**
+      - Na aba **Home**: seção destacada de "Hoje / Agenda do Dia" com linha do tempo de compromissos imediatos, hábitos ativos e checklist rápido;
+      - **Visão Dedicada de Agenda:** tela/modal completo com visualização diária/semanal, gerenciador de tarefas recorrentes, painel de Hábitos com barra de maestria (0-100%), status 'Enferrujada' e metas da semana/mês rumo ao Festival da Colheita;
+    - Modal de Check-in Semanal da G.S com opções estilizadas no tema Dark Fantasy Gilded RPG.
 - **2. Testes Automáticos:**
-  - Vitest + `fast-check` com `FakeClock`: fronteira 03:59 vs 04:00, progressão de streak e perda imediata com 2 diárias.
-  - Playwright (`e2e/phase11-daily-streak.spec.ts`): validar ganho e perda de streak com viagem no tempo.
+  - Vitest + `fast-check`: virada lógica das 04:00, progressão da barra de maestria do hábito (0-100%), recuo para 75% ('Enferrujada') na resposta negativa do check-in semanal, cálculo de recorrência e congelamento de streak em dias de descanso.
+  - Playwright (`e2e/phase11-agenda-habits.spec.ts`): criar tarefa agendada, preencher barra de hábito até 100%, simular check-in semanal e verificar status 'Enferrujada'.
 - **3. Testes do Usuário:**
-  - Concluir diárias na Home, verificar bônus de +50%, usar controles de tempo do Painel Dev para ver a virada das 04:00 ao vivo.
+  - Criar tarefas recorrentes na Agenda, testar a barra de maestria do hábito, simular o check-in semanal da G.S e validar a preservação de streak em dia de descanso.
 - **4. Debug e Fechamento:**
-  - Tratar inconsistências de fuso horário e atualizar arquivos de controle.
+  - Tratar fusos horários, repetições de calendário e atualizar arquivos de controle.
 
 #### Prompt da Fase 11
 
 ```markdown
-Leia `handoff.md`, `roadmap.md` e `feedback.md`. Vamos iniciar a **Fase 11 — Motor de Missões Diárias, Virada às 04:00, Streak Sem Escudo e UI na Home**.
+Leia `handoff.md`, `roadmap.md` e `feedback.md`. Vamos iniciar a **Fase 11 — Sistema de Agenda Independente, Tarefas Recorrentes, Hábitos (Barra 0-100% e Check-in Semanal) e Passivas**.
 
 ### Passo 1 — Desenvolvimento (Etapa 11.1)
 
 Marque `[/] 11.1 Desenvolvimento` em `roadmap.md` e implemente:
 
-1. Em `packages/game`: dia lógico às 04:00, gerador de diárias, streak sem escudo e bônus no ledger.
-2. Na Home do PWA: checklist de diárias, chama de streak e alerta de risco noturno.
+1. Motor de regras puras de Agenda e Recorrência em `packages/game/agenda.ts` e `habits.ts`: separação independente de projetos, barra de hábito 0-100%, check-in semanal com recuo a 75% ('Enferrujada'), streak com congelamento em dia de descanso e virada às 04:00.
+2. Interface híbrida no PWA: Snapshot "Hoje" na Home + Visão Dedicada completa de Agenda/Calendário, painel de Hábitos e modal de check-in semanal.
+3. Formulários de agendamento estilizados no tema Dark Fantasy Gilded RPG.
 
 ### Passo 2 — Testes Automáticos (Etapa 11.2)
 
-1. Testes Vitest + `fast-check` com `FakeClock` para limites das 04:00 e regras de streak.
-2. Teste E2E Playwright `e2e/phase11-daily-streak.spec.ts`.
+1. Testes Vitest + `fast-check` para barra de hábito, check-in semanal, regras de streak e congelamento em dias sem tarefas.
+2. Teste E2E Playwright `e2e/phase11-agenda-habits.spec.ts`.
 3. Execute `pnpm lint`, `pnpm typecheck` e `pnpm test`.
 
 ### Passo 3 — Pausa Obrigatória para Testes do Usuário (Etapa 11.3)
 
-Marque `[x]` nas etapas 11.1 e 11.2 em `roadmap.md` e **PARE**. Apresente o roteiro de testes ao usuário.
+Marque `[x]` nas etapas 11.1 e 11.2 em `roadmap.md` e **PARE**. Apresente o roteiro de testes da Agenda e Hábitos ao usuário.
+
+### Passo 4 — Debug e Fechamento (Etapa 11.4 — Somente após meu retorno)
+
+Atualize os arquivos de controle após o retorno do usuário.
+```
 
 ### Passo 4 — Debug e Fechamento (Etapa 11.4 — Somente após meu retorno)
 
@@ -978,11 +1006,8 @@ Após a aprovação final, atualize `handoff.md`, `feedback.md` e `roadmap.md` d
 
 A versão 2 (`v2`) do Slime Sage expandirá a profundidade da gamificação e a gestão temporal com os seguintes módulos:
 
-1. **Agendamento de Prazos e Término de Projetos/Atividades:**
-   - **`deadline` / `due_date`:** Definição opcional de data e hora limite para conclusão de projetos inteiros ou missões específicas.
-   - **Missões *Time-Attack* (Contrarrelógio do Sistema):** Missões com prazo crítico gerando alerta urgente da Grande Sábio. Conclusão dentro do prazo concede bônus de XP/Maestria e título comemorativo; estouro do prazo gera status de "Atrasada" e acúmulo de debuff de procrastinação.
-   - **Milestones (Marcos Cronológicos):** Visualização em linha do tempo / calendário distribuindo missões da árvore DAG até a data final de entrega do projeto.
-2. **Magicules (Energia Mágica / Mana):** Recurso consumível para buffs de concentração e invocações analíticas da G.S.
+1. **Missões *Time-Attack* e Contrarrelógio Crítico:** Missões com cronômetro em contagem regressiva ao vivo, gerando bônus de rapidez e títulos sazonais.
+2. **Magicules (Energia Mágica / Mana):** Recurso consumível para buffs de concentração e invocações analíticas especiais da G.S.
 3. **Drops & Gifts:** Saques e recompensas materiais/digitais especiais por projetos concluídos com louvor.
 4. **Debuffs do Sistema:** Penalidades temporárias aplicadas quando prazos expiram sucessivamente.
-5. **Festival da Colheita & Habilidade Suprema (*Ultimate Skill*):** O despertar definitivo com rituais de fusão e sacrifício de habilidades únicas.
+5. **Habilidade Suprema (*Ultimate Skill*):** O despertar definitivo com rituais de fusão e sacrifício de múltiplas habilidades únicas.

@@ -68,9 +68,9 @@ export const AttributesRadarChart: React.FC<AttributesRadarChartProps> = ({
       >
         <defs>
           <radialGradient id="radarAreaGradient" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#00f3ff" stopOpacity="0.45" />
-            <stop offset="70%" stopColor="#00f3ff" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="#00f3ff" stopOpacity="0.05" />
+            <stop offset="0%" stopColor="#fde047" stopOpacity="0.5" />
+            <stop offset="65%" stopColor="#dfa86c" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#966422" stopOpacity="0.08" />
           </radialGradient>
           <filter id="radarGlow" x="-20%" y="-20%" width="140%" height="140%">
             <feGaussianBlur stdDeviation="3" result="blur" />
@@ -78,15 +78,35 @@ export const AttributesRadarChart: React.FC<AttributesRadarChartProps> = ({
           </filter>
         </defs>
 
-        {/* Circular ambient system glow */}
+        {/* Esoteric Magic Circle Outer Rings */}
         <circle
           cx={center}
           cy={center}
-          r={radius}
+          r={radius * 1.08}
           fill="none"
-          stroke="#00f3ff"
-          strokeOpacity="0.08"
+          stroke="#dfa86c"
+          strokeOpacity="0.28"
           strokeWidth="1"
+        />
+        <circle
+          cx={center}
+          cy={center}
+          r={radius * 1.03}
+          fill="none"
+          stroke="#fde047"
+          strokeOpacity="0.35"
+          strokeWidth="0.75"
+          strokeDasharray="3 4"
+        />
+        <circle
+          cx={center}
+          cy={center}
+          r={radius * 0.5}
+          fill="none"
+          stroke="#dfa86c"
+          strokeOpacity="0.18"
+          strokeWidth="0.75"
+          strokeDasharray="2 3"
         />
 
         {/* Concentric pentagon grid lines */}
@@ -95,8 +115,8 @@ export const AttributesRadarChart: React.FC<AttributesRadarChartProps> = ({
             key={lvl}
             points={points}
             fill="none"
-            stroke="#0ea5e9"
-            strokeOpacity={lvl === 1.0 ? 0.35 : 0.15}
+            stroke="#c89b55"
+            strokeOpacity={lvl === 1.0 ? 0.55 : 0.22}
             strokeWidth={lvl === 1.0 ? "1.5" : "1"}
             strokeDasharray={lvl === 1.0 ? undefined : "3 3"}
           />
@@ -104,7 +124,7 @@ export const AttributesRadarChart: React.FC<AttributesRadarChartProps> = ({
 
         {/* Axis lines from center to outer vertices */}
         {ORDERED_AREAS.map((_, i) => {
-          const { x, y } = getCoordinates(i, 1.0);
+          const { x, y } = getCoordinates(i, 1.08);
           return (
             <line
               key={i}
@@ -112,8 +132,8 @@ export const AttributesRadarChart: React.FC<AttributesRadarChartProps> = ({
               y1={center}
               x2={x}
               y2={y}
-              stroke="#0ea5e9"
-              strokeOpacity="0.25"
+              stroke="#c89b55"
+              strokeOpacity="0.32"
               strokeWidth="1"
             />
           );
@@ -123,8 +143,8 @@ export const AttributesRadarChart: React.FC<AttributesRadarChartProps> = ({
         <polygon
           points={polygonPointsStr}
           fill="url(#radarAreaGradient)"
-          stroke="#00f3ff"
-          strokeWidth="2.5"
+          stroke="#fde047"
+          strokeWidth="2.2"
           filter="url(#radarGlow)"
           className="transition-all duration-700 ease-out"
           data-testid="radar-polygon"
@@ -136,19 +156,19 @@ export const AttributesRadarChart: React.FC<AttributesRadarChartProps> = ({
             <circle
               cx={p.x}
               cy={p.y}
-              r="4"
-              fill="#050811"
-              stroke="#00f3ff"
+              r="4.5"
+              fill="#040814"
+              stroke="#dfa86c"
               strokeWidth="2"
             />
-            <circle cx={p.x} cy={p.y} r="2" fill="#38bdf8" />
+            <circle cx={p.x} cy={p.y} r="2" fill="#fde047" />
           </g>
         ))}
 
         {/* Labels with Code & Mastery Value */}
         {ORDERED_AREAS.map((code, i) => {
           // Label coordinate slightly outside radius
-          const { x, y } = getCoordinates(i, 1.25);
+          const { x, y } = getCoordinates(i, 1.26);
           const area = BASE_AREAS.find((a) => a.code === code);
           const val = attributes[code] ?? 0;
 
@@ -157,7 +177,7 @@ export const AttributesRadarChart: React.FC<AttributesRadarChartProps> = ({
               <text
                 textAnchor="middle"
                 dominantBaseline="central"
-                className="fill-cyan-300 font-mono text-[11px] font-bold tracking-wider"
+                className="fill-[#fde047] font-fantasy text-[11px] font-bold tracking-widest"
               >
                 {code}
               </text>
@@ -165,7 +185,7 @@ export const AttributesRadarChart: React.FC<AttributesRadarChartProps> = ({
                 y="13"
                 textAnchor="middle"
                 dominantBaseline="central"
-                className="fill-slate-400 font-mono text-[10px]"
+                className="fill-[#e8d5b5] font-mono text-[10px]"
               >
                 {val} pts
               </text>
@@ -173,7 +193,7 @@ export const AttributesRadarChart: React.FC<AttributesRadarChartProps> = ({
                 y="-13"
                 textAnchor="middle"
                 dominantBaseline="central"
-                className="fill-slate-500 font-sans text-[9px]"
+                className="fill-[#a39171] font-fantasy text-[9px] uppercase tracking-wider"
               >
                 {area?.name}
               </text>

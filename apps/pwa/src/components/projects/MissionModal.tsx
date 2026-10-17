@@ -147,26 +147,26 @@ export const MissionModal: React.FC<MissionModalProps> = ({
         </div>
 
         {/* Dependency Selection */}
-        <div className="space-y-2 pt-2 border-t border-cyan-500/20">
-          <div className="text-xs font-mono font-medium uppercase tracking-wider text-cyan-400 flex items-center justify-between">
+        <div className="space-y-2 pt-2 border-t border-[#966422]/40">
+          <div className="text-xs font-fantasy font-semibold uppercase tracking-wider text-[#dfa86c] flex items-center justify-between">
             <span>Pré-Requisitos (Árvore de Dependências DAG)</span>
-            <span className="text-[10px] text-slate-400 lowercase">
+            <span className="text-[10px] text-[#c5b08f] font-mono lowercase">
               {selectedDeps.length} selecionada(s)
             </span>
           </div>
 
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[#c5b08f]">
             A missão ficará no status <strong>[Bloqueada]</strong> até que todas as missões
             selecionadas abaixo sejam concluídas.
           </p>
 
           {candidateMissions.length === 0 ? (
-            <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-lg text-slate-500 font-mono text-xs">
+            <div className="p-3 bg-[#040814]/80 border border-[#966422]/40 text-[#a39171] font-mono text-xs">
               Nenhuma outra missão criada neste projeto ainda. Esta missão estará disponível
               imediatamente.
             </div>
           ) : (
-            <div className="max-h-48 overflow-y-auto space-y-2 pr-1 bg-slate-950/50 p-2.5 rounded-lg border border-slate-800">
+            <div className="max-h-48 overflow-y-auto space-y-2 pr-1 bg-[#040814]/75 p-2.5 border border-[#966422]/45">
               {candidateMissions.map((cand) => {
                 const isSelected = selectedDeps.includes(cand.id);
                 return (
@@ -174,22 +174,22 @@ export const MissionModal: React.FC<MissionModalProps> = ({
                     key={cand.id}
                     type="button"
                     onClick={() => toggleDependency(cand.id)}
-                    className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors border ${
+                    className={`w-full flex items-center gap-3 p-2 text-left transition-colors border ${
                       isSelected
-                        ? "bg-cyan-950/40 border-cyan-500/50 text-cyan-200"
-                        : "bg-slate-900/40 border-slate-800/80 text-slate-300 hover:border-slate-700"
+                        ? "bg-[#241909]/85 border-[#dfa86c]/75 text-[#f8ecd5]"
+                        : "bg-[#060e20]/60 border-[#5c4829]/50 text-[#c5b08f] hover:border-[#c89b55]/60"
                     }`}
                   >
                     {isSelected ? (
-                      <CheckSquare className="w-4 h-4 text-cyan-400 shrink-0" />
+                      <CheckSquare className="w-4 h-4 text-[#fde047] shrink-0" />
                     ) : (
-                      <Square className="w-4 h-4 text-slate-600 shrink-0" />
+                      <Square className="w-4 h-4 text-[#8c7a5b] shrink-0" />
                     )}
                     <div className="flex-1 min-w-0">
-                      <div className="font-mono text-xs font-medium truncate">
+                      <div className="font-fantasy text-xs font-semibold truncate">
                         {cand.title}
                       </div>
-                      <div className="text-[10px] text-slate-500 font-mono">
+                      <div className="text-[10px] text-[#a39171] font-mono">
                         Status atual: [{cand.status}] · XP: +{cand.xp_reward}
                       </div>
                     </div>
@@ -201,13 +201,13 @@ export const MissionModal: React.FC<MissionModalProps> = ({
         </div>
 
         {error && (
-          <div className="p-3 bg-red-950/40 border border-red-500/50 rounded-lg text-red-300 font-mono text-xs flex items-center gap-2">
+          <div className="p-3 bg-red-950/40 border border-red-500/50 text-red-300 font-mono text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
             <span>[ERRO DE VALIDAÇÃO]: {error}</span>
           </div>
         )}
 
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-cyan-500/20">
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#966422]/40">
           <SystemButton
             type="button"
             variant="secondary"

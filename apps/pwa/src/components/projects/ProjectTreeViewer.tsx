@@ -6,6 +6,7 @@ import { logger } from "../../services/logger";
 import { SystemPanel } from "../system/SystemPanel";
 import { SystemBadge } from "../system/SystemBadge";
 import { SystemButton } from "../system/SystemButton";
+import { GildedCorners } from "../system/GildedCorners";
 import { MissionCard } from "./MissionCard";
 import { MissionModal, type MissionFormData } from "./MissionModal";
 import { ArrowLeft, Plus, CheckCircle2, Lock, Sparkles, Filter } from "lucide-react";
@@ -149,7 +150,7 @@ export const ProjectTreeViewer: React.FC<ProjectTreeViewerProps> = ({
 
   if (loading && !project) {
     return (
-      <div className="p-8 text-center font-mono text-cyan-400">
+      <div className="p-8 text-center font-fantasy tracking-widest text-[#dfa86c]">
         Carregando árvore de diretrizes...
       </div>
     );
@@ -208,71 +209,74 @@ export const ProjectTreeViewer: React.FC<ProjectTreeViewerProps> = ({
         }
       >
         {project.description && (
-          <p className="text-sm text-slate-300 font-sans mb-4 break-words [overflow-wrap:anywhere]">
+          <p className="text-sm text-[#e8d5b5] font-sans mb-4 break-words [overflow-wrap:anywhere]">
             {project.description}
           </p>
         )}
 
         {/* Progress Bar */}
-        <div className="space-y-1.5 pt-2 border-t border-cyan-500/20">
+        <div className="space-y-1.5 pt-2 border-t border-[#966422]/40">
           <div className="flex items-center justify-between text-xs font-mono">
-            <span className="text-slate-400 uppercase tracking-wider">
+            <span className="text-[#c5b08f] font-fantasy uppercase tracking-wider">
               Progresso de Conclusão:
             </span>
-            <span className="text-cyan-300 font-bold">
+            <span className="text-[#fde047] font-bold">
               {project.progress}% ({doneCount}/{missions.length} missões)
             </span>
           </div>
 
-          <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-cyan-500/30 p-0.5">
+          <div className="w-full h-2.5 bg-[#040814] overflow-hidden border border-[#c89b55]/60 p-0.5">
             <div
-              className="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(0,240,255,0.7)]"
+              className="h-full bg-gradient-to-r from-[#966422] via-[#dfa86c] to-[#fde047] transition-all duration-500 shadow-[0_0_12px_rgba(253,224,71,0.75)]"
               style={{ width: `${project.progress}%` }}
             />
           </div>
         </div>
 
         {/* Mission Counters */}
-        <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-800 text-center font-mono">
-          <div className="p-2 bg-cyan-950/20 rounded border border-cyan-500/20">
-            <div className="text-[10px] text-cyan-400 uppercase flex items-center justify-center gap-1">
+        <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-[#966422]/35 text-center font-mono">
+          <div className="relative p-2 bg-[#140f08]/85 border border-[#c89b55]/50 overflow-hidden shadow-[0_0_12px_rgba(223,168,108,0.1)]">
+            <GildedCorners size="xs" withInnerFrame={false} color="#dfa86c" diamondColor="#fde047" />
+            <div className="relative z-10 text-[10px] text-[#dfa86c] font-fantasy uppercase flex items-center justify-center gap-1">
               <Sparkles className="w-3 h-3" />
               <span>Disponíveis</span>
             </div>
-            <div className="text-lg font-bold text-cyan-300">{availableCount}</div>
+            <div className="relative z-10 text-lg font-bold text-[#fde047]">{availableCount}</div>
           </div>
 
-          <div className="p-2 bg-slate-950/40 rounded border border-slate-800">
-            <div className="text-[10px] text-slate-400 uppercase flex items-center justify-center gap-1">
+          <div className="relative p-2 bg-[#040814]/80 border border-[#5c4829]/50 overflow-hidden">
+            <GildedCorners size="xs" withInnerFrame={false} color="#715a38" diamondColor="#8c7a5b" />
+            <div className="relative z-10 text-[10px] text-[#a39171] font-fantasy uppercase flex items-center justify-center gap-1">
               <Lock className="w-3 h-3" />
               <span>Bloqueadas</span>
             </div>
-            <div className="text-lg font-bold text-slate-400">{blockedCount}</div>
+            <div className="relative z-10 text-lg font-bold text-[#a39171]">{blockedCount}</div>
           </div>
 
-          <div className="p-2 bg-emerald-950/20 rounded border border-emerald-500/20">
-            <div className="text-[10px] text-emerald-400 uppercase flex items-center justify-center gap-1">
+          <div className="relative p-2 bg-emerald-950/30 border border-emerald-500/40 overflow-hidden shadow-[0_0_12px_rgba(16,185,129,0.08)]">
+            <GildedCorners size="xs" withInnerFrame={false} color="#059669" diamondColor="#34d399" />
+            <div className="relative z-10 text-[10px] text-emerald-400 font-fantasy uppercase flex items-center justify-center gap-1">
               <CheckCircle2 className="w-3 h-3" />
               <span>Concluídas</span>
             </div>
-            <div className="text-lg font-bold text-emerald-300">{doneCount}</div>
+            <div className="relative z-10 text-lg font-bold text-emerald-300">{doneCount}</div>
           </div>
         </div>
       </SystemPanel>
 
       {/* Filter Tabs */}
       <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1">
-        <div className="flex items-center gap-1.5 text-xs font-mono">
-          <Filter className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="text-slate-400">Filtrar:</span>
+        <div className="flex items-center gap-1.5 text-xs font-fantasy tracking-wider">
+          <Filter className="w-3.5 h-3.5 text-[#dfa86c]" />
+          <span className="text-[#c5b08f] uppercase">Filtrar:</span>
           {(["all", "disponivel", "bloqueada", "feita"] as const).map((st) => (
             <button
               key={st}
               onClick={() => setFilterStatus(st)}
-              className={`px-2.5 py-1 rounded text-xs transition-colors border ${
+              className={`px-2.5 py-1 rounded-none text-xs transition-colors border uppercase ${
                 filterStatus === st
-                  ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 font-bold"
-                  : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200"
+                  ? "bg-[#241909]/95 border-[#dfa86c] text-[#fde047] font-bold"
+                  : "bg-[#060e20]/80 border-[#966422]/40 text-[#a39171] hover:text-[#f3e5cc]"
               }`}
             >
               {st === "all" ? "Todas" : st.charAt(0).toUpperCase() + st.slice(1)}
@@ -283,8 +287,8 @@ export const ProjectTreeViewer: React.FC<ProjectTreeViewerProps> = ({
 
       {/* Missions Tree Grid */}
       {filteredMissions.length === 0 ? (
-        <div className="p-8 text-center border border-dashed border-cyan-500/30 rounded-xl bg-[#0a1224]/50">
-          <p className="text-sm font-mono text-slate-400">
+        <div className="p-8 text-center border border-dashed border-[#c89b55]/40 rounded-none bg-[#060e20]/70">
+          <p className="text-sm font-fantasy tracking-wider text-[#c5b08f]">
             {missions.length === 0
               ? "Nenhuma missão cadastrada nesta diretriz ainda."
               : "Nenhuma missão com o filtro selecionado."}

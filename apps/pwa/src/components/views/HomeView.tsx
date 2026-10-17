@@ -7,6 +7,7 @@ import { logger } from "../../services/logger";
 import { SystemPanel } from "../system/SystemPanel";
 import { SystemBadge } from "../system/SystemBadge";
 import { SystemButton } from "../system/SystemButton";
+import { GildedCorners } from "../system/GildedCorners";
 import { MissionCard } from "../projects/MissionCard";
 import {
   FolderGit2,
@@ -155,10 +156,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
       {/* Welcome Banner */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-[10px] font-mono tracking-widest text-cyan-400 uppercase">
-            [ INTERFACE DE COMANDO // VISÃO GERAL ]
+          <div className="text-[10px] font-fantasy tracking-[0.2em] text-[#dfa86c] uppercase flex items-center gap-1.5">
+            <span className="inline-block w-1.5 h-1.5 rotate-45 bg-[#fde047]" />
+            <span>[ INTERFACE DE COMANDO // VISÃO GERAL ]</span>
           </div>
-          <h2 className="text-xl md:text-2xl font-bold font-mono text-white tracking-wide">
+          <h2 className="text-xl md:text-2xl font-bold font-fantasy text-[#f8ecd5] tracking-wider uppercase">
             PAINEL DO SISTEMA
           </h2>
         </div>
@@ -168,47 +170,48 @@ export const HomeView: React.FC<HomeViewProps> = ({
           size="sm"
           onClick={onNavigateToGs}
           aria-label="Consultar Grande Sábio"
-          icon={<Zap className="w-3.5 h-3.5 text-cyan-400" />}
+          icon={<Zap className="w-3.5 h-3.5 text-[#fde047]" />}
         >
           Consultar G.S
         </SystemButton>
       </div>
 
       {/* Hunter Status Banner (Level & XP) */}
-      <div className="p-4 bg-gradient-to-r from-[#061226] via-[#091838] to-[#061226] border border-cyan-500/30 rounded-xl shadow-[0_0_20px_rgba(0,240,255,0.08)] font-mono">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <div className="w-8 h-8 rounded-lg bg-cyan-950/80 border border-cyan-400/50 flex items-center justify-center font-bold text-cyan-300 text-sm shrink-0">
+      <div className="relative p-4 bg-gradient-to-r from-[#050c1a] via-[#0a162f] to-[#050c1a] border border-[#c89b55]/60 rounded-none shadow-[0_0_24px_rgba(223,168,108,0.14)] font-mono overflow-hidden">
+        <GildedCorners size="md" withCenterNotches />
+        <div className="relative z-10 flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="w-9 h-9 bg-[#1c1308] border border-[#dfa86c] flex items-center justify-center font-bold font-fantasy text-[#fde047] text-sm shrink-0 shadow-[0_0_12px_rgba(223,168,108,0.3)]">
               L{levelProgress.level}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-xs font-bold text-white tracking-wide truncate">
+              <div className="text-xs font-bold font-fantasy text-[#f8ecd5] tracking-wider uppercase truncate">
                 {profile?.name ?? "Rimuru Tempest"}
               </div>
-              <div className="text-[10px] text-cyan-400/80 truncate">
+              <div className="text-[10px] text-[#dfa86c] font-fantasy tracking-wide truncate">
                 {profile?.title ?? "Aspirante a Desperto"}
               </div>
             </div>
           </div>
           <div className="text-right shrink-0 pl-2">
-            <div className="text-[10px] text-slate-400 uppercase">XP Acumulado</div>
-            <div className="text-sm font-bold text-cyan-300">
-              {profile?.total_xp ?? 0} <span className="text-[10px] text-slate-500">XP</span>
+            <div className="text-[10px] font-fantasy tracking-widest text-[#c5b08f] uppercase">XP Acumulado</div>
+            <div className="text-sm font-bold text-[#fde047]">
+              {profile?.total_xp ?? 0} <span className="text-[10px] text-[#a39171]">XP</span>
             </div>
           </div>
         </div>
 
         {/* Level XP Bar */}
-        <div className="space-y-1">
-          <div className="flex justify-between text-[10px] text-slate-400">
-            <span>Progresso do Nível {levelProgress.level}</span>
-            <span>
+        <div className="relative z-10 space-y-1">
+          <div className="flex justify-between text-[10px] text-[#c5b08f]">
+            <span className="font-fantasy uppercase tracking-wider">Progresso do Nível {levelProgress.level}</span>
+            <span className="text-[#fde047]">
               {levelProgress.currentXp} / {levelProgress.xpForNextLevel} XP ({levelProgress.progressPercentage}%)
             </span>
           </div>
-          <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-cyan-500/20">
+          <div className="w-full bg-[#040814] h-2 overflow-hidden border border-[#c89b55]/50 p-[1px]">
             <div
-              className="bg-gradient-to-r from-cyan-500 to-cyan-300 h-full transition-all duration-500"
+              className="bg-gradient-to-r from-[#966422] via-[#dfa86c] to-[#fde047] h-full transition-all duration-500 shadow-[0_0_8px_rgba(253,224,71,0.65)]"
               style={{ width: `${levelProgress.progressPercentage}%` }}
             />
           </div>
@@ -217,32 +220,35 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
       {/* Quick Stats Grid */}
       <div className="grid grid-cols-3 gap-3 font-mono">
-        <div className="p-3 bg-[#0a152e]/80 border border-cyan-500/25 rounded-xl shadow-[0_0_15px_rgba(0,240,255,0.06)] min-w-0">
-          <div className="text-[10px] text-slate-400 uppercase flex items-center gap-1.5 mb-1 truncate">
-            <FolderGit2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+        <div className="relative p-3 bg-[#060e20]/90 border border-[#c89b55]/45 rounded-none shadow-[0_0_15px_rgba(223,168,108,0.08)] min-w-0 overflow-hidden">
+          <GildedCorners size="xs" withInnerFrame={false} />
+          <div className="relative z-10 text-[10px] text-[#c5b08f] font-fantasy uppercase tracking-wider flex items-center gap-1.5 mb-1 truncate">
+            <FolderGit2 className="w-3.5 h-3.5 text-[#dfa86c] shrink-0" />
             <span className="truncate">Projetos</span>
           </div>
-          <div className="text-lg md:text-xl font-bold text-cyan-300 truncate">
+          <div className="relative z-10 text-lg md:text-xl font-bold font-fantasy text-[#f8ecd5] truncate">
             {totalProjectsCount}
           </div>
         </div>
 
-        <div className="p-3 bg-[#0a152e]/80 border border-cyan-400/30 rounded-xl shadow-[0_0_15px_rgba(0,240,255,0.1)] min-w-0">
-          <div className="text-[10px] text-cyan-400 uppercase flex items-center gap-1.5 mb-1 truncate">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
+        <div className="relative p-3 bg-[#140f08]/85 border border-[#dfa86c]/60 rounded-none shadow-[0_0_15px_rgba(223,168,108,0.14)] min-w-0 overflow-hidden">
+          <GildedCorners size="xs" withInnerFrame={false} color="#dfa86c" diamondColor="#fde047" />
+          <div className="relative z-10 text-[10px] text-[#dfa86c] font-fantasy uppercase tracking-wider flex items-center gap-1.5 mb-1 truncate">
+            <Sparkles className="w-3.5 h-3.5 text-[#fde047] shrink-0" />
             <span className="truncate">Disponíveis</span>
           </div>
-          <div className="text-lg md:text-xl font-bold text-cyan-200 truncate">
+          <div className="relative z-10 text-lg md:text-xl font-bold font-fantasy text-[#fde047] truncate">
             {totalAvailableMissions}
           </div>
         </div>
 
-        <div className="p-3 bg-[#0a152e]/80 border border-emerald-500/25 rounded-xl min-w-0">
-          <div className="text-[10px] text-emerald-400 uppercase flex items-center gap-1.5 mb-1 truncate">
+        <div className="relative p-3 bg-[#060e20]/90 border border-emerald-500/35 rounded-none min-w-0 overflow-hidden shadow-[0_0_15px_rgba(16,185,129,0.08)]">
+          <GildedCorners size="xs" withInnerFrame={false} color="#059669" diamondColor="#34d399" />
+          <div className="relative z-10 text-[10px] text-emerald-400 font-fantasy uppercase tracking-wider flex items-center gap-1.5 mb-1 truncate">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
             <span className="truncate">Concluídas</span>
           </div>
-          <div className="text-lg md:text-xl font-bold text-emerald-300 truncate">
+          <div className="relative z-10 text-lg md:text-xl font-bold font-fantasy text-emerald-300 truncate">
             {totalDoneMissions}
           </div>
         </div>
@@ -250,7 +256,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
       {/* Active Project & Next Unlocked Mission Card */}
       {loading && !activeProject ? (
-        <div className="p-8 text-center font-mono text-cyan-400">
+        <div className="p-8 text-center font-fantasy tracking-widest text-[#dfa86c]">
           Sincronizando telemetria do projeto ativo...
         </div>
       ) : activeProject ? (
@@ -276,24 +282,24 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </SystemButton>
             }
           >
-            <h3 className="font-mono font-bold text-base md:text-lg text-white mb-1 break-words [overflow-wrap:anywhere]">
+            <h3 className="font-fantasy font-bold text-base md:text-lg text-[#f8ecd5] tracking-wide mb-1 break-words [overflow-wrap:anywhere]">
               {activeProject.title}
             </h3>
             {activeProject.description && (
-              <p className="text-xs text-slate-400 font-sans mb-3 break-words [overflow-wrap:anywhere]">
+              <p className="text-xs text-[#c5b08f] font-sans mb-3 break-words [overflow-wrap:anywhere]">
                 {activeProject.description}
               </p>
             )}
 
             {/* Progress bar */}
-            <div className="space-y-1 pt-2 border-t border-cyan-500/15">
+            <div className="space-y-1 pt-2 border-t border-[#966422]/40">
               <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-slate-400">Progresso Geral</span>
-                <span className="text-cyan-300 font-bold">{activeProject.progress}%</span>
+                <span className="text-[#c5b08f] font-fantasy uppercase tracking-wider">Progresso Geral</span>
+                <span className="text-[#fde047] font-bold">{activeProject.progress}%</span>
               </div>
-              <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-cyan-500/20">
+              <div className="w-full h-2 bg-[#040814] overflow-hidden border border-[#c89b55]/55 p-[1px]">
                 <div
-                  className="h-full bg-cyan-400 rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(0,240,255,0.7)]"
+                  className="h-full bg-gradient-to-r from-[#966422] via-[#dfa86c] to-[#fde047] transition-all duration-300 shadow-[0_0_8px_rgba(253,224,71,0.7)]"
                   style={{ width: `${activeProject.progress}%` }}
                 />
               </div>
@@ -302,8 +308,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
           {/* Next Mission Unlocked */}
           <div>
-            <div className="text-xs font-mono uppercase tracking-wider text-cyan-400 mb-2 flex items-center gap-2">
-              <Target className="w-4 h-4 text-cyan-400" />
+            <div className="text-xs font-fantasy font-bold uppercase tracking-widest text-[#dfa86c] mb-2 flex items-center gap-2">
+              <Target className="w-4 h-4 text-[#fde047]" />
               <span>Próxima Missão Desbloqueada</span>
             </div>
 
@@ -315,7 +321,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 loading={actionLoading}
               />
             ) : (
-              <div className="p-5 border border-dashed border-cyan-500/30 rounded-xl bg-[#0a1224]/50 text-center font-mono text-xs text-slate-400">
+              <div className="p-5 border border-dashed border-[#c89b55]/40 rounded-none bg-[#060e20]/70 text-center font-mono text-xs text-[#c5b08f]">
                 Todas as missões desbloqueadas deste projeto foram concluídas ou aguardam pré-requisitos!
                 <div className="mt-3">
                   <SystemButton
@@ -332,14 +338,14 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
       ) : (
         /* Empty State */
-        <div className="p-8 md:p-10 border border-dashed border-cyan-500/30 rounded-2xl bg-[#0a1224]/50 text-center">
-          <div className="w-12 h-12 rounded-full bg-cyan-950/60 border border-cyan-500/40 text-cyan-400 flex items-center justify-center mx-auto mb-3">
+        <div className="p-8 md:p-10 border border-dashed border-[#c89b55]/45 rounded-none bg-[#060e20]/70 text-center">
+          <div className="w-12 h-12 bg-[#140f08] border border-[#c89b55]/60 text-[#dfa86c] flex items-center justify-center mx-auto mb-3 shadow-[0_0_16px_rgba(223,168,108,0.2)]">
             <FolderGit2 className="w-6 h-6" />
           </div>
-          <h3 className="text-base font-bold font-mono text-white mb-1">
+          <h3 className="text-base font-bold font-fantasy tracking-wider uppercase text-[#f8ecd5] mb-1">
             Nenhuma Diretriz Ativa
           </h3>
-          <p className="text-xs text-slate-400 font-sans max-w-sm mx-auto mb-4">
+          <p className="text-xs text-[#c5b08f] font-sans max-w-sm mx-auto mb-4">
             Crie seu primeiro projeto ou utilize o Painel Dev para semear dados de teste e começar seu treinamento.
           </p>
           <SystemButton

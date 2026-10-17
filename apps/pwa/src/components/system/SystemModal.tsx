@@ -61,31 +61,43 @@ export const SystemModal: React.FC<SystemModalProps> = ({
             transition={{ duration: 0.2, ease: "easeOut" }}
             role="dialog"
             aria-modal="true"
-            className={`relative w-full ${maxWidthClasses} bg-[#070d1e] border border-cyan-400/50 rounded-2xl shadow-[0_0_40px_rgba(0,240,255,0.25)] p-5 md:p-6 z-10 text-slate-100 max-h-[90vh] flex flex-col`}
+            className={`relative w-full ${maxWidthClasses} bg-[#060e20]/95 border border-[#c89b55]/75 rounded-none shadow-[0_0_45px_rgba(223,168,108,0.28)] p-5 md:p-6 z-10 text-[#f3e5cc] max-h-[90vh] flex flex-col`}
           >
-            {/* System Corner Brackets */}
-            <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-cyan-400 rounded-tl pointer-events-none" />
-            <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-cyan-400 rounded-tr pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-cyan-400 rounded-bl pointer-events-none" />
-            <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-cyan-400 rounded-br pointer-events-none" />
+            {/* Inner gilded hairline frame */}
+            <div className="absolute inset-[4px] border border-[#dfa86c]/25 pointer-events-none" />
+
+            {/* Gothic Corner Brackets & Diamonds */}
+            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#dfa86c] pointer-events-none">
+              <div className="absolute top-[2px] left-[2px] w-1.5 h-1.5 bg-[#fde047] rotate-45 shadow-[0_0_6px_rgba(253,224,71,0.9)]" />
+            </div>
+            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#dfa86c] pointer-events-none">
+              <div className="absolute top-[2px] right-[2px] w-1.5 h-1.5 bg-[#fde047] rotate-45 shadow-[0_0_6px_rgba(253,224,71,0.9)]" />
+            </div>
+            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#dfa86c] pointer-events-none">
+              <div className="absolute bottom-[2px] left-[2px] w-1.5 h-1.5 bg-[#fde047] rotate-45 shadow-[0_0_6px_rgba(253,224,71,0.9)]" />
+            </div>
+            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#dfa86c] pointer-events-none">
+              <div className="absolute bottom-[2px] right-[2px] w-1.5 h-1.5 bg-[#fde047] rotate-45 shadow-[0_0_6px_rgba(253,224,71,0.9)]" />
+            </div>
 
             {/* Header */}
-            <div className="flex items-start justify-between gap-4 border-b border-cyan-500/20 pb-4 shrink-0 min-w-0">
+            <div className="relative z-10 flex items-start justify-between gap-4 border-b border-[#966422]/45 pb-4 shrink-0 min-w-0">
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 {icon && (
-                  <div className="p-2 rounded-lg bg-cyan-950/60 border border-cyan-500/40 text-cyan-400 shrink-0">
+                  <div className="p-2 bg-[#0b1630]/80 border border-[#c89b55]/55 text-[#dfa86c] shrink-0 shadow-[0_0_12px_rgba(223,168,108,0.18)]">
                     {icon}
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <div className="text-[10px] font-mono tracking-widest text-cyan-400 uppercase">
-                    [ INTERFACE DO SISTEMA ]
+                  <div className="text-[10px] font-fantasy tracking-[0.22em] text-[#dfa86c] uppercase flex items-center gap-1.5">
+                    <span className="inline-block w-1 h-1 rotate-45 bg-[#fde047]" />
+                    <span>[ DECRETO DO SISTEMA ]</span>
                   </div>
-                  <h3 className="text-lg md:text-xl font-bold font-mono text-white tracking-wide break-words [overflow-wrap:anywhere]">
+                  <h3 className="text-lg md:text-xl font-bold font-fantasy text-[#f8ecd5] tracking-wider uppercase break-words [overflow-wrap:anywhere] mt-0.5">
                     {title}
                   </h3>
                   {subtitle && (
-                    <p className="text-xs text-slate-400 font-mono mt-0.5 break-words [overflow-wrap:anywhere]">{subtitle}</p>
+                    <p className="text-xs text-[#c5b08f] font-mono mt-0.5 break-words [overflow-wrap:anywhere]">{subtitle}</p>
                   )}
                 </div>
               </div>
@@ -97,14 +109,14 @@ export const SystemModal: React.FC<SystemModalProps> = ({
                   onClose();
                 }}
                 aria-label="Fechar Modal"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-cyan-300 hover:bg-cyan-950/40 border border-transparent hover:border-cyan-500/30 transition-colors shrink-0"
+                className="p-1.5 text-[#c5b08f] hover:text-[#fde047] hover:bg-[#101f42]/80 border border-transparent hover:border-[#c89b55]/45 transition-colors shrink-0"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Content Body */}
-            <div className="mt-4 overflow-y-auto pr-1 flex-1">{children}</div>
+            <div className="relative z-10 mt-4 overflow-y-auto pr-1 flex-1">{children}</div>
           </motion.div>
         </div>
       )}

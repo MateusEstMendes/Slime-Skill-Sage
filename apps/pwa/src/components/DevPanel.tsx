@@ -36,6 +36,7 @@ import { localDb } from "../services/db";
 import { gameService } from "../services/gameService";
 import { type LedgerAuditResult } from "@slime-sage/game";
 import { VoicesView } from "./views/VoicesView";
+import { GildedCorners } from "./system/GildedCorners";
 
 interface DevPanelProps {
   isOpen: boolean;
@@ -314,20 +315,22 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
     <div
       role="dialog"
       aria-label="Painel do Desenvolvedor"
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
+      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
     >
-      <div className="bg-[#070c18] border border-cyan-500/40 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-[0_0_50px_rgba(0,240,255,0.2)] overflow-hidden font-sans">
+      <div className="relative bg-[#060e20]/95 border border-[#c89b55]/75 rounded-none w-full max-w-4xl max-h-[90vh] flex flex-col shadow-[0_0_50px_rgba(223,168,108,0.22)] overflow-hidden font-sans text-[#f3e5cc]">
+        <GildedCorners size="lg" withCenterNotches />
+
         {/* Header */}
-        <div className="bg-[#0a1224] border-b border-cyan-500/20 px-5 py-3.5 flex items-center justify-between">
+        <div className="relative z-10 bg-[#081329] border-b border-[#966422]/45 px-5 py-3.5 flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
-            <div className="p-1.5 rounded-lg bg-cyan-950/80 border border-cyan-500/40 text-cyan-400">
+            <div className="p-1.5 bg-[#140f08] border border-[#dfa86c]/60 text-[#fde047]">
               <Terminal className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-[10px] font-mono tracking-widest text-cyan-400/70 uppercase">
+              <span className="text-[10px] font-fantasy tracking-widest text-[#dfa86c] uppercase">
                 [PAINEL DEV // PROTOCOLO ADMINISTRADOR]
               </span>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <h2 className="text-base font-bold font-fantasy text-[#f8ecd5] uppercase tracking-wider flex items-center gap-2">
                 Console do Sistema Slime Sage
               </h2>
             </div>
@@ -336,20 +339,20 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
           <button
             onClick={onClose}
             aria-label="Fechar Painel Dev"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
+            className="p-1.5 text-[#c5b08f] hover:text-[#fde047] hover:bg-[#101f42] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex border-b border-cyan-500/15 bg-slate-950/40 px-4 overflow-x-auto">
+        <div className="relative z-10 flex border-b border-[#966422]/40 bg-[#040814]/80 px-4 overflow-x-auto">
           <button
             onClick={() => setActiveTab("logs")}
-            className={`px-3.5 py-2.5 text-xs font-mono font-medium border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+            className={`px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === "logs"
-                ? "border-cyan-400 text-cyan-300 bg-cyan-950/20"
-                : "border-transparent text-slate-400 hover:text-slate-200"
+                ? "border-[#fde047] text-[#fde047] bg-[#1c1308]/50"
+                : "border-transparent text-[#a39171] hover:text-[#f3e5cc]"
             }`}
           >
             <Terminal className="w-3.5 h-3.5" />
@@ -358,10 +361,10 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
 
           <button
             onClick={() => setActiveTab("ledger")}
-            className={`px-3.5 py-2.5 text-xs font-mono font-medium border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+            className={`px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === "ledger"
-                ? "border-cyan-400 text-cyan-300 bg-cyan-950/20"
-                : "border-transparent text-slate-400 hover:text-slate-200"
+                ? "border-[#fde047] text-[#fde047] bg-[#1c1308]/50"
+                : "border-transparent text-[#a39171] hover:text-[#f3e5cc]"
             }`}
           >
             <Scale className="w-3.5 h-3.5" />
@@ -370,10 +373,10 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
 
           <button
             onClick={() => setActiveTab("time")}
-            className={`px-3.5 py-2.5 text-xs font-mono font-medium border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+            className={`px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === "time"
-                ? "border-cyan-400 text-cyan-300 bg-cyan-950/20"
-                : "border-transparent text-slate-400 hover:text-slate-200"
+                ? "border-[#fde047] text-[#fde047] bg-[#1c1308]/50"
+                : "border-transparent text-[#a39171] hover:text-[#f3e5cc]"
             }`}
           >
             <Clock className="w-3.5 h-3.5" />
@@ -382,10 +385,10 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
 
           <button
             onClick={() => setActiveTab("db")}
-            className={`px-3.5 py-2.5 text-xs font-mono font-medium border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+            className={`px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === "db"
-                ? "border-cyan-400 text-cyan-300 bg-cyan-950/20"
-                : "border-transparent text-slate-400 hover:text-slate-200"
+                ? "border-[#fde047] text-[#fde047] bg-[#1c1308]/50"
+                : "border-transparent text-[#a39171] hover:text-[#f3e5cc]"
             }`}
           >
             <Database className="w-3.5 h-3.5" />
@@ -394,10 +397,10 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
 
           <button
             onClick={() => setActiveTab("voices")}
-            className={`px-3.5 py-2.5 text-xs font-mono font-medium border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+            className={`px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === "voices"
-                ? "border-cyan-400 text-cyan-300 bg-cyan-950/20"
-                : "border-transparent text-slate-400 hover:text-slate-200"
+                ? "border-[#fde047] text-[#fde047] bg-[#1c1308]/50"
+                : "border-transparent text-[#a39171] hover:text-[#f3e5cc]"
             }`}
           >
             <Volume2 className="w-3.5 h-3.5" />
@@ -406,10 +409,10 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
 
           <button
             onClick={() => setActiveTab("notif")}
-            className={`px-3.5 py-2.5 text-xs font-mono font-medium border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+            className={`px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === "notif"
-                ? "border-cyan-400 text-cyan-300 bg-cyan-950/20"
-                : "border-transparent text-slate-400 hover:text-slate-200"
+                ? "border-[#fde047] text-[#fde047] bg-[#1c1308]/50"
+                : "border-transparent text-[#a39171] hover:text-[#f3e5cc]"
             }`}
           >
             <Bell className="w-3.5 h-3.5" />
@@ -422,17 +425,18 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
           {/* TAB: LEDGER */}
           {activeTab === "ledger" && (
             <div className="space-y-5 max-w-3xl mx-auto font-mono">
-              <div className="bg-[#0a1224]/70 border border-cyan-500/20 rounded-xl p-5 space-y-4">
-                <div className="flex items-center justify-between gap-3">
+              <div className="relative bg-[#060e20]/95 border border-[#c89b55]/60 rounded-none p-5 space-y-4 shadow-[0_0_25px_rgba(223,168,108,0.12)] overflow-hidden">
+                <GildedCorners size="sm" />
+                <div className="relative z-10 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-lg bg-cyan-950/70 border border-cyan-500/40 text-cyan-400">
+                    <div className="p-2.5 bg-[#140f08] border border-[#dfa86c]/60 text-[#fde047] shadow-[0_0_12px_rgba(223,168,108,0.25)]">
                       <Scale className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-white">
+                      <h3 className="text-sm font-bold font-fantasy text-[#f8ecd5] tracking-wider uppercase">
                         Ledger Imutável // Auditoria Total (xp_event)
                       </h3>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-[#c5b08f]">
                         Regra de Ouro 2: Toda alteração de XP gera registro imutável no ledger.
                       </p>
                     </div>
@@ -442,7 +446,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                     onClick={loadLedgerData}
                     disabled={ledgerLoading}
                     title="Atualizar Ledger"
-                    className="p-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-500/50 text-slate-300 hover:text-cyan-300 transition-colors"
+                    className="p-1.5 bg-[#081329] border border-[#966422]/60 hover:border-[#dfa86c] text-[#c5b08f] hover:text-[#fde047] transition-colors"
                   >
                     <RefreshCw className={`w-4 h-4 ${ledgerLoading ? "animate-spin" : ""}`} />
                   </button>
@@ -570,27 +574,28 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
           {/* TAB: TIME TRAVEL (FAKE CLOCK) */}
           {activeTab === "time" && (
             <div className="space-y-5 max-w-2xl mx-auto font-mono">
-              <div className="bg-[#0a1224]/70 border border-cyan-500/20 rounded-xl p-5 space-y-4">
-                <div className="flex items-center justify-between gap-3">
+              <div className="relative bg-[#060e20]/95 border border-[#c89b55]/60 rounded-none p-5 space-y-4 shadow-[0_0_25px_rgba(223,168,108,0.12)] overflow-hidden">
+                <GildedCorners size="sm" />
+                <div className="relative z-10 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-lg bg-cyan-950/70 border border-cyan-500/40 text-cyan-400">
+                    <div className="p-2.5 bg-[#140f08] border border-[#dfa86c]/60 text-[#fde047] shadow-[0_0_12px_rgba(223,168,108,0.25)]">
                       <Clock className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-white">
+                      <h3 className="text-sm font-bold font-fantasy text-[#f8ecd5] tracking-wider uppercase">
                         Viagem no Tempo // Controles de Clock
                       </h3>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-[#c5b08f]">
                         Injeção de tempo determinístico via FakeClock para testar viradas de dia e cooldowns.
                       </p>
                     </div>
                   </div>
 
                   <span
-                    className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
+                    className={`px-2.5 py-1 rounded-none text-[10px] uppercase font-bold font-fantasy border ${
                       isFakeClock
-                        ? "bg-amber-950 text-amber-400 border border-amber-600/40"
-                        : "bg-emerald-950 text-emerald-400 border border-emerald-600/40"
+                        ? "bg-[#261a08] text-[#fde047] border-[#dfa86c]/70 shadow-[0_0_10px_rgba(253,224,71,0.2)]"
+                        : "bg-emerald-950/80 text-emerald-300 border-emerald-500/50"
                     }`}
                   >
                     {isFakeClock ? "FakeClock Ativo" : "RealClock Ativo"}
@@ -598,17 +603,18 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 {timeMessage && (
-                  <div className="p-3 bg-cyan-950/40 border border-cyan-500/40 rounded-lg text-xs text-cyan-300 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                  <div className="relative z-10 p-3 bg-[#1c1308]/90 border border-[#dfa86c]/60 text-xs text-[#fde047] flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#fde047] flex-shrink-0" />
                     <span>{timeMessage}</span>
                   </div>
                 )}
 
                 {/* Current Clock Display */}
-                <div className="p-4 bg-slate-950/80 border border-slate-800 rounded-xl text-center space-y-1 relative overflow-hidden">
+                <div className="relative z-10 p-4 bg-[#040814]/90 border border-[#966422]/60 rounded-none text-center space-y-1 overflow-hidden shadow-[inset_0_0_12px_rgba(223,168,108,0.05)]">
+                  <GildedCorners size="xs" withInnerFrame={false} />
                   <div className="flex items-center justify-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-                    <span className="text-[10px] text-slate-400 uppercase tracking-widest">
+                    <span className="w-2 h-2 rounded-full bg-[#fde047] animate-ping" />
+                    <span className="text-[10px] text-[#c5b08f] uppercase tracking-widest font-fantasy">
                       Horário Atual do Sistema (Tempo Real)
                     </span>
                   </div>
@@ -706,17 +712,18 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
           {/* TAB: DATABASE */}
           {activeTab === "db" && (
             <div className="space-y-5 max-w-2xl mx-auto">
-              <div className="bg-[#0a1224]/70 border border-cyan-500/20 rounded-xl p-5 space-y-4">
-                <div className="flex items-center justify-between gap-3">
+              <div className="relative bg-[#060e20]/95 border border-[#c89b55]/60 rounded-none p-5 space-y-4 shadow-[0_0_25px_rgba(223,168,108,0.12)] overflow-hidden">
+                <GildedCorners size="sm" />
+                <div className="relative z-10 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-lg bg-cyan-950/70 border border-cyan-500/40 text-cyan-400">
+                    <div className="p-2.5 bg-[#140f08] border border-[#dfa86c]/60 text-[#fde047] shadow-[0_0_12px_rgba(223,168,108,0.25)]">
                       <Database className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-white">
+                      <h3 className="text-sm font-bold font-fantasy text-[#f8ecd5] tracking-wider uppercase">
                         Gestão do Banco de Dados Local (IndexedDB)
                       </h3>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-[#c5b08f]">
                         Schema relacional v2 — 19 tabelas locais ativas.
                       </p>
                     </div>
@@ -726,15 +733,15 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                     onClick={loadTableCounts}
                     disabled={dbLoading}
                     title="Atualizar Contagens"
-                    className="p-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-500/50 text-slate-300 hover:text-cyan-300 transition-colors"
+                    className="p-1.5 bg-[#081329] border border-[#966422]/60 hover:border-[#dfa86c] text-[#c5b08f] hover:text-[#fde047] transition-colors"
                   >
                     <RefreshCw className={`w-4 h-4 ${dbLoading ? "animate-spin" : ""}`} />
                   </button>
                 </div>
 
                 {dbActionMessage && (
-                  <div className="p-3 bg-cyan-950/40 border border-cyan-500/40 rounded-lg text-xs text-cyan-300 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                  <div className="relative z-10 p-3 bg-[#1c1308]/90 border border-[#dfa86c]/60 text-xs text-[#fde047] flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#fde047] flex-shrink-0" />
                     <span>{dbActionMessage}</span>
                   </div>
                 )}
@@ -797,22 +804,23 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
           {activeTab === "logs" && (
             <div className="space-y-4">
               {/* Controls bar */}
-              <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0a1224]/60 p-3 rounded-xl border border-cyan-500/20">
-                <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[280px]">
+              <div className="relative flex flex-wrap items-center justify-between gap-3 bg-[#040814]/90 p-3.5 rounded-none border border-[#966422]/55 overflow-hidden shadow-[inset_0_0_12px_rgba(223,168,108,0.04)]">
+                <GildedCorners size="xs" withInnerFrame={false} />
+                <div className="relative z-10 flex flex-wrap items-center gap-2 flex-1 min-w-[280px]">
                   {/* Search input */}
                   <input
                     type="text"
                     placeholder="Filtrar mensagem ou dados..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 flex-1 min-w-[150px]"
+                    className="bg-[#060e20] border border-[#966422]/60 rounded-none px-3 py-1.5 text-xs text-[#f3e5cc] placeholder-[#8c7a5b] focus:outline-none focus:border-[#dfa86c] flex-1 min-w-[150px] font-mono"
                   />
 
                   {/* Scope filter */}
                   <select
                     value={scopeFilter}
                     onChange={(e) => setScopeFilter(e.target.value)}
-                    className="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-400"
+                    className="bg-[#060e20] border border-[#966422]/60 rounded-none px-2.5 py-1.5 text-xs text-[#dfa86c] focus:outline-none focus:border-[#dfa86c] font-mono"
                   >
                     <option value="all">Todos os Escopos</option>
                     <option value="game">game</option>
@@ -828,7 +836,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                   <select
                     value={levelFilter}
                     onChange={(e) => setLevelFilter(e.target.value)}
-                    className="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-400"
+                    className="bg-[#060e20] border border-[#966422]/60 rounded-none px-2.5 py-1.5 text-xs text-[#dfa86c] focus:outline-none focus:border-[#dfa86c] font-mono"
                   >
                     <option value="all">Todos os Níveis</option>
                     <option value="debug">debug</option>
@@ -963,16 +971,17 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
           {/* TAB: NOTIFICATIONS */}
           {activeTab === "notif" && (
             <div className="space-y-5 max-w-xl mx-auto">
-              <div className="bg-[#0a1224]/70 border border-cyan-500/20 rounded-xl p-5 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-lg bg-cyan-950/70 border border-cyan-500/40 text-cyan-400">
+              <div className="relative bg-[#060e20]/95 border border-[#c89b55]/60 rounded-none p-5 space-y-4 shadow-[0_0_25px_rgba(223,168,108,0.12)] overflow-hidden">
+                <GildedCorners size="sm" />
+                <div className="relative z-10 flex items-center gap-3">
+                  <div className="p-2.5 bg-[#140f08] border border-[#dfa86c]/60 text-[#fde047] shadow-[0_0_12px_rgba(223,168,108,0.25)]">
                     <Bell className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white">
+                    <h3 className="text-sm font-bold font-fantasy text-[#f8ecd5] tracking-wider uppercase">
                       Spike de Web Notifications
                     </h3>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-[#c5b08f]">
                       Alertas do Sistema e lembretes de diárias via Service Worker.
                     </p>
                   </div>

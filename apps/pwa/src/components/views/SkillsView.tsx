@@ -3,6 +3,7 @@ import { SystemPanel } from "../system/SystemPanel";
 import { SystemBadge } from "../system/SystemBadge";
 import { SystemButton } from "../system/SystemButton";
 import { SystemModal } from "../system/SystemModal";
+import { GildedCorners } from "../system/GildedCorners";
 import { SystemInput, SystemSelect } from "../system/SystemFormControls";
 import { BASE_AREAS, type Skill, type AreaCode, type XpEvent } from "@slime-sage/shared";
 import { gameService } from "../../services/gameService";
@@ -135,11 +136,11 @@ export const SkillsView: React.FC<SkillsViewProps> = ({ isActive }) => {
       {/* Header with Title and Create Action */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl md:text-2xl font-bold font-mono text-white tracking-wide flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-cyan-400" />
+          <h2 className="text-xl md:text-2xl font-bold font-fantasy text-[#f8ecd5] tracking-wider uppercase flex items-center gap-2">
+            <Sparkles className="w-6 h-6 text-[#dfa86c]" />
             <span>ÁRVORE DE HABILIDADES // TENSURA</span>
           </h2>
-          <p className="text-xs md:text-sm text-slate-400 font-mono mt-0.5">
+          <p className="text-xs md:text-sm text-[#c5b08f] font-mono mt-0.5">
             Registro das habilidades despertadas, progressão de maestria e evolução de tier.
           </p>
         </div>
@@ -155,9 +156,9 @@ export const SkillsView: React.FC<SkillsViewProps> = ({ isActive }) => {
       </div>
 
       {/* Filter Tabs / Bar by Area */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none font-mono text-xs">
-        <div className="flex items-center gap-1 text-slate-400 mr-2 shrink-0">
-          <Filter className="w-3.5 h-3.5 text-cyan-400" />
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none font-fantasy text-xs">
+        <div className="flex items-center gap-1 text-[#c5b08f] mr-2 shrink-0">
+          <Filter className="w-3.5 h-3.5 text-[#dfa86c]" />
           <span className="text-[11px] uppercase tracking-wider">Filtro:</span>
         </div>
 
@@ -168,10 +169,10 @@ export const SkillsView: React.FC<SkillsViewProps> = ({ isActive }) => {
               key={opt.value}
               type="button"
               onClick={() => setSelectedArea(opt.value)}
-              className={`px-3 py-1.5 rounded-lg border transition-colors shrink-0 text-xs font-mono ${
+              className={`px-3 py-1.5 rounded-none border transition-colors shrink-0 text-xs font-fantasy tracking-wider uppercase ${
                 isActive
-                  ? "bg-cyan-950/80 border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(0,243,255,0.2)]"
-                  : "bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700"
+                  ? "bg-[#241909]/95 border-[#dfa86c] text-[#fde047] shadow-[0_0_12px_rgba(223,168,108,0.28)]"
+                  : "bg-[#060e20]/80 border-[#966422]/45 text-[#a39171] hover:text-[#f3e5cc] hover:border-[#c89b55]/60"
               }`}
             >
               {opt.label}
@@ -182,14 +183,14 @@ export const SkillsView: React.FC<SkillsViewProps> = ({ isActive }) => {
 
       {/* Skills List Grid */}
       {loading ? (
-        <div className="p-12 text-center font-mono text-xs text-slate-500 animate-pulse">
+        <div className="p-12 text-center font-fantasy tracking-widest text-xs text-[#dfa86c] animate-pulse">
           Consultando a Árvore de Habilidades...
         </div>
       ) : filteredSkills.length === 0 ? (
         <SystemPanel title="Nenhuma Habilidade Encontrada">
-          <div className="p-8 text-center font-mono text-xs text-slate-400 space-y-3">
+          <div className="p-8 text-center font-mono text-xs text-[#c5b08f] space-y-3">
             <p>Nenhuma habilidade cadastrada para a área selecionada.</p>
-            <p className="text-slate-500 text-[11px]">
+            <p className="text-[#a39171] text-[11px]">
               Complete missões vinculadas a habilidades ou adquira uma habilidade manualmente pelo botão acima.
             </p>
             <SystemButton
@@ -216,22 +217,29 @@ export const SkillsView: React.FC<SkillsViewProps> = ({ isActive }) => {
             );
 
             const tierColor = isUnica
-              ? "text-purple-400 border-purple-500/40 bg-purple-950/60"
+              ? "text-purple-300 border-purple-500/60 bg-purple-950/60 shadow-[0_0_15px_rgba(168,85,247,0.25)]"
               : isExtra
-              ? "text-amber-300 border-amber-500/40 bg-amber-950/60 shadow-[0_0_15px_rgba(251,191,36,0.15)]"
-              : "text-cyan-300 border-cyan-500/40 bg-cyan-950/60";
+              ? "text-[#fde047] border-[#dfa86c]/80 bg-[#261a08]/90 shadow-[0_0_15px_rgba(253,224,71,0.25)]"
+              : "text-[#e8d5b5] border-[#966422]/65 bg-[#120d06]/90";
 
             return (
               <div
                 key={skill.id}
                 data-testid={`skill-card-${skill.id}`}
-                className="bg-[#070c18] border border-cyan-500/20 hover:border-cyan-500/40 transition-all rounded-xl p-4.5 flex flex-col justify-between space-y-4 min-w-0 overflow-hidden"
+                className="relative bg-[#060e20]/95 border border-[#c89b55]/55 hover:border-[#fde047]/80 transition-all rounded-none p-4.5 flex flex-col justify-between space-y-4 min-w-0 overflow-hidden shadow-[0_6px_24px_rgba(0,0,0,0.65)]"
               >
+                <GildedCorners
+                  size="sm"
+                  color={isUnica ? "#a855f7" : isExtra ? "#dfa86c" : "#966422"}
+                  diamondColor={isUnica ? "#c084fc" : isExtra ? "#fde047" : "#dfa86c"}
+                  glow={isExtra || isUnica}
+                />
+
                 {/* Top Badge & Tier */}
-                <div className="space-y-2 min-w-0">
+                <div className="relative z-10 space-y-2 min-w-0">
                   <div className="flex items-center justify-between gap-2 flex-wrap min-w-0">
                     <span
-                      className={`text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border shrink-0 ${tierColor}`}
+                      className={`text-[10px] font-fantasy font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-none border shrink-0 ${tierColor}`}
                     >
                       {skill.tier === "extra" ? "Habilidade Extra" : skill.tier === "unica" ? "Habilidade Única" : "Habilidade Comum"}
                     </span>
@@ -239,45 +247,45 @@ export const SkillsView: React.FC<SkillsViewProps> = ({ isActive }) => {
                   </div>
 
                   <div className="min-w-0">
-                    <h3 className="text-base font-bold font-mono text-white tracking-wide break-words [overflow-wrap:anywhere]">
+                    <h3 className="text-base font-bold font-fantasy text-[#f8ecd5] tracking-wider uppercase break-words [overflow-wrap:anywhere]">
                       {skill.name}
                     </h3>
-                    <p className="text-xs text-slate-400 font-sans mt-0.5 line-clamp-2 break-words [overflow-wrap:anywhere]">
+                    <p className="text-xs text-[#c5b08f] font-sans mt-0.5 line-clamp-2 break-words [overflow-wrap:anywhere]">
                       {skill.description}
                     </p>
                   </div>
                 </div>
 
                 {/* Mastery Progress Bar */}
-                <div className="space-y-1.5 pt-2 border-t border-slate-800/80 font-mono">
+                <div className="relative z-10 space-y-1.5 pt-2 border-t border-[#966422]/40 font-mono">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-400 flex items-center gap-1.5">
-                      <Zap className="w-3.5 h-3.5 text-cyan-400" />
+                    <span className="text-[#c5b08f] font-fantasy uppercase tracking-wider flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5 text-[#dfa86c]" />
                       Maestria
                     </span>
-                    <span className="text-cyan-300 font-bold">
+                    <span className="text-[#fde047] font-bold">
                       {skill.mastery} / {maxThreshold} pts ({progressPercent}%)
                     </span>
                   </div>
 
-                  <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
+                  <div className="w-full bg-[#040814] h-2 overflow-hidden border border-[#966422]/60 p-[1px]">
                     <div
                       className={`h-full transition-all duration-500 ${
                         isUnica
-                          ? "bg-gradient-to-r from-purple-500 to-pink-400"
+                          ? "bg-gradient-to-r from-purple-600 via-purple-400 to-pink-300"
                           : isExtra
-                          ? "bg-gradient-to-r from-amber-500 to-amber-300"
-                          : "bg-gradient-to-r from-cyan-500 to-cyan-300"
+                          ? "bg-gradient-to-r from-[#b8860b] via-[#fde047] to-[#fffbeb]"
+                          : "bg-gradient-to-r from-[#966422] via-[#dfa86c] to-[#fde047]"
                       }`}
                       style={{ width: `${progressPercent}%` }}
                     />
                   </div>
 
                   {/* Evolution Hint */}
-                  <div className="text-[10px] text-slate-400 pt-0.5">
+                  <div className="text-[10px] text-[#a39171] pt-0.5">
                     {isComum && (
                       <span>
-                        Faltam <strong className="text-cyan-300">{Math.max(0, 100 - skill.mastery)} pts</strong> para evoluir para <span className="text-amber-400">Habilidade Extra</span>.
+                        Faltam <strong className="text-[#fde047]">{Math.max(0, 100 - skill.mastery)} pts</strong> para evoluir para <span className="text-[#dfa86c]">Habilidade Extra</span>.
                       </span>
                     )}
                     {isExtra && (
@@ -295,12 +303,12 @@ export const SkillsView: React.FC<SkillsViewProps> = ({ isActive }) => {
                 </div>
 
                 {/* History Button */}
-                <div className="pt-2 flex justify-end">
+                <div className="relative z-10 pt-2 flex justify-end">
                   <SystemButton
                     variant="ghost"
                     size="sm"
                     onClick={() => handleOpenHistory(skill)}
-                    icon={<History className="w-3.5 h-3.5 text-cyan-400" />}
+                    icon={<History className="w-3.5 h-3.5 text-[#dfa86c]" />}
                     className="text-xs"
                   >
                     Histórico de Missões
@@ -318,21 +326,24 @@ export const SkillsView: React.FC<SkillsViewProps> = ({ isActive }) => {
         subtitle="Regras de transição vigentes no Sistema v1"
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 my-2 font-mono text-xs">
-          <div className="p-3.5 bg-slate-950/70 border border-slate-800 rounded-xl space-y-1">
-            <div className="font-bold text-slate-300">[Tier 1] Comum</div>
-            <p className="text-slate-400 text-[11px] font-sans">
+          <div className="relative p-3.5 bg-[#040814]/85 border border-[#966422]/50 space-y-1 overflow-hidden shadow-[inset_0_0_8px_rgba(150,100,34,0.06)]">
+            <GildedCorners size="xs" color="#966422" diamondColor="#dfa86c" withInnerFrame={false} />
+            <div className="relative z-10 font-bold font-fantasy text-[#e8d5b5] uppercase tracking-wider">[Tier 1] Comum</div>
+            <p className="relative z-10 text-[#c5b08f] text-[11px] font-sans">
               Desbloqueada manualmente ou via onboarding. Maestria varia de 0 a 100.
             </p>
           </div>
-          <div className="p-3.5 bg-slate-950/70 border border-amber-500/30 rounded-xl space-y-1">
-            <div className="font-bold text-amber-300">[Tier 2] Extra</div>
-            <p className="text-slate-400 text-[11px] font-sans">
+          <div className="relative p-3.5 bg-[#040814]/85 border border-[#dfa86c]/60 space-y-1 overflow-hidden shadow-[inset_0_0_8px_rgba(223,168,108,0.08)]">
+            <GildedCorners size="xs" color="#dfa86c" diamondColor="#fde047" withInnerFrame={false} />
+            <div className="relative z-10 font-bold font-fantasy text-[#fde047] uppercase tracking-wider">[Tier 2] Extra</div>
+            <p className="relative z-10 text-[#c5b08f] text-[11px] font-sans">
               Evolui automaticamente ao cruzar 100 de maestria. Teto de 300 de maestria.
             </p>
           </div>
-          <div className="p-3.5 bg-slate-950/70 border border-purple-500/30 rounded-xl space-y-1">
-            <div className="font-bold text-purple-300">[Tier 3] Única</div>
-            <p className="text-slate-400 text-[11px] font-sans">
+          <div className="relative p-3.5 bg-[#040814]/85 border border-purple-500/50 space-y-1 overflow-hidden shadow-[inset_0_0_8px_rgba(168,85,247,0.08)]">
+            <GildedCorners size="xs" color="#a855f7" diamondColor="#c084fc" withInnerFrame={false} />
+            <div className="relative z-10 font-bold font-fantasy text-purple-300 uppercase tracking-wider">[Tier 3] Única</div>
+            <p className="relative z-10 text-[#c5b08f] text-[11px] font-sans">
               Exige 300 maestria + 1 projeto concluído + Roleta do Destino (Fase 10).
             </p>
           </div>
@@ -375,12 +386,12 @@ export const SkillsView: React.FC<SkillsViewProps> = ({ isActive }) => {
           />
 
           {formError && (
-            <div className="p-2.5 rounded-lg bg-red-950/40 border border-red-500/40 text-red-300 text-xs">
+            <div className="p-2.5 bg-red-950/40 border border-red-500/40 text-red-300 text-xs">
               {formError}
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#966422]/40">
             <SystemButton
               type="button"
               variant="ghost"
@@ -410,15 +421,15 @@ export const SkillsView: React.FC<SkillsViewProps> = ({ isActive }) => {
         maxWidth="lg"
       >
         {historyLoading ? (
-          <div className="p-8 text-center text-xs text-slate-400 font-mono animate-pulse">
+          <div className="p-8 text-center text-xs text-[#dfa86c] font-fantasy tracking-widest animate-pulse">
             Carregando transações do Ledger...
           </div>
         ) : skillHistoryEvents.length === 0 ? (
-          <div className="p-6 text-center text-xs text-slate-400 font-mono border border-dashed border-slate-800 rounded-xl my-2">
+          <div className="p-6 text-center text-xs text-[#a39171] font-mono border border-dashed border-[#966422]/45 my-2">
             Nenhuma missão ou evento registrado para esta habilidade até o momento.
           </div>
         ) : (
-          <div className="divide-y divide-slate-800/80 font-mono text-xs my-2 max-h-[360px] overflow-y-auto">
+          <div className="divide-y divide-[#966422]/30 font-mono text-xs my-2 max-h-[360px] overflow-y-auto">
             {skillHistoryEvents.map((ev) => {
               const formattedDate = new Date(ev.created_at).toLocaleString("pt-BR", {
                 day: "2-digit",
@@ -430,18 +441,18 @@ export const SkillsView: React.FC<SkillsViewProps> = ({ isActive }) => {
               return (
                 <div
                   key={ev.id}
-                  className="py-3 px-2 flex items-center justify-between gap-3 hover:bg-slate-900/30 rounded-lg min-w-0"
+                  className="py-3 px-2 flex items-center justify-between gap-3 hover:bg-[#0b1630]/50 min-w-0"
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="p-1.5 rounded-lg bg-cyan-950/60 border border-cyan-500/30 text-cyan-400 shrink-0">
+                    <div className="p-1.5 bg-[#1c1308]/90 border border-[#dfa86c]/55 text-[#fde047] shrink-0">
                       <ArrowUpRight className="w-4 h-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-slate-200 font-semibold break-words [overflow-wrap:anywhere]">{ev.description}</div>
-                      <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5 flex-wrap">
+                      <div className="text-[#f8ecd5] font-semibold break-words [overflow-wrap:anywhere]">{ev.description}</div>
+                      <div className="text-[11px] text-[#a39171] flex items-center gap-2 mt-0.5 flex-wrap">
                         <span className="shrink-0">{formattedDate}</span>
                         <span>·</span>
-                        <span className="text-slate-400 shrink-0">
+                        <span className="text-[#c5b08f] shrink-0">
                           {ev.entity_type === "mission" ? "Missão Concluída" : ev.entity_type}
                         </span>
                       </div>
@@ -449,10 +460,10 @@ export const SkillsView: React.FC<SkillsViewProps> = ({ isActive }) => {
                   </div>
 
                   <div className="text-right shrink-0 pl-2">
-                    <div className="text-cyan-300 font-bold">
+                    <div className="text-[#fde047] font-bold">
                       +{ev.mastery_amount} Maestria
                     </div>
-                    <div className="text-[10px] text-slate-400">
+                    <div className="text-[10px] text-[#c5b08f]">
                       +{ev.xp_amount} XP
                     </div>
                   </div>
@@ -462,7 +473,7 @@ export const SkillsView: React.FC<SkillsViewProps> = ({ isActive }) => {
           </div>
         )}
 
-        <div className="flex justify-end pt-3 border-t border-slate-800 mt-2">
+        <div className="flex justify-end pt-3 border-t border-[#966422]/40 mt-2">
           <SystemButton
             variant="secondary"
             size="sm"

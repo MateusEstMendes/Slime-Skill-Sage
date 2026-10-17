@@ -146,11 +146,11 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
       {/* Header with Title and Create Button */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl md:text-2xl font-bold font-mono text-white tracking-wide flex items-center gap-2">
-            <FolderGit2 className="w-6 h-6 text-cyan-400" />
+          <h2 className="text-xl md:text-2xl font-bold font-fantasy text-[#f8ecd5] tracking-wider uppercase flex items-center gap-2">
+            <FolderGit2 className="w-6 h-6 text-[#dfa86c]" />
             <span>DIRETRIZES DE DESENVOLVIMENTO</span>
           </h2>
-          <p className="text-xs md:text-sm text-slate-400 font-mono mt-0.5">
+          <p className="text-xs md:text-sm text-[#c5b08f] font-mono mt-0.5">
             Gerencie projetos e progrida nas 5 áreas de atributos do Caçador.
           </p>
         </div>
@@ -167,16 +167,16 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
 
       {/* Filter Tabs: Areas */}
       <div className="space-y-3">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-mono">
-          <span className="text-slate-400 shrink-0 mr-1">Área:</span>
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-fantasy tracking-wider">
+          <span className="text-[#c5b08f] shrink-0 mr-1 uppercase">Área:</span>
           {AREAS.map((a) => (
             <button
               key={a}
               onClick={() => setAreaFilter(a)}
-              className={`px-3 py-1.5 rounded-lg border transition-all shrink-0 ${
+              className={`px-3 py-1.5 rounded-none border transition-all shrink-0 uppercase ${
                 areaFilter === a
-                  ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 font-bold shadow-[0_0_10px_rgba(0,240,255,0.2)]"
-                  : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200"
+                  ? "bg-[#241909]/95 border-[#dfa86c] text-[#fde047] font-bold shadow-[0_0_12px_rgba(223,168,108,0.3)]"
+                  : "bg-[#060e20]/80 border-[#966422]/45 text-[#a39171] hover:text-[#f3e5cc] hover:border-[#c89b55]/60"
               }`}
             >
               {a === "all" ? "Todas as Áreas" : a}
@@ -185,16 +185,16 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
         </div>
 
         {/* Status Filter */}
-        <div className="flex items-center gap-1.5 text-xs font-mono">
-          <span className="text-slate-400 shrink-0 mr-1">Status:</span>
+        <div className="flex items-center gap-1.5 text-xs font-fantasy tracking-wider flex-wrap">
+          <span className="text-[#c5b08f] shrink-0 mr-1 uppercase">Status:</span>
           {(["ativo", "concluido", "pausado", "all"] as const).map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`px-2.5 py-1 rounded text-xs border transition-colors ${
+              className={`px-2.5 py-1 rounded-none text-xs border transition-colors uppercase ${
                 statusFilter === s
-                  ? "bg-cyan-500/15 border-cyan-500/50 text-cyan-300 font-bold"
-                  : "bg-slate-900/40 border-slate-800 text-slate-400 hover:text-slate-300"
+                  ? "bg-[#241909]/90 border-[#dfa86c]/80 text-[#fde047] font-bold"
+                  : "bg-[#060e20]/60 border-[#966422]/35 text-[#a39171] hover:text-[#f3e5cc]"
               }`}
             >
               {s === "all" ? "Todos" : s.charAt(0).toUpperCase() + s.slice(1)}
@@ -205,18 +205,18 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
 
       {/* Projects List */}
       {loading ? (
-        <div className="p-8 text-center font-mono text-cyan-400">
+        <div className="p-8 text-center font-fantasy tracking-widest text-[#dfa86c]">
           Consultando registros locais do Sistema...
         </div>
       ) : filteredProjects.length === 0 ? (
-        <div className="p-8 md:p-12 text-center border border-dashed border-cyan-500/30 rounded-2xl bg-[#0a1224]/50">
-          <div className="w-12 h-12 rounded-full bg-cyan-950/60 border border-cyan-500/40 text-cyan-400 flex items-center justify-center mx-auto mb-3">
+        <div className="p-8 md:p-12 text-center border border-dashed border-[#c89b55]/45 rounded-none bg-[#060e20]/70">
+          <div className="w-12 h-12 bg-[#140f08] border border-[#c89b55]/60 text-[#dfa86c] flex items-center justify-center mx-auto mb-3 shadow-[0_0_16px_rgba(223,168,108,0.2)]">
             <FolderGit2 className="w-6 h-6" />
           </div>
-          <h3 className="text-base font-bold font-mono text-white mb-1">
+          <h3 className="text-base font-bold font-fantasy tracking-wider uppercase text-[#f8ecd5] mb-1">
             Nenhuma diretriz encontrada
           </h3>
-          <p className="text-xs text-slate-400 font-sans max-w-sm mx-auto mb-4">
+          <p className="text-xs text-[#c5b08f] font-sans max-w-sm mx-auto mb-4">
             {projects.length === 0
               ? "Você ainda não cadastrou nenhum projeto. Crie sua primeira diretriz para desbloquear missões e acumular XP."
               : "Nenhum projeto corresponde aos filtros de área e status selecionados."}
@@ -235,7 +235,7 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
           {filteredProjects.map((p) => (
             <SystemPanel
               key={p.id}
-              className="flex flex-col justify-between hover:border-cyan-400/60 transition-all group"
+              className="flex flex-col justify-between hover:border-[#fde047]/80 transition-all group"
             >
               <div className="min-w-0">
                 <div className="flex items-start justify-between gap-2 mb-2 min-w-0">
@@ -248,40 +248,40 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
                     <button
                       onClick={() => handleOpenEdit(p)}
                       aria-label={`Editar projeto ${p.title}`}
-                      className="p-1 text-slate-400 hover:text-cyan-300 rounded hover:bg-cyan-950/40"
+                      className="p-1 text-[#c5b08f] hover:text-[#fde047] hover:bg-[#101f42]/60"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => handleDeleteProject(p.id)}
                       aria-label={`Excluir projeto ${p.title}`}
-                      className="p-1 text-slate-400 hover:text-red-400 rounded hover:bg-red-950/40"
+                      className="p-1 text-[#c5b08f] hover:text-red-400 hover:bg-red-950/40"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
 
-                <h3 className="font-mono font-bold text-base text-white group-hover:text-cyan-200 transition-colors break-words [overflow-wrap:anywhere]">
+                <h3 className="font-fantasy font-bold text-base text-[#f8ecd5] group-hover:text-[#fde047] transition-colors tracking-wide break-words [overflow-wrap:anywhere]">
                   {p.title}
                 </h3>
                 {p.description && (
-                  <p className="text-xs text-slate-400 mt-1 line-clamp-2 font-sans break-words [overflow-wrap:anywhere]">
+                  <p className="text-xs text-[#c5b08f] mt-1 line-clamp-2 font-sans break-words [overflow-wrap:anywhere]">
                     {p.description}
                   </p>
                 )}
               </div>
 
               {/* Progress and Open Tree Button */}
-              <div className="mt-4 pt-3 border-t border-cyan-500/15 space-y-3">
+              <div className="mt-4 pt-3 border-t border-[#966422]/40 space-y-3">
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-xs font-mono">
-                    <span className="text-slate-400">Progresso</span>
-                    <span className="text-cyan-300 font-bold">{p.progress}%</span>
+                    <span className="text-[#c5b08f]">Progresso</span>
+                    <span className="text-[#fde047] font-bold">{p.progress}%</span>
                   </div>
-                  <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                  <div className="w-full h-2 bg-[#040814] overflow-hidden border border-[#966422]/60 p-[1px]">
                     <div
-                      className="h-full bg-cyan-400 rounded-full transition-all duration-300"
+                      className="h-full bg-gradient-to-r from-[#966422] via-[#dfa86c] to-[#fde047] transition-all duration-300 shadow-[0_0_8px_rgba(253,224,71,0.6)]"
                       style={{ width: `${p.progress}%` }}
                     />
                   </div>

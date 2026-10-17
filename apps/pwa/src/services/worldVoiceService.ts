@@ -10,7 +10,7 @@ export const WORLD_VOICE_TTS_KEY = "world_voice_tts_enabled";
 
 export interface WorldVoiceItem {
   id: string;
-  type: "LEVEL_UP" | "SKILL_EVOLVED_EXTRA" | "SKILL_ACQUIRED";
+  type: "LEVEL_UP" | "SKILL_EVOLVED_EXTRA" | "SKILL_ACQUIRED" | "PROJECT_COMPLETE";
   title: string;
   subtitle: string;
   description: string;
@@ -28,11 +28,19 @@ export interface WorldVoiceItem {
   };
 }
 
+export const OFFICIAL_AUDIO_MAP: Record<string, string> = {
+  LEVEL_UP: "/audio/voice/level-up.mp3",
+  SKILL_ACQUIRED: "/audio/voice/skill-acquired.mp3",
+  SKILL_EVOLVED_EXTRA: "/audio/voice/skill-evolved-extra.mp3",
+  PROJECT_COMPLETE: "/audio/voice/project-complete.mp3",
+};
+
 class WorldVoiceService {
   private queue: WorldVoiceItem[] = [];
   private currentItem: WorldVoiceItem | null = null;
   private listeners: Array<(item: WorldVoiceItem | null) => void> = [];
   private isAutoInitialized = false;
+  private currentAudio: HTMLAudioElement | null = null;
 
   constructor() {
     this.init();
@@ -95,6 +103,10 @@ class WorldVoiceService {
   }
 
   public dismissCurrent(): void {
+    if (this.currentAudio) {
+      this.currentAudio.pause();
+      this.currentAudio = null;
+    }
     ttsService.stop();
     if (this.queue.length > 0) {
       const next = this.queue.shift()!;
@@ -109,9 +121,18 @@ class WorldVoiceService {
 
   public async replayCurrentSpeech(): Promise<void> {
     if (!this.currentItem) return;
-    const ttsEnabled = await this.isTtsEnabled();
-    if (ttsEnabled) {
-      await ttsService.speak(this.currentItem.spokenText);
+    const isEnabled = await this.isTtsEnabled();
+    if (!isEnabled) return;
+
+    const audioSrc = OFFICIAL_AUDIO_MAP[this.currentItem.type];
+    if (audioSrc && typeof Audio !== "undefined") {
+      if (this.currentAudio) {
+        this.currentAudio.pause();
+        this.currentAudio = null;
+      }
+      const audio = new Audio(audioSrc);
+      this.currentAudio = audio;
+      await audio.play().catch(() => {});
     }
   }
 
@@ -144,11 +165,25 @@ class WorldVoiceService {
       // Ignore
     }
 
-    // 3. Web Speech TTS Narration if enabled
+    // 3. Play Official Voice MP3 Audio if enabled
     try {
-      const ttsEnabled = await this.isTtsEnabled();
-      if (ttsEnabled) {
-        void ttsService.speak(item.spokenText);
+      const isEnabled = await this.isTtsEnabled();
+      if (isEnabled) {
+        const audioSrc = OFFICIAL_AUDIO_MAP[item.type];
+        if (audioSrc && typeof Audio !== "undefined") {
+          if (this.currentAudio) {
+            this.currentAudio.pause();
+            this.currentAudio = null;
+          }
+          const audio = new Audio(audioSrc);
+          this.currentAudio = audio;
+          audio.onended = () => {
+            if (this.currentAudio === audio) {
+              this.currentAudio = null;
+            }
+          };
+          await audio.play().catch(() => {});
+        }
       }
     } catch {
       // Ignore

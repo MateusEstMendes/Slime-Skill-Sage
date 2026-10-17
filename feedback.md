@@ -77,5 +77,18 @@
   - `loadProjects` e `loadStatusData` foram protegidos com referências de ciclo de vida (`isMountedRef`) para garantir robustez assíncrona.
 - **Status:** [x] Validado pelo Usuário
 
+## Fase 5 — Voz do Mundo & G.S (Modal Dourado + Áudios Oficiais/API Sem TTS) e Telas de Status e Habilidades
 
+### Rodada 1 de Testes do Usuário (Áudios Oficiais da G.S, Descarte de TTS e Validação de Rituais)
 
+- **Feedback do Usuário:**
+  - O usuário questionou: *"por que a voz tocada não é a da G.S qou a voz ja colocada no voices?"*
+  - Na sessão de alinhamento `/grill-me`, foi estabelecido o descarte definitivo do TTS nativo do navegador (`window.speechSynthesis`), direcionando o sistema para uso exclusivo dos áudios oficiais pré-gravados da G.S (`.mp3` na pasta `public/audio/voice/`) e síntese neural de alta qualidade via API do Gemini com cache local (Fase 6).
+  - Remoção de avisos sonoros em missões individuais (apenas som de interface Web Audio API sutil); áudio solene mantido para conclusão de projetos completos e rituais de consagração.
+- **Causa Raiz & Melhoria Aplicada:**
+  - O serviço `worldVoiceService.ts` ainda acionava `ttsService.speak()` com Web Speech API em paralelo aos efeitos sonoros.
+  - Implementado `OFFICIAL_AUDIO_MAP` mapeando cada tipo de anúncio para os arquivos oficiais correspondentes (`level-up.mp3`, `skill-acquired.mp3`, `skill-evolved-extra.mp3`, `project-complete.mp3`).
+  - O serviço agora gerencia instâncias de `HTMLAudioElement` (`new Audio(audioSrc)`), controlando reprodução, repetição (`replayCurrentSpeech`) e interrupção limpa (`dismissCurrent`).
+  - Adicionado mock para `HTMLMediaElement.prototype.play`, `pause` e `load` no arquivo de setup dos testes (`setup.ts`).
+  - A suíte de testes de `WorldVoiceModal.test.tsx` e todos os testes da PWA (80/80) foram executados e aprovados com 100% de sucesso.
+- **Status:** [x] Validado pelo Usuário

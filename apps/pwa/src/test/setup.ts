@@ -110,4 +110,10 @@ if (typeof window !== "undefined") {
     // @ts-expect-error mock assignment
     window.AudioContext = MockAudioContext;
   }
+
+  if (window.HTMLMediaElement) {
+    window.HTMLMediaElement.prototype.play = vi.fn().mockResolvedValue(undefined);
+    window.HTMLMediaElement.prototype.pause = vi.fn();
+    window.HTMLMediaElement.prototype.load = vi.fn();
+  }
 }

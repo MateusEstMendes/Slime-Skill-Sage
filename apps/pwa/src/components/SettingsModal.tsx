@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Settings, X, Terminal, Cpu, Shield, Sparkles, Volume2, VolumeX } from "lucide-react";
 import { localDb } from "../services/db";
 import { worldVoiceService } from "../services/worldVoiceService";
+import { GildedCorners } from "./system/GildedCorners";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -87,74 +88,78 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       aria-label="Ajustes do Sistema"
       className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 font-sans"
     >
-      <div className="bg-[#070c18] border border-cyan-500/30 rounded-2xl w-full max-w-md flex flex-col shadow-[0_0_40px_rgba(0,240,255,0.15)] overflow-hidden">
+      <div className="relative bg-[#060e20]/95 border border-[#c89b55]/75 rounded-none w-full max-w-md flex flex-col shadow-[0_0_45px_rgba(223,168,108,0.22)] overflow-hidden">
+        <GildedCorners size="lg" withCenterNotches />
+
         {/* Header */}
-        <div className="bg-[#0a1224] border-b border-cyan-500/20 px-5 py-4 flex items-center justify-between">
+        <div className="relative z-10 bg-[#081329] border-b border-[#966422]/45 px-5 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
-            <div className="p-1.5 rounded-lg bg-cyan-950/80 border border-cyan-500/40 text-cyan-400">
+            <div className="p-1.5 bg-[#140f08] border border-[#dfa86c]/60 text-[#fde047]">
               <Settings className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-[10px] font-mono tracking-widest text-cyan-400/70 uppercase">
+              <span className="text-[10px] font-fantasy tracking-widest text-[#dfa86c] uppercase">
                 [CONFIGURAÇÃO DO SISTEMA]
               </span>
-              <h2 className="text-base font-bold text-white">Ajustes</h2>
+              <h2 className="text-base font-bold font-fantasy text-[#f8ecd5] uppercase tracking-wider">Ajustes</h2>
             </div>
           </div>
 
           <button
             onClick={onClose}
             aria-label="Fechar Ajustes"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 text-[#c5b08f] hover:text-[#fde047] hover:bg-[#101f42] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-5 space-y-4">
+        <div className="relative z-10 p-5 space-y-4">
           {/* Status info */}
-          <div className="bg-slate-950/80 border border-slate-800/80 rounded-xl p-3.5 space-y-2.5 font-mono text-xs">
-            <div className="flex items-center justify-between text-slate-400">
+          <div className="relative bg-[#040814]/90 border border-[#966422]/55 p-3.5 space-y-2.5 font-mono text-xs overflow-hidden shadow-[inset_0_0_12px_rgba(223,168,108,0.04)]">
+            <GildedCorners size="xs" withInnerFrame={false} />
+            <div className="flex items-center justify-between text-[#c5b08f]">
               <span className="flex items-center gap-1.5">
-                <Cpu className="w-3.5 h-3.5 text-cyan-400" />
+                <Cpu className="w-3.5 h-3.5 text-[#dfa86c]" />
                 Arquitetura:
               </span>
-              <span className="text-slate-200">PWA Offline-First</span>
+              <span className="text-[#f8ecd5]">PWA Offline-First</span>
             </div>
 
-            <div className="flex items-center justify-between text-slate-400">
+            <div className="flex items-center justify-between text-[#c5b08f]">
               <span className="flex items-center gap-1.5">
-                <Shield className="w-3.5 h-3.5 text-cyan-400" />
+                <Shield className="w-3.5 h-3.5 text-[#dfa86c]" />
                 Protocolo:
               </span>
               <span className="text-emerald-400 font-bold">Ledger Imutável</span>
             </div>
 
-            <div className="flex items-center justify-between text-slate-400">
+            <div className="flex items-center justify-between text-[#c5b08f]">
               <span className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                <Sparkles className="w-3.5 h-3.5 text-[#dfa86c]" />
                 Voz da Sabedoria:
               </span>
-              <span className="text-cyan-300">Grande Sábio (G.S)</span>
+              <span className="text-[#fde047]">Grande Sábio (G.S)</span>
             </div>
           </div>
 
           {/* Audio & Narration Toggle */}
-          <div className="bg-slate-950/80 border border-slate-800/80 rounded-xl p-3.5 flex items-center justify-between">
+          <div className="relative bg-[#040814]/90 border border-[#966422]/55 p-3.5 flex items-center justify-between overflow-hidden shadow-[inset_0_0_12px_rgba(223,168,108,0.04)]">
+            <GildedCorners size="xs" withInnerFrame={false} />
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-cyan-400">
+              <div className="p-2 bg-[#140f08] border border-[#966422]/60 text-[#fde047]">
                 {isNarrationEnabled ? (
                   <Volume2 className="w-4 h-4" />
                 ) : (
-                  <VolumeX className="w-4 h-4 text-slate-500" />
+                  <VolumeX className="w-4 h-4 text-[#8c7a5b]" />
                 )}
               </div>
               <div>
-                <div className="text-xs font-mono font-bold text-slate-200">
+                <div className="text-xs font-fantasy font-bold uppercase tracking-wider text-[#f8ecd5]">
                   Narração da Voz do Mundo
                 </div>
-                <div className="text-[11px] text-slate-400 font-sans">
+                <div className="text-[11px] text-[#c5b08f] font-sans">
                   Web Speech TTS para anúncios solenes do Sistema
                 </div>
               </div>
@@ -166,12 +171,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               aria-checked={isNarrationEnabled}
               aria-label="Alternar narração da Voz do Mundo"
               onClick={handleToggleNarration}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-1 focus:ring-cyan-400 ${
-                isNarrationEnabled ? "bg-cyan-500" : "bg-slate-800"
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-1 focus:ring-[#dfa86c] ${
+                isNarrationEnabled ? "bg-[#c89b55]" : "bg-[#081329]"
               }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-slate-950 transition-transform ${
+                className={`inline-block h-4 w-4 transform rounded-full bg-[#040814] transition-transform ${
                   isNarrationEnabled ? "translate-x-6" : "translate-x-1"
                 }`}
               />
@@ -182,9 +187,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {isDevUnlocked && (
             <button
               onClick={onOpenDevPanel}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-cyan-950/40 border border-cyan-500/50 hover:bg-cyan-900/50 text-cyan-300 text-xs font-mono font-medium transition-colors shadow-[0_0_15px_rgba(0,240,255,0.15)]"
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[#1c1308]/90 border border-[#dfa86c]/70 hover:bg-[#2a1d0c] text-[#fde047] text-xs font-fantasy font-bold uppercase tracking-wider transition-colors shadow-[0_0_15px_rgba(223,168,108,0.2)]"
             >
-              <Terminal className="w-4 h-4 text-cyan-400" />
+              <Terminal className="w-4 h-4 text-[#dfa86c]" />
               <span>Abrir Painel do Desenvolvedor</span>
             </button>
           )}
@@ -193,7 +198,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {toastMessage && (
             <div
               role="status"
-              className="p-2.5 bg-cyan-950/60 border border-cyan-500/40 rounded-lg text-center font-mono text-xs text-cyan-300 animate-pulse"
+              className="p-2.5 bg-[#1c1308]/90 border border-[#dfa86c]/60 text-center font-mono text-xs text-[#fde047] animate-pulse"
             >
               {toastMessage}
             </div>
@@ -201,18 +206,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {/* Version with 7 clicks trigger */}
           <div className="pt-2 text-center">
-            <p className="text-[11px] text-slate-500 mb-1 font-mono">
+            <p className="text-[11px] text-[#a39171] mb-1 font-fantasy uppercase tracking-widest">
               Slime Sage Skill (S.S.S)
             </p>
             <button
               type="button"
               data-testid="version-badge"
               onClick={handleVersionClick}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-700/80 hover:border-cyan-500/40 text-slate-400 hover:text-cyan-300 font-mono text-xs transition-colors cursor-pointer select-none"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#040814] border border-[#966422]/60 hover:border-[#dfa86c] text-[#c5b08f] hover:text-[#fde047] font-mono text-xs transition-colors cursor-pointer select-none"
               title="Versão do Sistema"
             >
               <span>Versão</span>
-              <span className="font-semibold text-cyan-400">{APP_VERSION}</span>
+              <span className="font-semibold text-[#dfa86c]">{APP_VERSION}</span>
             </button>
           </div>
         </div>

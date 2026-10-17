@@ -18,6 +18,7 @@ import {
 import { SystemPanel } from "../system/SystemPanel";
 import { SystemButton } from "../system/SystemButton";
 import { SystemBadge } from "../system/SystemBadge";
+import { GildedCorners } from "../system/GildedCorners";
 import { OFFICIAL_VOICE_CLIPS, type VoiceClip } from "../../services/voiceCatalog";
 import { ttsService } from "../../services/ttsService";
 import { soundService } from "../../services/soundService";
@@ -208,7 +209,7 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
     <div className="space-y-6 pb-6 select-none font-sans" data-testid="voices-view">
       {/* Top Banner Notice */}
       {actionNotice && (
-        <div className="p-3 bg-amber-950/70 border border-amber-500/50 rounded-xl text-xs text-amber-200 flex items-center gap-2">
+        <div className="p-3 bg-amber-950/70 border border-amber-500/50 rounded-none text-xs text-amber-200 flex items-center gap-2">
           <Zap className="w-4 h-4 text-amber-400 shrink-0" />
           <span>{actionNotice}</span>
         </div>
@@ -233,16 +234,16 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
             )}
             <SystemBadge
               label="9 VOZES OFICIAIS"
-              className="border-cyan-500/60 text-cyan-300 bg-cyan-950/40 font-bold"
+              className="border-[#dfa86c]/70 text-[#fde047] bg-[#1c1308]/90 font-bold"
             />
           </div>
         }
       >
-        <div className="text-xs text-slate-300 leading-relaxed font-mono">
+        <div className="text-xs text-[#e8d5b5] leading-relaxed font-mono">
           Este módulo permite testar a biblioteca canônica de voz oficial da{" "}
-          <span className="text-cyan-300 font-bold">Voz do Mundo (voz neural Kore)</span> em formato{" "}
-          <code className="text-amber-300">.mp3</code>, além do motor de síntese offline (Web Speech API) da{" "}
-          <span className="text-cyan-300 font-bold">Grande Sábio</span> e os anúncios dramáticos em tela cheia.
+          <span className="text-[#fde047] font-bold">Voz do Mundo (voz neural Kore)</span> em formato{" "}
+          <code className="text-[#dfa86c]">.mp3</code>, além do motor de síntese offline (Web Speech API) da{" "}
+          <span className="text-[#fde047] font-bold">Grande Sábio</span> e os anúncios dramáticos em tela cheia.
         </div>
       </SystemPanel>
 
@@ -250,22 +251,22 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Radio className="w-4 h-4 text-cyan-400" />
-            <h3 className="font-mono font-bold text-sm text-white uppercase tracking-wider">
+            <Radio className="w-4 h-4 text-[#dfa86c]" />
+            <h3 className="font-fantasy font-bold text-sm text-[#f8ecd5] uppercase tracking-wider">
               Áudios Oficiais da Voz do Mundo (.mp3)
             </h3>
           </div>
 
           {/* Category Filter Pills */}
-          <div className="flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
+          <div className="flex flex-wrap items-center gap-1.5 font-fantasy text-[11px] tracking-wider">
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-2.5 py-1 rounded-lg border transition-colors ${
+                className={`px-2.5 py-1 rounded-none border transition-colors uppercase ${
                   selectedCategory === cat
-                    ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 font-bold shadow-[0_0_10px_rgba(0,240,255,0.2)]"
-                    : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200"
+                    ? "bg-[#241909]/95 border-[#dfa86c] text-[#fde047] font-bold shadow-[0_0_10px_rgba(223,168,108,0.25)]"
+                    : "bg-[#060e20]/80 border-[#966422]/45 text-[#a39171] hover:text-[#f3e5cc]"
                 }`}
               >
                 {cat === "all" ? "Todas" : cat}
@@ -282,28 +283,36 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
             const isGold = clip.colorVariant === "gold";
             const isPurple = clip.colorVariant === "purple";
 
-            let borderStyle = "border-cyan-500/30 hover:border-cyan-400/70";
-            let activeBg = "bg-[#0b1329]";
+            let borderStyle = "border-[#c89b55]/45 hover:border-[#dfa86c]/80";
+            let activeBg = "bg-[#060e20]/90";
             if (isGold) {
-              borderStyle = "border-amber-500/30 hover:border-amber-400/70";
+              borderStyle = "border-[#fde047]/45 hover:border-[#fde047]/80";
             } else if (isPurple) {
-              borderStyle = "border-purple-500/30 hover:border-purple-400/70";
+              borderStyle = "border-purple-500/45 hover:border-purple-400/80";
             }
 
             if (isPlaying) {
-              activeBg = isGold ? "bg-amber-950/30 border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.2)]" : "bg-cyan-950/30 border-cyan-400 shadow-[0_0_20px_rgba(0,240,255,0.2)]";
+              activeBg = isGold
+                ? "bg-[#261a08]/80 border-[#fde047] shadow-[0_0_20px_rgba(253,224,71,0.25)]"
+                : "bg-[#1c1308]/85 border-[#dfa86c] shadow-[0_0_20px_rgba(223,168,108,0.25)]";
             }
 
             return (
               <div
                 key={clip.id}
-                className={`relative rounded-xl border p-4 transition-all duration-200 flex flex-col justify-between overflow-hidden ${borderStyle} ${activeBg}`}
+                className={`relative rounded-none border p-4 transition-all duration-200 flex flex-col justify-between overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.6)] ${borderStyle} ${activeBg}`}
               >
+                <GildedCorners
+                  size="sm"
+                  color={isGold ? "#dfa86c" : isPurple ? "#a855f7" : "#c89b55"}
+                  diamondColor={isGold ? "#fde047" : isPurple ? "#c084fc" : "#dfa86c"}
+                  glow={isPlaying}
+                />
                 {/* Progress Bar background for active playing clip */}
                 {isPlaying && (
                   <div
                     className={`absolute bottom-0 left-0 top-0 opacity-15 pointer-events-none transition-all duration-100 ${
-                      isGold ? "bg-amber-400" : "bg-cyan-400"
+                      isGold ? "bg-[#fde047]" : "bg-[#dfa86c]"
                     }`}
                     style={{ width: `${progress}%` }}
                   />
@@ -312,49 +321,49 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
                 <div className="space-y-2 z-10">
                   <div className="flex items-center justify-between gap-2">
                     <span
-                      className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border uppercase ${
+                      className={`text-[10px] font-fantasy font-bold px-2 py-0.5 rounded-none border uppercase tracking-wider ${
                         isGold
-                          ? "bg-amber-950/80 border-amber-500/50 text-amber-300"
+                          ? "bg-[#261a08]/90 border-[#fde047]/60 text-[#fde047]"
                           : isPurple
                             ? "bg-purple-950/80 border-purple-500/50 text-purple-300"
-                            : "bg-cyan-950/80 border-cyan-500/50 text-cyan-300"
+                            : "bg-[#140f08]/90 border-[#c89b55]/60 text-[#dfa86c]"
                       }`}
                     >
                       {clip.badge}
                     </span>
 
-                    <span className="text-[10px] font-mono text-slate-500">
+                    <span className="text-[10px] font-mono text-[#a39171]">
                       {clip.category}
                     </span>
                   </div>
 
                   <div>
-                    <h4 className="font-mono font-bold text-sm text-white">
+                    <h4 className="font-fantasy font-bold text-sm text-[#f8ecd5] tracking-wide">
                       {clip.title}
                     </h4>
-                    <p className="text-[10px] font-mono text-cyan-400/80 mt-0.5">
+                    <p className="text-[10px] font-mono text-[#dfa86c] mt-0.5">
                       {clip.subtitle}
                     </p>
                   </div>
 
-                  <div className="p-2.5 rounded-lg bg-black/50 border border-slate-800 text-xs font-mono text-slate-300 italic">
+                  <div className="p-2.5 rounded-none bg-[#040814]/85 border border-[#966422]/40 text-xs font-mono text-[#e8d5b5] italic">
                     &ldquo;{clip.transcript}&rdquo;
                   </div>
                 </div>
 
                 {/* Card Play Controls */}
-                <div className="mt-3.5 pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2 z-10">
-                  <span className="text-[10px] font-mono text-slate-500 truncate">
+                <div className="mt-3.5 pt-3 border-t border-[#966422]/35 flex items-center justify-between gap-2 z-10">
+                  <span className="text-[10px] font-mono text-[#a39171] truncate">
                     {clip.url.split("/").pop()}
                   </span>
 
                   <button
                     onClick={() => handlePlayClip(clip)}
                     data-testid={`play-btn-${clip.id}`}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs font-bold transition-all ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-none font-fantasy uppercase tracking-wider text-xs font-bold transition-all ${
                       isPlaying
-                        ? "bg-cyan-400 text-slate-950 shadow-[0_0_15px_rgba(0,240,255,0.7)] scale-105"
-                        : "bg-slate-900 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-950/60 hover:border-cyan-300"
+                        ? "bg-gradient-to-b from-[#e8b974] to-[#966422] text-[#050811] border border-[#fde047] shadow-[0_0_15px_rgba(223,168,108,0.7)] scale-105"
+                        : "bg-[#081329] border border-[#c89b55]/60 text-[#f3e5cc] hover:bg-[#101f42] hover:border-[#fde047]"
                     }`}
                   >
                     {isPlaying ? (
@@ -382,7 +391,7 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
         subtitle="Dispare anúncios em tela cheia com partículas e animações idênticas ao fluxo de gameplay"
       >
         <div className="space-y-3">
-          <p className="text-xs font-mono text-slate-300">
+          <p className="text-xs font-mono text-[#e8d5b5]">
             Clique para testar o modal dramático que surge para o caçador durante conquistas maiores:
           </p>
 
@@ -390,42 +399,45 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
             <button
               onClick={handleTriggerModalLevelUp}
               data-testid="trigger-modal-level-up"
-              className="p-3.5 rounded-xl bg-[#09152b] border border-cyan-500/40 hover:border-cyan-300 hover:bg-cyan-950/40 text-left transition-all group flex flex-col justify-between"
+              className="relative p-3.5 rounded-none bg-[#081329]/90 border border-[#c89b55]/55 hover:border-[#fde047] hover:bg-[#101f42]/90 text-left transition-all group flex flex-col justify-between overflow-hidden shadow-[0_0_15px_rgba(223,168,108,0.08)]"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <ArrowUpCircle className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
-                <span className="font-mono font-bold text-xs text-white">Novo Nível (Level Up)</span>
+              <GildedCorners size="xs" withInnerFrame={false} />
+              <div className="relative z-10 flex items-center gap-2 mb-2">
+                <ArrowUpCircle className="w-5 h-5 text-[#dfa86c] group-hover:scale-110 transition-transform" />
+                <span className="font-fantasy font-bold text-xs text-[#f8ecd5] uppercase tracking-wider">Novo Nível (Level Up)</span>
               </div>
-              <span className="text-[11px] font-mono text-slate-400">
-                Tema Ciano // Partículas e calibração de status
+              <span className="relative z-10 text-[11px] font-mono text-[#c5b08f]">
+                Tema Ouro Imperial // Partículas e calibração de status
               </span>
             </button>
 
             <button
               onClick={handleTriggerModalSkillAcquired}
               data-testid="trigger-modal-skill-acquired"
-              className="p-3.5 rounded-xl bg-[#09152b] border border-cyan-500/40 hover:border-cyan-300 hover:bg-cyan-950/40 text-left transition-all group flex flex-col justify-between"
+              className="relative p-3.5 rounded-none bg-[#081329]/90 border border-[#c89b55]/55 hover:border-[#fde047] hover:bg-[#101f42]/90 text-left transition-all group flex flex-col justify-between overflow-hidden shadow-[0_0_15px_rgba(223,168,108,0.08)]"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
-                <span className="font-mono font-bold text-xs text-white">Habilidade Adquirida</span>
+              <GildedCorners size="xs" withInnerFrame={false} />
+              <div className="relative z-10 flex items-center gap-2 mb-2">
+                <Sparkles className="w-5 h-5 text-[#dfa86c] group-hover:scale-110 transition-transform" />
+                <span className="font-fantasy font-bold text-xs text-[#f8ecd5] uppercase tracking-wider">Habilidade Adquirida</span>
               </div>
-              <span className="text-[11px] font-mono text-slate-400">
-                Tema Ciano // Registro na Árvore de Habilidades
+              <span className="relative z-10 text-[11px] font-mono text-[#c5b08f]">
+                Tema Ouro Imperial // Registro na Árvore de Habilidades
               </span>
             </button>
 
             <button
               onClick={handleTriggerModalSkillEvolved}
               data-testid="trigger-modal-skill-evolved"
-              className="p-3.5 rounded-xl bg-[#1c1606] border border-amber-500/40 hover:border-amber-300 hover:bg-amber-950/40 text-left transition-all group flex flex-col justify-between"
+              className="relative p-3.5 rounded-none bg-[#1c1308]/90 border border-[#fde047]/60 hover:border-[#fde047] hover:bg-[#2a1d0c]/90 text-left transition-all group flex flex-col justify-between overflow-hidden shadow-[0_0_20px_rgba(253,224,71,0.15)]"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <Award className="w-5 h-5 text-amber-400 group-hover:scale-110 transition-transform" />
-                <span className="font-mono font-bold text-xs text-amber-300">Evolução de Habilidade</span>
+              <GildedCorners size="xs" withInnerFrame={false} color="#dfa86c" diamondColor="#fde047" />
+              <div className="relative z-10 flex items-center gap-2 mb-2">
+                <Award className="w-5 h-5 text-[#fde047] group-hover:scale-110 transition-transform" />
+                <span className="font-fantasy font-bold text-xs text-[#fde047] uppercase tracking-wider">Evolução de Habilidade</span>
               </div>
-              <span className="text-[11px] font-mono text-amber-400/70">
-                Tema Ouro // Ascensão para Grau Extra com 100 de Maestria
+              <span className="relative z-10 text-[11px] font-mono text-[#dfa86c]">
+                Tema Ouro Radiante // Ascensão para Grau Extra com 100 de Maestria
               </span>
             </button>
           </div>
@@ -438,20 +450,20 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
         subtitle="Web Speech API integrada ao navegador com normalizador fonético para termos em inglês"
       >
         {!ttsSupported ? (
-          <div className="p-3.5 bg-amber-950/40 border border-amber-600/40 rounded-xl text-amber-300 text-xs font-mono">
+          <div className="p-3.5 bg-amber-950/40 border border-amber-600/40 rounded-none text-amber-300 text-xs font-mono">
             A Web Speech API (speechSynthesis) não está disponível no navegador atual.
           </div>
         ) : (
           <div className="space-y-4 font-mono text-xs">
             {/* Voice select */}
             <div>
-              <label className="text-slate-400 block mb-1.5 font-bold">
+              <label className="text-[#dfa86c] font-fantasy uppercase tracking-wider block mb-1.5 font-bold">
                 Selecione a Voz Instalada no Navegador:
               </label>
               <select
                 value={selectedTtsVoice}
                 onChange={(e) => setSelectedTtsVoice(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400"
+                className="w-full bg-[#040814] border border-[#966422]/60 rounded-none px-3 py-2 text-xs text-[#f3e5cc] focus:outline-none focus:border-[#dfa86c]"
               >
                 {ttsVoices.map((v) => (
                   <option key={v.name} value={v.name}>
@@ -463,10 +475,10 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
 
             {/* Sliders Rate & Pitch */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-lg space-y-1.5">
-                <div className="flex justify-between text-slate-300">
-                  <span>Velocidade de Fala (Rate):</span>
-                  <span className="text-cyan-400 font-bold">{ttsRate.toFixed(1)}x</span>
+              <div className="p-3 bg-[#040814]/85 border border-[#966422]/45 rounded-none space-y-1.5">
+                <div className="flex justify-between text-[#e8d5b5]">
+                  <span className="font-fantasy uppercase tracking-wider">Velocidade de Fala (Rate):</span>
+                  <span className="text-[#fde047] font-bold">{ttsRate.toFixed(1)}x</span>
                 </div>
                 <input
                   type="range"
@@ -475,14 +487,14 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
                   step="0.1"
                   value={ttsRate}
                   onChange={(e) => setTtsRate(parseFloat(e.target.value))}
-                  className="w-full accent-cyan-400"
+                  className="w-full accent-[#dfa86c]"
                 />
               </div>
 
-              <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-lg space-y-1.5">
-                <div className="flex justify-between text-slate-300">
-                  <span>Tom da Voz (Pitch):</span>
-                  <span className="text-cyan-400 font-bold">{ttsPitch.toFixed(1)}</span>
+              <div className="p-3 bg-[#040814]/85 border border-[#966422]/45 rounded-none space-y-1.5">
+                <div className="flex justify-between text-[#e8d5b5]">
+                  <span className="font-fantasy uppercase tracking-wider">Tom da Voz (Pitch):</span>
+                  <span className="text-[#fde047] font-bold">{ttsPitch.toFixed(1)}</span>
                 </div>
                 <input
                   type="range"
@@ -491,14 +503,14 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
                   step="0.1"
                   value={ttsPitch}
                   onChange={(e) => setTtsPitch(parseFloat(e.target.value))}
-                  className="w-full accent-cyan-400"
+                  className="w-full accent-[#dfa86c]"
                 />
               </div>
             </div>
 
             {/* Custom Input & Presets */}
             <div className="space-y-2">
-              <label className="text-slate-400 block font-bold">
+              <label className="text-[#dfa86c] font-fantasy uppercase tracking-wider block font-bold">
                 Texto para Fala da Grande Sábio:
               </label>
               <textarea
@@ -506,11 +518,11 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
                 onChange={(e) => setCustomText(e.target.value)}
                 rows={2}
                 placeholder="Digite uma mensagem para a Grande Sábio narrar..."
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400"
+                className="w-full bg-[#040814] border border-[#966422]/60 rounded-none p-2.5 text-xs text-[#f3e5cc] placeholder-[#8c7a5b] focus:outline-none focus:border-[#dfa86c]"
               />
 
               <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                <span className="text-[10px] text-slate-500 uppercase font-bold mr-1">
+                <span className="text-[10px] font-fantasy text-[#c5b08f] uppercase font-bold mr-1">
                   Frases Rápidas:
                 </span>
                 {PRESET_PHRASES.map((phrase, idx) => (
@@ -518,7 +530,7 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
                     key={idx}
                     type="button"
                     onClick={() => setCustomText(phrase)}
-                    className="px-2 py-1 rounded bg-slate-900 border border-slate-800 hover:border-cyan-500/50 text-[10px] text-slate-400 hover:text-cyan-300 transition-colors"
+                    className="px-2 py-1 rounded-none bg-[#060e20] border border-[#966422]/45 hover:border-[#dfa86c] text-[10px] font-fantasy uppercase tracking-wider text-[#c5b08f] hover:text-[#fde047] transition-colors"
                   >
                     Exemplo {idx + 1}
                   </button>
@@ -565,11 +577,11 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
               hapticFeedback.tap();
               soundService.playSystemNotification();
             }}
-            className="p-3 rounded-lg bg-slate-950 border border-slate-800 hover:border-cyan-500/50 hover:bg-slate-900 text-slate-300 hover:text-cyan-300 flex flex-col items-center gap-1.5 transition-colors"
+            className="p-3 rounded-none bg-[#040814]/90 border border-[#966422]/50 hover:border-[#dfa86c] hover:bg-[#081329] text-[#e8d5b5] hover:text-[#fde047] flex flex-col items-center gap-1.5 transition-colors"
           >
-            <Zap className="w-4 h-4 text-cyan-400" />
-            <span className="font-bold">Notificação</span>
-            <span className="text-[10px] text-slate-500">Ping Harmônico</span>
+            <Zap className="w-4 h-4 text-[#dfa86c]" />
+            <span className="font-fantasy font-bold uppercase tracking-wider">Notificação</span>
+            <span className="text-[10px] text-[#a39171]">Ping Harmônico</span>
           </button>
 
           <button
@@ -577,11 +589,11 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
               hapticFeedback.levelUp();
               soundService.playLevelUp();
             }}
-            className="p-3 rounded-lg bg-slate-950 border border-slate-800 hover:border-cyan-500/50 hover:bg-slate-900 text-slate-300 hover:text-cyan-300 flex flex-col items-center gap-1.5 transition-colors"
+            className="p-3 rounded-none bg-[#040814]/90 border border-[#966422]/50 hover:border-[#dfa86c] hover:bg-[#081329] text-[#e8d5b5] hover:text-[#fde047] flex flex-col items-center gap-1.5 transition-colors"
           >
-            <ArrowUpCircle className="w-4 h-4 text-cyan-400" />
-            <span className="font-bold">Level Up</span>
-            <span className="text-[10px] text-slate-500">Arpeggio C5-E6</span>
+            <ArrowUpCircle className="w-4 h-4 text-[#dfa86c]" />
+            <span className="font-fantasy font-bold uppercase tracking-wider">Level Up</span>
+            <span className="text-[10px] text-[#a39171]">Arpeggio C5-E6</span>
           </button>
 
           <button
@@ -589,11 +601,11 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
               hapticFeedback.success();
               soundService.playSkillAcquired();
             }}
-            className="p-3 rounded-lg bg-slate-950 border border-slate-800 hover:border-cyan-500/50 hover:bg-slate-900 text-slate-300 hover:text-cyan-300 flex flex-col items-center gap-1.5 transition-colors"
+            className="p-3 rounded-none bg-[#040814]/90 border border-[#966422]/50 hover:border-[#dfa86c] hover:bg-[#081329] text-[#e8d5b5] hover:text-[#fde047] flex flex-col items-center gap-1.5 transition-colors"
           >
-            <Sparkles className="w-4 h-4 text-cyan-400" />
-            <span className="font-bold">Habilidade</span>
-            <span className="text-[10px] text-slate-500">Chime A4-A5</span>
+            <Sparkles className="w-4 h-4 text-[#dfa86c]" />
+            <span className="font-fantasy font-bold uppercase tracking-wider">Habilidade</span>
+            <span className="text-[10px] text-[#a39171]">Chime A4-A5</span>
           </button>
 
           <button
@@ -601,11 +613,11 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
               hapticFeedback.skillEvolved();
               soundService.playSkillEvolved();
             }}
-            className="p-3 rounded-lg bg-slate-950 border border-slate-800 hover:border-amber-500/50 hover:bg-slate-900 text-slate-300 hover:text-amber-300 flex flex-col items-center gap-1.5 transition-colors"
+            className="p-3 rounded-none bg-[#040814]/90 border border-[#fde047]/45 hover:border-[#fde047] hover:bg-[#1c1308] text-[#fde047] flex flex-col items-center gap-1.5 transition-colors"
           >
-            <Award className="w-4 h-4 text-amber-400" />
-            <span className="font-bold">Evolução</span>
-            <span className="text-[10px] text-amber-500/70">Burst E4-E6</span>
+            <Award className="w-4 h-4 text-[#fde047]" />
+            <span className="font-fantasy font-bold uppercase tracking-wider">Evolução</span>
+            <span className="text-[10px] text-[#dfa86c]">Burst E4-E6</span>
           </button>
         </div>
       </SystemPanel>

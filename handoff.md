@@ -2,9 +2,9 @@
 
 ## Status Atual
 
-- **Última Fase Concluída:** Fase 4 — Motor de Jogo Puro (Parte 1): Clock/RNG, XP, Nível, Maestria, Atributos e Ledger
-- **Próxima Fase:** Fase 5 — Voz do Mundo (Modal + Haptics + Som + Web TTS) e Telas de Status e Habilidades
-- **Data da Atualização:** 2026-10-15
+- **Última Fase Concluída:** Fase 5 — Voz do Mundo & G.S (Modal Dourado + Áudios Oficiais/API Sem TTS) e Telas de Status e Habilidades
+- **Próxima Fase:** Fase 6 — Backend `/chat`, Síntese de Voz G.S, Cartões de Prévia e Pop-up de Pendências
+- **Data da Atualização:** 2026-10-17
 
 ## Histórico de Fases Concluídas
 
@@ -87,18 +87,20 @@
     - `@slime-sage/game`: 16/16 testes
     - `@slime-sage/api`: 3/3 testes
     - `@slime-sage/pwa`: 37/37 testes
-### Fase 3 — Design System "Sistema", Navegação por Abas e CRUD Manual de Projetos/Missões
+### Fase 3 — Design System "Sistema" (Dark Fantasy Gilded RPG), Navegação por Abas e CRUD Manual de Projetos/Missões
 
 - **Mudanças Implementadas:**
-  - Design System temático do "Sistema" (*Solo Leveling* / *Tensura*): paleta escura `#050811`, ciano neon `#00f3ff`, tipografia mono, feedback tátil com `navigator.vibrate` e componentes reutilizáveis (`SystemButton`, `SystemBadge`, `SystemPanel`, `SystemModal`, `SystemFormControls`, `SystemHeader`).
-  - Navegação fluida por 5 abas (`TabBar`): Home, Projetos, G.S (hero central), Skills e Status, com preservação de estado no DOM eliminando efeito de piscar preto.
+  - Design System temático do "Sistema" redesenhado com estética **Dark Fantasy Gilded RPG** (baseada em `docs/design.png`): paleta obsidiana cósmica `#040814` / `#060e20`, ouro antigo e brilhante (`#dfa86c`, `#fde047`, `#c89b55`, `#966422`), tipografia serifada épica `Cinzel` para títulos/cabeçalhos combinada com `JetBrains Mono` para dados/telemetria, molduras duplas ornamentadas com cantoneiras góticas e losangos nos cantos, círculos mágicos esotéricos em SVG, feedback tátil com `navigator.vibrate` e componentes reutilizáveis (`SystemButton`, `SystemBadge`, `SystemPanel`, `SystemModal`, `SystemFormControls`, `SystemHeader`).
+  - Proteção global contra transbordo de nomes longos de atividades, missões, habilidades e projetos (`min-w-0`, `overflow-hidden`, `flex-wrap`, `break-words [overflow-wrap:anywhere]`) em todas as views e cartões.
+  - Navegação fluida por 5 abas (`TabBar`): Home, Projetos, G.S (medalhão central dourado com círculo mágico esotérico), Skills e Status, com preservação de estado no DOM eliminando efeito de piscar preto.
   - CRUD manual completo de Projetos e Missões conectado a `projectRepository.ts`, com visualizador em árvore (DAG), desbloqueio em cascata e visualização dos 3 estados (`bloqueada`, `disponivel`, `feita`).
   - Atualizações otimizadas de projetos e missões (`updateProject`, `updateMission`) e testes de ponta a ponta em `e2e/projects-and-missions-flow.spec.ts`.
 - **Arquivos Criados / Modificados:**
-  - `apps/pwa/src/components/system/*` — [Design System "Sistema"]
-  - `apps/pwa/src/components/navigation/TabBar.tsx` — [barra de abas responsiva]
-  - `apps/pwa/src/components/projects/*` — [componentes de projetos, missões e modais CRUD]
-  - `apps/pwa/src/components/views/*` — [views de Home, Projetos, Chat G.S, Skills e Status]
+  - `apps/pwa/index.html`, `apps/pwa/tailwind.config.js`, `apps/pwa/src/index.css` — [tokens Dark Fantasy Gilded RPG, fonte `Cinzel`, fundo cósmico e utilitários de moldura dourada]
+  - `apps/pwa/src/components/system/*` — [Design System "Sistema" Dark Fantasy Gilded RPG]
+  - `apps/pwa/src/components/navigation/TabBar.tsx` — [barra de abas ornamentada com medalhão esotérico G.S]
+  - `apps/pwa/src/components/projects/*` — [componentes de projetos, missões e modais CRUD com proteção anti-overflow]
+  - `apps/pwa/src/components/views/*` — [views de Home, Projetos, Chat G.S, Skills, Vozes e Status com estética Dark Fantasy]
   - `apps/pwa/src/services/haptics.ts` — [feedback tátil com vibração]
   - `apps/pwa/src/services/projectRepository.ts` — [suporte a updateProject e updateMission]
 - **Estado dos Testes Automáticos:**
@@ -114,8 +116,8 @@
     - Auditor de integridade do ledger (`auditLedger`, `calculateLedgerTotals`).
   - No cliente PWA:
     - `gameService.ts`: Transações atômicas `completeMission` e `undoMissionCompletion` integradas ao ledger imutável `xp_event`, com recálculo de perfil, disparo de eventos do motor (`LEVEL_UP`, `SKILL_EVOLVED_EXTRA`) e compensação estrita no undo.
-    - Telas `HomeView.tsx` e `StatusView.tsx` atualizadas com barra de progresso de nível, ranques de caçador dinâmicos e status de conformidade da auditoria do ledger.
-    - `DevPanel.tsx`: Novas abas **"Ledger de XP"** (com auditoria em tempo real, visualização das transações e reconciliação) e **"Viagem no Tempo"** (com `FakeClock` ativo avançando segundos ao vivo em tempo real, luz pulsante ciano e selo de deslocamento relativo).
+    - Telas `HomeView.tsx` e `StatusView.tsx` atualizadas com barra de progresso de nível dourada, ranques de caçador dinâmicos e status de conformidade da auditoria do ledger.
+    - `DevPanel.tsx`: Novas abas **"Ledger de XP"** (com auditoria em tempo real, visualização das transações e reconciliação) e **"Viagem no Tempo"** (com `FakeClock` ativo avançando segundos ao vivo em tempo real e selo de deslocamento relativo).
     - Proteção assíncrona com `isMountedRef` em `ProjectsView.tsx` e `StatusView.tsx`.
 - **Arquivos Criados / Modificados:**
   - `packages/game/src/clock.ts`, `packages/game/src/rng.ts`, `packages/game/src/config.ts`, `packages/game/src/skills.ts`, `packages/game/src/attributes.ts`, `packages/game/src/ledger.ts`, `packages/game/src/index.ts`, `packages/game/src/gameEngine.test.ts`
@@ -126,9 +128,41 @@
 - **Estado dos Testes Automáticos:**
   - Suítes passando: 20/20 | Testes passando: 110/110 | Lint e Typecheck: 100% OK
   - Cobertura em `@slime-sage/game`: 98.92% statements, 93.28% branches, 100% functions, 98.92% lines (acima da meta de 90%).
-- **Pontos de Atenção para a Próxima Fase (Fase 5):**
-  - Implementar o modal solene da **Voz do Mundo** (`VoiceOfTheWorldModal.tsx`) para anúncios épicos de evolução (`LEVEL_UP`, `SKILL_ACQUIRED`, `SKILL_EVOLVED_EXTRA`, `RANK_UP`), com áudio pré-gravado oficial da voz `Kore` do Gemini e fallback para Web Speech API normalizado.
-  - Tela completa de **Status do Caçador** (atributos pentagonais radar/barras, ranques F a S).
-  - Tela completa da **Árvore de Habilidades (Tensura)** agrupadas por área e tier (Comum / Extra).
+
+### Fase 5 — Voz do Mundo & G.S (Modal Dourado + Áudios Oficiais/API Sem TTS) e Telas de Status e Habilidades
+
+- **Mudanças Implementadas:**
+  - `WorldVoiceModal.tsx` desenvolvido com a nova estética **Dark Fantasy Gilded RPG** (molduras duplas ouro/âmbar, cantoneiras com losangos e círculos esotéricos, efeito pulsante e animações do Framer Motion).
+  - Refatoração do `worldVoiceService.ts`:
+    - Eliminação completa da Web Speech API (`speechSynthesis`).
+    - Integração de `OFFICIAL_AUDIO_MAP` executando via instâncias de `new Audio(audioSrc)` com arquivos estáticos oficiais em `public/audio/voice/` (`level-up.mp3`, `skill-acquired.mp3`, `skill-evolved-extra.mp3`, `project-complete.mp3`).
+    - Fila sequencial (FIFO) de anúncios com suporte a repetição do áudio (`replayCurrentSpeech`) e interrupção segura (`dismissCurrent`).
+    - Som sutil Web Audio API mantido para a conclusão de missões individuais sem disparar áudio de voz falado.
+  - Integração visual e funcional em `StatusView.tsx` (gráfico de radar SVG, ranques por atributo, lista de transações com proteção de quebra de linha) e `SkillsView.tsx` (lista de habilidades comuns/extras, modal de aquisição manual com disparo de ritual solene `SKILL_ACQUIRED`).
+  - Configuração de mocks globais para `HTMLMediaElement` (`play`, `pause`, `load`) em `apps/pwa/src/test/setup.ts`.
+  - Atualização dos testes unitários em `WorldVoiceModal.test.tsx` para validação de `HTMLMediaElement.prototype.play`.
+- **Arquivos Criados / Modificados:**
+  - `apps/pwa/src/components/system/WorldVoiceModal.tsx`, `apps/pwa/src/components/system/WorldVoiceModal.test.tsx`
+  - `apps/pwa/src/services/worldVoiceService.ts`
+  - `apps/pwa/src/components/views/StatusView.tsx`, `apps/pwa/src/components/views/SkillsView.tsx`
+  - `apps/pwa/src/test/setup.ts`
+  - `roadmap.md`, `feedback.md`, `handoff.md`
+- **Estado dos Testes Automáticos:**
+  - Monorepo: 4/4 pacotes passando | 24/24 suítes | 128/128 testes passando (100% verde)
+    - `@slime-sage/pwa`: 80/80 testes (19 arquivos)
+    - `@slime-sage/game`: 37/37 testes (3 arquivos)
+    - `@slime-sage/shared`: 8/8 testes (1 arquivo)
+    - `@slime-sage/api`: 3/3 testes (1 arquivo)
+
+- **Pontos de Atenção para a Fase 6 e Subsequentes (Diretrizes Grill-Me Consolidadas):**
+  - **Fase 6 — Backend `/chat`, Síntese de Voz G.S, Cartões de Prévia e Pop-up de Pendências:**
+    - Criar rota `POST /chat` em `apps/api` usando `@ai-sdk/google` (Gemini 2.0 Flash) com streaming de resposta e ferramenta para proposição estruturada de projetos/missões (cartões de prévia interativos).
+    - Criar rota `POST /tts` em `apps/api` sintetizando falas dinâmicas da G.S com a voz neural oficial `Kore` e cache local em IndexedDB no PWA.
+    - Componente de Chat da G.S: texto rápido em streaming, botão de ouvir voz gerada, e pop-up/toast discreto para notificações proativas sem tirar o caçador da tela atual.
+    - Verificação de itens atrasados/pendentes ao abrir a aba da Grande Sábio.
+  - **Diretrizes Arquiteturais Firmadas:**
+    - Zero TTS local do navegador.
+    - Ascensão de nível online com estado 'Elegível para Ascensão' offline.
+    - Agenda independente da árvore de projetos com barra de maestria de hábitos (0 a 100%) e estado 'Enferrujada' a 75%.
 
 

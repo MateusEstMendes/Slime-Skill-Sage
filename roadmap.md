@@ -23,7 +23,7 @@ Legenda: `[ ]` Pendente | `[/]` Em andamento | `[x]` Concluído e Aprovado pelo 
 - [x] 2.3 Testes do Usuário
 - [x] 2.4 Debug e Atualização de Handoff/Feedback
 
-## Fase 3 — Design System "Sistema", Navegação por Abas e CRUD Manual de Projetos/Missões
+## Fase 3 — Design System "Sistema" (Dark Fantasy Gilded RPG — `docs/design.png`), Navegação por Abas e CRUD Manual de Projetos/Missões
 
 - [x] 3.1 Desenvolvimento
 - [x] 3.2 Testes Automáticos
@@ -37,14 +37,14 @@ Legenda: `[ ]` Pendente | `[/]` Em andamento | `[x]` Concluído e Aprovado pelo 
 - [x] 4.3 Testes do Usuário
 - [x] 4.4 Debug e Atualização de Handoff/Feedback
 
-## Fase 5 — Voz do Mundo (Modal + Haptics + Som + Web TTS) e Telas de Status e Habilidades
+## Fase 5 — Voz do Mundo & G.S (Modal Dourado + Áudios Oficiais/API Sem TTS) e Telas de Status e Habilidades
 
 - [x] 5.1 Desenvolvimento
 - [x] 5.2 Testes Automáticos
-- [ ] 5.3 Testes do Usuário
-- [ ] 5.4 Debug e Atualização de Handoff/Feedback1
+- [x] 5.3 Testes do Usuário
+- [x] 5.4 Debug e Atualização de Handoff/Feedback
 
-## Fase 6 — Backend `/chat` (Streaming + Tools Schema) e Cliente de Chat com Cartões de Prévia
+## Fase 6 — Backend `/chat`, Síntese de Voz G.S, Cartões de Prévia e Pop-up de Pendências
 
 - [ ] 6.1 Desenvolvimento
 - [ ] 6.2 Testes Automáticos
@@ -58,7 +58,7 @@ Legenda: `[ ]` Pendente | `[/]` Em andamento | `[x]` Concluído e Aprovado pelo 
 - [ ] 7.3 Testes do Usuário
 - [ ] 7.4 Debug e Atualização de Handoff/Feedback
 
-## Fase 8 — Onboarding: 5 Perguntas Narradas por Web TTS, Revelação de Classe e 1ª Conquista
+## Fase 8 — Onboarding: Apresentação da G.S com Áudios Oficiais, Typewriter e Revelação Inicial via API
 
 - [ ] 8.1 Desenvolvimento
 - [ ] 8.2 Testes Automáticos
@@ -72,14 +72,14 @@ Legenda: `[ ]` Pendente | `[/]` Em andamento | `[x]` Concluído e Aprovado pelo 
 - [ ] 9.3 Testes do Usuário
 - [ ] 9.4 Debug e Atualização de Handoff/Feedback
 
-## Fase 10 — Evolução de Habilidade (Extra → Única) e Roleta Animada (SVG + Framer Motion + Cooldown 24h)
+## Fase 10 — Evolução de Habilidade (Extra → Única), Roleta Esotérica e Festival da Colheita
 
 - [ ] 10.1 Desenvolvimento
 - [ ] 10.2 Testes Automáticos
 - [ ] 10.3 Testes do Usuário
 - [ ] 10.4 Debug e Atualização de Handoff/Feedback
 
-## Fase 11 — Motor de Missões Diárias, Virada às 04:00, Streak Sem Escudo e UI na Home
+## Fase 11 — Sistema de Agenda Independente, Tarefas Recorrentes, Hábitos (Barra 0-100% e Check-in Semanal) e Passivas
 
 - [ ] 11.1 Desenvolvimento
 - [ ] 11.2 Testes Automáticos

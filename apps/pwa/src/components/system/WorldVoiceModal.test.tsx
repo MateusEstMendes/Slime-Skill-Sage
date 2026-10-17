@@ -39,7 +39,7 @@ describe("WorldVoiceModal & worldVoiceService", () => {
       expect(screen.getByText("NÍVEL 2 ALCANÇADO")).toBeInTheDocument();
     });
 
-    expect(window.speechSynthesis.speak).toHaveBeenCalled();
+    expect(window.HTMLMediaElement.prototype.play).toHaveBeenCalled();
   });
 
   it("handles SKILL_EVOLVED_EXTRA with gold theme and dismisses properly", async () => {
@@ -120,13 +120,13 @@ describe("WorldVoiceModal & worldVoiceService", () => {
       expect(screen.getByRole("dialog", { name: "Voz do Mundo" })).toBeInTheDocument();
     });
 
-    const initialSpeakCalls = vi.mocked(window.speechSynthesis.speak).mock.calls.length;
+    const initialPlayCalls = vi.mocked(window.HTMLMediaElement.prototype.play).mock.calls.length;
 
     const replayBtn = screen.getByRole("button", { name: "Repetir narração da Voz do Mundo" });
     fireEvent.click(replayBtn);
 
     await waitFor(() => {
-      expect(window.speechSynthesis.speak).toHaveBeenCalledTimes(initialSpeakCalls + 1);
+      expect(window.HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(initialPlayCalls + 1);
     });
   });
 });
