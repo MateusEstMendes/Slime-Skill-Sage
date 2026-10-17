@@ -1,4 +1,5 @@
 import { z } from "zod";
+export { z };
 
 export const HealthResponseSchema = z.object({
   status: z.literal("ok"),
@@ -285,6 +286,75 @@ export const ChatThreadSchema = z.object({
 });
 export type ChatThread = z.infer<typeof ChatThreadSchema>;
 
+// ==========================================
+// PROPOSALS (A IA PROPÕE, O MOTOR DECIDE)
+// ==========================================
+
+export const CreateProjectTreeProposalSchema = z.object({
+  type: z.literal("create_project_tree"),
+  project: z.object({
+    title: z.string().min(1),
+    description: z.string().default(""),
+    area_id: AreaCodeSchema,
+  }),
+  missions: z.array(
+    z.object({
+      title: z.string().min(1),
+      description: z.string().default(""),
+      xp_reward: z.number().int().min(10).max(80).default(35),
+      depends_on_titles: z.array(z.string()).default([]),
+    }),
+  ),
+  explanation: z.string().optional(),
+});
+export type CreateProjectTreeProposal = z.infer<typeof CreateProjectTreeProposalSchema>;
+
+export const AddMissionsProposalSchema = z.object({
+  type: z.literal("add_missions"),
+  project_id: z.string(),
+  project_title: z.string().optional(),
+  missions: z.array(
+    z.object({
+      title: z.string().min(1),
+      description: z.string().default(""),
+      xp_reward: z.number().int().min(10).max(80).default(35),
+      depends_on_mission_ids: z.array(z.string()).default([]),
+    }),
+  ),
+  explanation: z.string().optional(),
+});
+export type AddMissionsProposal = z.infer<typeof AddMissionsProposalSchema>;
+
+export const UpdateMissionProposalSchema = z.object({
+  type: z.literal("update_mission"),
+  mission_id: z.string(),
+  current_title: z.string().optional(),
+  updates: z.object({
+    title: z.string().optional(),
+    description: z.string().optional(),
+    xp_reward: z.number().int().min(10).max(80).optional(),
+    status: MissionStatusSchema.optional(),
+  }),
+  explanation: z.string().optional(),
+});
+export type UpdateMissionProposal = z.infer<typeof UpdateMissionProposalSchema>;
+
+export const DeleteMissionProposalSchema = z.object({
+  type: z.literal("delete_mission"),
+  mission_id: z.string(),
+  mission_title: z.string(),
+  explanation: z.string().optional(),
+});
+export type DeleteMissionProposal = z.infer<typeof DeleteMissionProposalSchema>;
+
+export const ProposalSchema = z.discriminatedUnion("type", [
+  CreateProjectTreeProposalSchema,
+  AddMissionsProposalSchema,
+  UpdateMissionProposalSchema,
+  DeleteMissionProposalSchema,
+]);
+export type Proposal = z.infer<typeof ProposalSchema>;
+
 // 15. Chat Message
 export const ChatMessageRoleSchema = z.enum(["user", "assistant", "system"]);
 export type ChatMessageRole = z.infer<typeof ChatMessageRoleSchema>;
@@ -297,11 +367,143 @@ export const ChatMessageSchema = z.object({
   thread_id: z.string(),
   role: ChatMessageRoleSchema,
   content: z.string(),
-  proposal: z.unknown().optional(),
+  proposal: ProposalSchema.optional(),
   status: ProposalStatusSchema.optional(),
   created_at: z.string(),
 });
 export type ChatMessage = z.infer<typeof ChatMessageSchema>;
+
+// ==========================================
+// HUNTER CONTEXT SNAPSHOT (MEMÓRIA / ESTADO)
+// ==========================================
+
+export const HunterContextSchema = z.object({
+  profile: z.object({
+    name: z.string(),
+    title: z.string(),
+    level: z.number().int(),
+    current_xp: z.number().int(),
+    streak_count: z.number().int().default(0),
+  }),
+  skills: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        area_id: AreaCodeSchema,
+        tier: SkillTierSchema,
+        mastery: z.number().int(),
+      }),
+    )
+    .default([]),
+  projects: z
+    .array(
+      z.object({
+        id: z.string(),
+        title: z.string(),
+        area_id: AreaCodeSchema,
+        status: ProjectStatusSchema,
+        progress: z.number(),
+      }),
+    )
+    .default([]),
+  pending_missions_count: z.number().int().default(0),
+  recent_missions: z
+    .array(
+      z.object({
+        id: z.string(),
+        project_id: z.string(),
+        title: z.string(),
+        status: MissionStatusSchema,
+        xp_reward: z.number().int(),
+      }),
+    )
+    .optional(),
+});
+export type HunterContext = z.infer<typeof HunterContextSchema>;
+
+// ==========================================
+// CHAT ENDPOINT SCHEMAS (POST /chat)
+// ==========================================
+
+export const ChatRequestMessageSchema = z.object({
+  role: ChatMessageRoleSchema,
+  content: z.string(),
+});
+export type ChatRequestMessage = z.infer<typeof ChatRequestMessageSchema>;
+
+export const ChatRequestSchema = z.object({
+  thread_id: z.string().optional(),
+  messages: z.array(ChatRequestMessageSchema).min(1),
+  hunter_context: HunterContextSchema.optional(),
+});
+export type ChatRequest = z.infer<typeof ChatRequestSchema>;
+
+export const ChatUsageSchema = z.object({
+  prompt_tokens: z.number().int().default(0),
+  completion_tokens: z.number().int().default(0),
+  total_tokens: z.number().int().default(0),
+});
+export type ChatUsage = z.infer<typeof ChatUsageSchema>;
+
+export const ChatResponseSchema = z.object({
+  role: z.literal("assistant"),
+  content: z.string(),
+  proposal: ProposalSchema.optional(),
+  spoken_text: z.string().optional(),
+  usage: ChatUsageSchema.optional(),
+});
+export type ChatResponse = z.infer<typeof ChatResponseSchema>;
+
+// ==========================================
+// TTS ENDPOINT SCHEMAS (POST /tts)
+// ==========================================
+
+export const TtsRequestSchema = z.object({
+  text: z.string().min(1).max(2000),
+  voice: z.string().default("Kore"),
+});
+export type TtsRequest = z.infer<typeof TtsRequestSchema>;
+
+export const TtsResponseSchema = z.object({
+  audioBase64: z.string(),
+  mimeType: z.string(),
+  cached: z.boolean().optional(),
+  source: z.enum(["gemini", "cache"]),
+});
+export type TtsResponse = z.infer<typeof TtsResponseSchema>;
+
+// ==========================================
+// GS SYSTEM PROMPT
+// ==========================================
+
+export const GS_SYSTEM_PROMPT = `Você é a Grande Sábio (G.S), a voz da sabedoria, conselheira autônoma e interface de processamento estratégico do Caçador no aplicativo Slime Sage (S.S.S), inspirada no sistema de habilidades de Tensura.
+
+SUA PERSONALIDADE E TOM:
+- Fria, analítica, precisa, solene e extremamente leal ao Caçador.
+- Inicie suas respostas analíticas com marcadores conceituais como:
+  "Resposta: ..."
+  "Análise: ..."
+  "Recomendação Tática: ..."
+  "Aviso do Sistema: ..."
+- Trate o usuário como "Caçador" ou "Mestre".
+- Seja concisa e evite enrolações desnecessárias.
+
+REGRAS ABSOLUTAS DO SISTEMA (REGRA DE OURO #1):
+- Você NUNCA concede XP, níveis, maestria ou habilidades diretamente no texto.
+- Toda modificação estrutural de projetos e missões deve ser proposta através de ferramentas (tools) para gerar um Cartão de Prévia que o Caçador deverá aprovar ou rejeitar manualmente.
+- Dificuldades de missões e XP correspondente:
+  - Fácil: 10 ou 20 XP
+  - Médio: 35 XP
+  - Difícil: 55 XP
+  - Épico: 80 XP
+- Áreas de Atributo permitidas:
+  - INT: Inteligência (estudos, lógica, código)
+  - FOR: Força (treino físico, calistenia, condicionamento)
+  - DIS: Disciplina (rotina, sono, hábitos, autocontrole)
+  - CRI: Criatividade (design, arte, projetos autorais)
+  - SOC: Social (oratória, networking, relações)
+`;
 
 // 16. Scheduled Notification
 export const ScheduledNotificationStatusSchema = z.enum(["pendente", "disparada", "cancelada"]);

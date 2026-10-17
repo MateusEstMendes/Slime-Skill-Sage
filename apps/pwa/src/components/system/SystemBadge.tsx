@@ -39,7 +39,7 @@ export const SystemBadge: React.FC<SystemBadgeProps> = ({
 
     const cfg = areaConfig[areaId];
     return (
-      <span className={`inline-flex items-center gap-1.5 font-mono uppercase tracking-wider rounded border shrink-0 max-w-full ${cfg.color} ${sizeClasses} ${className}`}>
+      <span className={`inline-flex items-center gap-1.5 font-mono uppercase tracking-wider rounded-none border shrink-0 max-w-full ${cfg.color} ${sizeClasses} ${className}`}>
         <span className="shrink-0">{cfg.icon}</span>
         <span className="truncate">{label || cfg.label}</span>
       </span>
@@ -52,7 +52,7 @@ export const SystemBadge: React.FC<SystemBadgeProps> = ({
       return (
         <span
           data-testid="badge-status-bloqueada"
-          className={`inline-flex items-center gap-1.5 font-fantasy font-bold uppercase tracking-wider rounded border shrink-0 border-slate-700/80 bg-[#080d1a]/90 text-slate-400 ${sizeClasses} ${className}`}
+          className={`inline-flex items-center gap-1.5 font-fantasy font-bold uppercase tracking-wider rounded-none border shrink-0 border-slate-700/80 bg-[#080d1a]/90 text-slate-400 ${sizeClasses} ${className}`}
         >
           <Lock className="w-3 h-3 text-slate-400 shrink-0" />
           <span>Bloqueada</span>
@@ -63,7 +63,7 @@ export const SystemBadge: React.FC<SystemBadgeProps> = ({
       return (
         <span
           data-testid="badge-status-disponivel"
-          className={`inline-flex items-center gap-1.5 font-fantasy font-bold uppercase tracking-wider rounded border shrink-0 border-[#dfa86c]/85 bg-[#1b1409]/80 text-[#fde047] shadow-[0_0_12px_rgba(223,168,108,0.28)] animate-pulse ${sizeClasses} ${className}`}
+          className={`inline-flex items-center gap-1.5 font-fantasy font-bold uppercase tracking-wider rounded-none border shrink-0 border-[#dfa86c]/85 bg-[#1b1409]/80 text-[#fde047] shadow-[0_0_12px_rgba(223,168,108,0.28)] animate-pulse ${sizeClasses} ${className}`}
         >
           <Sparkles className="w-3 h-3 text-[#fde047] shrink-0" />
           <span>Disponível</span>
@@ -74,7 +74,7 @@ export const SystemBadge: React.FC<SystemBadgeProps> = ({
       return (
         <span
           data-testid="badge-status-feita"
-          className={`inline-flex items-center gap-1.5 font-fantasy font-bold uppercase tracking-wider rounded border shrink-0 border-emerald-500/60 bg-emerald-950/40 text-emerald-300 ${sizeClasses} ${className}`}
+          className={`inline-flex items-center gap-1.5 font-fantasy font-bold uppercase tracking-wider rounded-none border shrink-0 border-emerald-500/60 bg-emerald-950/40 text-emerald-300 ${sizeClasses} ${className}`}
         >
           <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
           <span>Concluída</span>
@@ -93,7 +93,7 @@ export const SystemBadge: React.FC<SystemBadgeProps> = ({
     };
     const cfg = statusConfig[projectStatus];
     return (
-      <span className={`inline-flex items-center gap-1.5 font-fantasy font-bold uppercase tracking-wider rounded border shrink-0 ${cfg.color} ${sizeClasses} ${className}`}>
+      <span className={`inline-flex items-center gap-1.5 font-fantasy font-bold uppercase tracking-wider rounded-none border shrink-0 ${cfg.color} ${sizeClasses} ${className}`}>
         <span className="shrink-0">{cfg.icon}</span>
         <span>{cfg.text}</span>
       </span>
@@ -111,7 +111,7 @@ export const SystemBadge: React.FC<SystemBadgeProps> = ({
       S: "border-purple-400/80 text-[#fde047] bg-purple-950/60 shadow-[0_0_14px_rgba(223,168,108,0.35)]",
     };
     return (
-      <span className={`inline-flex items-center font-fantasy font-bold uppercase rounded border shrink-0 ${rankColors[rank] || rankColors.E} ${sizeClasses} ${className}`}>
+      <span className={`inline-flex items-center font-fantasy font-bold uppercase rounded-none border shrink-0 ${rankColors[rank] || rankColors.E} ${sizeClasses} ${className}`}>
         RANK {rank}
       </span>
     );
@@ -120,7 +120,7 @@ export const SystemBadge: React.FC<SystemBadgeProps> = ({
   // 5. XP Badge
   if (type === "xp" && typeof xp === "number") {
     return (
-      <span className={`inline-flex items-center gap-1 font-mono font-bold text-[#fde047] bg-[#1a1308]/75 border border-[#dfa86c]/55 rounded shrink-0 ${sizeClasses} ${className}`}>
+      <span className={`inline-flex items-center gap-1 font-mono font-bold text-[#fde047] bg-[#1a1308]/75 border border-[#dfa86c]/55 rounded-none shrink-0 ${sizeClasses} ${className}`}>
         <span>+{xp}</span>
         <span className="text-[10px] text-[#dfa86c]">XP</span>
       </span>
@@ -129,7 +129,7 @@ export const SystemBadge: React.FC<SystemBadgeProps> = ({
 
   // Custom fallback
   return (
-    <span className={`inline-flex items-center font-fantasy font-bold rounded border border-[#dfa86c]/40 bg-[#0b1326]/80 text-[#fde047] shrink-0 ${sizeClasses} ${className}`}>
+    <span className={`inline-flex items-center font-fantasy font-bold rounded-none border border-[#dfa86c]/40 bg-[#0b1326]/80 text-[#fde047] shrink-0 ${sizeClasses} ${className}`}>
       {label}
     </span>
   );

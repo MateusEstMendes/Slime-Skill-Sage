@@ -46,8 +46,8 @@ Legenda: `[ ]` Pendente | `[/]` Em andamento | `[x]` Concluído e Aprovado pelo 
 
 ## Fase 6 — Backend `/chat`, Síntese de Voz G.S, Cartões de Prévia e Pop-up de Pendências
 
-- [ ] 6.1 Desenvolvimento
-- [ ] 6.2 Testes Automáticos
+- [x] 6.1 Desenvolvimento
+- [x] 6.2 Testes Automáticos
 - [ ] 6.3 Testes do Usuário
 - [ ] 6.4 Debug e Atualização de Handoff/Feedback
 

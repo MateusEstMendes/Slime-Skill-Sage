@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   RotateCcw,
   Scale,
+  Bot,
 } from "lucide-react";
 import {
   type AppLogEntry,
@@ -75,6 +76,30 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
     useState<NotificationStatus>("unsupported");
   const [notifMessage, setNotifMessage] = useState<string>("");
 
+  // AI Usage Telemetry state
+  const [aiStats, setAiStats] = useState<{
+    total_prompt_tokens: number;
+    total_completion_tokens: number;
+    total_tokens: number;
+    requests_count: number;
+    last_used_at?: string;
+  } | null>(null);
+
+  const loadAiStats = useCallback(async () => {
+    try {
+      const stats = await localDb.getKv<{
+        total_prompt_tokens: number;
+        total_completion_tokens: number;
+        total_tokens: number;
+        requests_count: number;
+        last_used_at?: string;
+      }>("ai_usage_stats");
+      setAiStats(stats || null);
+    } catch {
+      // Ignora erro
+    }
+  }, []);
+
   const loadLogs = useCallback(async () => {
     setLoadingLogs(true);
     try {
@@ -84,12 +109,13 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
         levelFilter !== "all" ? (levelFilter as LogLevel) : undefined;
       const fetched = await logger.getLogs({ scope, level });
       setLogs(fetched);
+      void loadAiStats();
     } catch {
       // Ignore load error
     } finally {
       setLoadingLogs(false);
     }
-  }, [scopeFilter, levelFilter]);
+  }, [scopeFilter, levelFilter, loadAiStats]);
 
   const loadTableCounts = useCallback(async () => {
     setDbLoading(true);
@@ -824,7 +850,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                   >
                     <option value="all">Todos os Escopos</option>
                     <option value="game">game</option>
-                    <option value="ai">ai</option>
+                    <option value="ai">ai (Canal Neural & Gemini)</option>
                     <option value="notif">notif</option>
                     <option value="db">db</option>
                     <option value="focus">focus</option>
@@ -872,6 +898,43 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
+                </div>
+              </div>
+
+              {/* AI Telemetry & Usage Status Banner */}
+              <div className="relative bg-[#060e20] border border-[#dfa86c]/60 p-3.5 flex flex-wrap items-center justify-between gap-4 font-mono text-xs shadow-[0_0_15px_rgba(223,168,108,0.1)]">
+                <GildedCorners size="xs" />
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-[#140f08] border border-[#dfa86c]/60 text-[#fde047]">
+                    <Bot className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="font-fantasy font-bold text-[#fde047] uppercase tracking-wider text-[11px] flex items-center gap-2">
+                      <span>Telemetria Neural // Modelos Ativos</span>
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    </div>
+                    <div className="text-[10px] text-[#c5b08f]">
+                      Chat: <span className="text-[#f3e5cc] font-semibold">gemini-3.8-flash</span> · Síntese: <span className="text-[#f3e5cc] font-semibold">gemini-3.8-flash-tts</span> (Kore)
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 text-[11px] flex-wrap">
+                  <div>
+                    <span className="text-[#8c7a5b]">Chamadas:</span>{" "}
+                    <span className="font-bold text-[#f8ecd5]">{aiStats?.requests_count ?? 0}</span>
+                  </div>
+                  <div>
+                    <span className="text-[#8c7a5b]">Prompt:</span>{" "}
+                    <span className="font-bold text-[#dfa86c]">{aiStats?.total_prompt_tokens?.toLocaleString() ?? 0}</span>
+                  </div>
+                  <div>
+                    <span className="text-[#8c7a5b]">Resposta:</span>{" "}
+                    <span className="font-bold text-[#38bdf8]">{aiStats?.total_completion_tokens?.toLocaleString() ?? 0}</span>
+                  </div>
+                  <div className="bg-[#140f08] px-2.5 py-1 border border-[#fde047]/50 text-[#fde047] font-bold">
+                    Total: {aiStats?.total_tokens?.toLocaleString() ?? 0} tokens
+                  </div>
                 </div>
               </div>
 

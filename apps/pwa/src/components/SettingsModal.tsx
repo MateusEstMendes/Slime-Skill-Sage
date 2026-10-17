@@ -11,7 +11,7 @@ interface SettingsModalProps {
 }
 
 const REQUIRED_CLICKS = 7;
-const APP_VERSION = "v1.0.0-phase1";
+const APP_VERSION = "v1.0.0-phase6";
 const DEV_MODE_KEY = "dev_mode_unlocked";
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -22,17 +22,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const clickCountRef = React.useRef<number>(0);
   const [isDevUnlocked, setIsDevUnlocked] = useState<boolean>(false);
   const [isNarrationEnabled, setIsNarrationEnabled] = useState<boolean>(true);
+  const [isAutoPlayEnabled, setIsAutoPlayEnabled] = useState<boolean>(false);
+  const [isPendingToastEnabled, setIsPendingToastEnabled] = useState<boolean>(true);
   const [toastMessage, setToastMessage] = useState<string>("");
 
   useEffect(() => {
     if (isOpen) {
       void localDb.getKv<boolean>(DEV_MODE_KEY).then((unlocked) => {
-        if (unlocked) {
-          setIsDevUnlocked(true);
-        }
+        if (unlocked) setIsDevUnlocked(true);
       });
       void worldVoiceService.isTtsEnabled().then((enabled) => {
         setIsNarrationEnabled(enabled);
+      });
+      void localDb.getKv<boolean>("settings_auto_play_voice").then((autoPlay) => {
+        setIsAutoPlayEnabled(Boolean(autoPlay));
+      });
+      void localDb.getKv<boolean>("settings_disable_pending_toast").then((disabled) => {
+        setIsPendingToastEnabled(!disabled);
       });
     }
   }, [isOpen]);
@@ -43,6 +49,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     await worldVoiceService.setTtsEnabled(nextState);
     setToastMessage(
       nextState ? "Narração por voz ativada." : "Narração por voz desativada."
+    );
+    setTimeout(() => {
+      setToastMessage("");
+    }, 2000);
+  };
+
+  const handleToggleAutoPlay = async () => {
+    const nextState = !isAutoPlayEnabled;
+    setIsAutoPlayEnabled(nextState);
+    await localDb.setKv("settings_auto_play_voice", nextState);
+    setToastMessage(
+      nextState ? "Auto-reprodução de voz da G.S ativada." : "Auto-reprodução de voz desativada."
+    );
+    setTimeout(() => {
+      setToastMessage("");
+    }, 2000);
+  };
+
+  const handleTogglePendingToast = async () => {
+    const nextState = !isPendingToastEnabled;
+    setIsPendingToastEnabled(nextState);
+    await localDb.setKv("settings_disable_pending_toast", !nextState);
+    setToastMessage(
+      nextState ? "Avisos de pendências ativados." : "Avisos de pendências silenciados."
     );
     setTimeout(() => {
       setToastMessage("");
@@ -160,7 +190,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   Narração da Voz do Mundo
                 </div>
                 <div className="text-[11px] text-[#c5b08f] font-sans">
-                  Web Speech TTS para anúncios solenes do Sistema
+                  Áudios oficiais e anúncios de rituais do Sistema
                 </div>
               </div>
             </div>
@@ -178,6 +208,76 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-[#040814] transition-transform ${
                   isNarrationEnabled ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* G.S Voice Auto-Play Toggle */}
+          <div className="relative bg-[#040814]/90 border border-[#966422]/55 p-3.5 flex items-center justify-between overflow-hidden shadow-[inset_0_0_12px_rgba(223,168,108,0.04)]">
+            <GildedCorners size="xs" withInnerFrame={false} />
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-[#140f08] border border-[#dfa86c]/60 text-[#dfa86c]">
+                <Volume2 className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-fantasy font-bold uppercase tracking-wider text-[#f8ecd5]">
+                  Auto-reproduzir Voz da G.S
+                </div>
+                <div className="text-[11px] text-[#c5b08f] font-sans">
+                  Sintetizar via voz Kore ao receber diretrizes
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isAutoPlayEnabled}
+              aria-label="Alternar auto-reprodução de voz da G.S"
+              onClick={handleToggleAutoPlay}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-1 focus:ring-[#dfa86c] ${
+                isAutoPlayEnabled ? "bg-[#c89b55]" : "bg-[#081329]"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-[#040814] transition-transform ${
+                  isAutoPlayEnabled ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Pending Tasks Toast Toggle */}
+          <div className="relative bg-[#040814]/90 border border-[#966422]/55 p-3.5 flex items-center justify-between overflow-hidden shadow-[inset_0_0_12px_rgba(223,168,108,0.04)]">
+            <GildedCorners size="xs" withInnerFrame={false} />
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-[#140f08] border border-[#00f3ff]/60 text-[#00f3ff]">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-fantasy font-bold uppercase tracking-wider text-[#f8ecd5]">
+                  Aviso de Pendências
+                </div>
+                <div className="text-[11px] text-[#c5b08f] font-sans">
+                  Pop-up proativo ao detectar missões disponíveis
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isPendingToastEnabled}
+              aria-label="Alternar aviso proativo de pendências"
+              onClick={handleTogglePendingToast}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-1 focus:ring-[#dfa86c] ${
+                isPendingToastEnabled ? "bg-[#c89b55]" : "bg-[#081329]"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-[#040814] transition-transform ${
+                  isPendingToastEnabled ? "translate-x-6" : "translate-x-1"
                 }`}
               />
             </button>

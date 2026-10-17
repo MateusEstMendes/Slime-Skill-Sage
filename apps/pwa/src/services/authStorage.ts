@@ -39,3 +39,6 @@ export const authStorage = {
     localStorage.removeItem(STORAGE_API_URL_KEY);
   },
 };
+
+export const getStoredToken = (): string | null => authStorage.getToken();
+export const getStoredApiUrl = (): string => authStorage.getApiUrl();

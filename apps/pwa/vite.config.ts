@@ -11,6 +11,20 @@ export default defineConfig({
         target: "http://127.0.0.1:3000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
+        configure: (proxy) => {
+          proxy.on("error", (_err, _req, res) => {
+            if ("writeHead" in res && typeof res.writeHead === "function" && !res.headersSent) {
+              res.writeHead(503, { "Content-Type": "application/json" });
+              res.end(
+                JSON.stringify({
+                  error:
+                    "Aviso: Backend Slime Sage offline (porta 3000). Inicie a API com 'pnpm dev' para estabelecer a conexão neural.",
+                  code: "BACKEND_OFFLINE",
+                }),
+              );
+            }
+          });
+        },
       },
     },
   },

@@ -111,8 +111,19 @@ if (typeof window !== "undefined") {
     window.AudioContext = MockAudioContext;
   }
 
+  if (typeof Element !== "undefined" && !Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = vi.fn();
+  }
+
   if (window.HTMLMediaElement) {
-    window.HTMLMediaElement.prototype.play = vi.fn().mockResolvedValue(undefined);
+    const defaultPlay = vi.fn().mockImplementation(function (this: HTMLMediaElement) {
+      setTimeout(() => {
+        this.onended?.(new Event("ended"));
+        this.dispatchEvent(new Event("ended"));
+      }, 5);
+      return Promise.resolve();
+    });
+    window.HTMLMediaElement.prototype.play = defaultPlay;
     window.HTMLMediaElement.prototype.pause = vi.fn();
     window.HTMLMediaElement.prototype.load = vi.fn();
   }

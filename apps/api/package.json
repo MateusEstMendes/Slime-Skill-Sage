@@ -10,9 +10,12 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.99",
     "@hono/node-server": "^2.1.4",
     "@slime-sage/shared": "workspace:*",
-    "hono": "^4.7.2"
+    "ai": "^7.0.143",
+    "hono": "^4.7.2",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

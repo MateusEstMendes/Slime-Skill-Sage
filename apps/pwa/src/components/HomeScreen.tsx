@@ -11,6 +11,7 @@ import { SkillsView } from "./views/SkillsView";
 import { StatusView } from "./views/StatusView";
 import { GsChatView } from "./views/GsChatView";
 import { WorldVoiceModal } from "./system/WorldVoiceModal";
+import { PendingTasksToast } from "./system/PendingTasksToast";
 
 interface HomeScreenProps {
   onDisconnect: () => void;
@@ -128,6 +129,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onDisconnect }) => {
         isOpen={isDevPanelOpen}
         onClose={() => setIsDevPanelOpen(false)}
       />
+
+      {/* Proactive Pending Tasks Toast */}
+      <PendingTasksToast onNavigateToProjects={() => handleNavigateToProjects()} />
 
       {/* World Voice System Modal */}
       <WorldVoiceModal />

@@ -462,6 +462,77 @@ export class ProjectRepository {
     await this.db.put("project", project);
     return progress;
   }
+
+  public async createProjectTree(
+    projectInput: CreateProjectInput,
+    missionsInput: Array<{
+      title: string;
+      description?: string;
+      xp_reward?: number;
+      depends_on_titles?: string[];
+    }>,
+  ): Promise<{ project: Project; missions: Mission[] }> {
+    const project = await this.createProject(projectInput);
+
+    const titleToIdMap = new Map<string, string>();
+    missionsInput.forEach((m, idx) => {
+      const id = `mis_${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 6)}`;
+      titleToIdMap.set(m.title, id);
+    });
+
+    const treeItems: CreateMissionTreeItem[] = missionsInput.map((m, idx) => {
+      const missionId = titleToIdMap.get(m.title)!;
+      const dependsOnIds: string[] = [];
+      if (m.depends_on_titles) {
+        for (const title of m.depends_on_titles) {
+          const depId = titleToIdMap.get(title);
+          if (depId) {
+            dependsOnIds.push(depId);
+          }
+        }
+      }
+
+      return {
+        id: missionId,
+        title: m.title,
+        description: m.description,
+        order_index: idx,
+        xp_reward: m.xp_reward ?? 35,
+        depends_on_ids: dependsOnIds,
+      };
+    });
+
+    const result = await this.createMissionTree(project.id, treeItems);
+    return {
+      project,
+      missions: result.missions,
+    };
+  }
+
+  public async addMissions(
+    projectId: string,
+    missionsInput: Array<{
+      title: string;
+      description?: string;
+      xp_reward?: number;
+      depends_on_mission_ids?: string[];
+    }>,
+  ): Promise<Mission[]> {
+    const treeItems: CreateMissionTreeItem[] = missionsInput.map((m, idx) => ({
+      title: m.title,
+      description: m.description,
+      order_index: idx,
+      xp_reward: m.xp_reward ?? 35,
+      depends_on_ids: m.depends_on_mission_ids || [],
+    }));
+
+    const result = await this.createMissionTree(projectId, treeItems);
+    return result.missions;
+  }
+
+  public async deleteMission(missionId: string): Promise<void> {
+    await this.softDeleteMission(missionId);
+  }
 }
 
 export const projectRepository = new ProjectRepository();

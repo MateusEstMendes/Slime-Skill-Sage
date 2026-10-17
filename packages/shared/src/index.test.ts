@@ -22,6 +22,17 @@ import {
   ChatMessageSchema,
   ScheduledNotificationSchema,
   PhraseBankSchema,
+  ProposalSchema,
+  CreateProjectTreeProposalSchema,
+  AddMissionsProposalSchema,
+  UpdateMissionProposalSchema,
+  DeleteMissionProposalSchema,
+  HunterContextSchema,
+  ChatRequestSchema,
+  ChatResponseSchema,
+  TtsRequestSchema,
+  TtsResponseSchema,
+  GS_SYSTEM_PROMPT,
   BASE_AREAS,
   TABLE_NAMES,
 } from "./index";
@@ -290,5 +301,150 @@ describe("Shared Schemas", () => {
         created_at: now,
       }).success,
     ).toBe(true);
+  });
+
+  it("validates ProposalSchema for all 4 proposal types", () => {
+    const createTree = {
+      type: "create_project_tree",
+      project: {
+        title: "Dominar Rust",
+        description: "Projeto de programação de sistemas",
+        area_id: "INT",
+      },
+      missions: [
+        {
+          title: "Sintaxe Básica e Ownership",
+          description: "Ler o The Book",
+          xp_reward: 35,
+          depends_on_titles: [],
+        },
+        {
+          title: "Smart Pointers",
+          description: "Box, Rc, Arc",
+          xp_reward: 55,
+          depends_on_titles: ["Sintaxe Básica e Ownership"],
+        },
+      ],
+      explanation: "Estrutura recomendada para maximizar maestria lógica.",
+    };
+    expect(CreateProjectTreeProposalSchema.safeParse(createTree).success).toBe(true);
+    expect(ProposalSchema.safeParse(createTree).success).toBe(true);
+
+    const addMissions = {
+      type: "add_missions",
+      project_id: "proj-123",
+      project_title: "Dominar Rust",
+      missions: [
+        {
+          title: "Criar CLI com Clap",
+          xp_reward: 35,
+        },
+      ],
+    };
+    expect(AddMissionsProposalSchema.safeParse(addMissions).success).toBe(true);
+    expect(ProposalSchema.safeParse(addMissions).success).toBe(true);
+
+    const updateMission = {
+      type: "update_mission",
+      mission_id: "mis-456",
+      current_title: "Título Antigo",
+      updates: {
+        title: "Título Novo e Refinado",
+        xp_reward: 55,
+      },
+      explanation: "Ajuste na dificuldade da missão.",
+    };
+    expect(UpdateMissionProposalSchema.safeParse(updateMission).success).toBe(true);
+    expect(ProposalSchema.safeParse(updateMission).success).toBe(true);
+
+    const deleteMission = {
+      type: "delete_mission",
+      mission_id: "mis-789",
+      mission_title: "Missão Obsoleta",
+      explanation: "Não agrega mais valor à meta.",
+    };
+    expect(DeleteMissionProposalSchema.safeParse(deleteMission).success).toBe(true);
+    expect(ProposalSchema.safeParse(deleteMission).success).toBe(true);
+  });
+
+  it("validates HunterContextSchema, ChatRequestSchema and ChatResponseSchema", () => {
+    const validContext = {
+      profile: {
+        name: "Rimuru",
+        title: "Aspirante a Desperto",
+        level: 3,
+        current_xp: 450,
+        streak_count: 5,
+      },
+      skills: [
+        {
+          id: "sk-1",
+          name: "Pensamento Crítico",
+          area_id: "INT",
+          tier: "comum",
+          mastery: 85,
+        },
+      ],
+      projects: [
+        {
+          id: "proj-1",
+          title: "Aprender TypeScript",
+          area_id: "INT",
+          status: "ativo",
+          progress: 50,
+        },
+      ],
+      pending_missions_count: 2,
+    };
+    expect(HunterContextSchema.safeParse(validContext).success).toBe(true);
+
+    const validChatRequest = {
+      thread_id: "th-1",
+      messages: [
+        { role: "user", content: "Sugira um novo projeto de treino de força." },
+      ],
+      hunter_context: validContext,
+    };
+    expect(ChatRequestSchema.safeParse(validChatRequest).success).toBe(true);
+
+    const validChatResponse = {
+      role: "assistant",
+      content: "Resposta: Proposta de treino físico elaborada.",
+      proposal: {
+        type: "create_project_tree",
+        project: {
+          title: "Calistenia Fundamentos",
+          description: "Treino com peso do corpo",
+          area_id: "FOR",
+        },
+        missions: [
+          {
+            title: "50 flexões diárias",
+            xp_reward: 35,
+            depends_on_titles: [],
+          },
+        ],
+      },
+      spoken_text: "Diretriz tática de força formulada, Caçador.",
+    };
+    expect(ChatResponseSchema.safeParse(validChatResponse).success).toBe(true);
+  });
+
+  it("validates TtsRequestSchema, TtsResponseSchema and GS_SYSTEM_PROMPT", () => {
+    const validTtsReq = {
+      text: "Aviso do Sistema: Nova habilidade adquirida.",
+      voice: "Kore",
+    };
+    expect(TtsRequestSchema.safeParse(validTtsReq).success).toBe(true);
+
+    const validTtsRes = {
+      audioBase64: "UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=",
+      mimeType: "audio/wav",
+      source: "gemini",
+    };
+    expect(TtsResponseSchema.safeParse(validTtsRes).success).toBe(true);
+
+    expect(GS_SYSTEM_PROMPT).toContain("Grande Sábio (G.S)");
+    expect(GS_SYSTEM_PROMPT).toContain("REGRA DE OURO #1");
   });
 });

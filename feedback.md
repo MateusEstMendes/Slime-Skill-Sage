@@ -106,3 +106,62 @@
   5. **Banner do Caçador com Transliteração Dinâmica**: Criada função pura `toElderFuthark` em [`HomeView.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/views/HomeView.tsx) que translitera em tempo real o nome do caçador no perfil para o alfabeto rúnico nórdico na borda superior do banner de status.
   6. **Decreto Rúnico em Modais**: [`SystemModal.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/system/SystemModal.tsx) atualizado com moldura rúnica sagrada `✦ ᛋ ᚨ ᚲ ᚱ ᛖ ᛞ · ᛟ ᚱ ᛞ ᛖ ᚱ ✦`.
 - **Status:** [x] Validado pelo Usuário
+
+## Fase 6 — Backend `/chat`, Síntese de Voz G.S, Cartões de Prévia e Pop-up de Pendências
+
+### Rodada 1 de Testes do Usuário (Canal Neural da G.S e Erro 500)
+
+- **Feedback do Usuário:**
+  - "erro do canal neural da GS ( 500)"
+- **Causa Raiz Identificada (Debug):**
+  1. **Ordem de Turnos do Chat Gemini:** No estado inicial da interface, uma mensagem de apresentação da Grande Sábio já existia no chat (`role: "assistant"`). Ao enviar a primeira mensagem do usuário, a lista transmitida ao Gemini iniciava com o papel `assistant`. A API do Google (`gemini-2.0-flash`) exige estritamente que conversas com múltiplos turnos iniciem com o papel `user`, rejeitando requisições fora desse padrão.
+  2. **Compatibilidade de Chave Reserva:** O arquivo `.env` continha a chave reserva com o nome `GEMINI_API_KEY_RESERVE`, enquanto `getApiKeys()` buscava apenas `GEMINI_API_KEY_FALLBACK`.
+  3. **Diagnóstico do Proxy Vite & Falha de Conexão:** Caso o backend na porta 3000 não respondesse de imediato, o proxy do Vite retornava erro HTTP 500 cru em texto puro sem JSON, fazendo com que o cliente exibisse a mensagem genérica `Erro no canal neural da Grande Sábio (500)`.
+- **Correção Aplicada + Testes de Regressão Criados:**
+  1. Em [`geminiService.ts`](file:///workspaces/Skill-Grinding/apps/api/src/services/geminiService.ts): sanitização ativa de mensagens antes do envio à API Gemini, removendo mensagens de assistente no início para assegurar que a conversa sempre inicie com o turno do `user`, e adicionado suporte a `GEMINI_API_KEY_RESERVE` no failover de credenciais.
+  2. Em [`geminiService.ts`](file:///workspaces/Skill-Grinding/apps/api/src/services/geminiService.ts): proteção defensiva completa com validação de nulos em `toolCalls` para todas as ferramentas (`create_project_tree`, `add_missions`, `update_mission`, `delete_mission`).
+  3. Em [`vite.config.ts`](file:///workspaces/Skill-Grinding/apps/pwa/vite.config.ts) e [`apiClient.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/apiClient.ts): configurado listener de erro no proxy do Vite para retornar HTTP 503 com payload JSON descritivo (`BACKEND_OFFLINE`), e mensagens de erro no frontend agora instruem com clareza a verificação do comando `pnpm dev`.
+  4. Em [`server.ts`](file:///workspaces/Skill-Grinding/apps/api/src/server.ts): suporte a múltiplos caminhos de resolução do arquivo `.env`.
+  5. Suíte completa de testes executada e 100% verde (161/161 testes passando).
+- **Status:** [ ] Aguardando validação do usuário
+
+### Rodada 2 de Testes do Usuário (Depreciação de Modelo Gemini & Modo de Hibernação Neural)
+
+- **Feedback do Usuário:**
+  - "aviso: conexão neural com arquivos centrais indisonivel temporariamente. A grande sabio entoru em modo de hibernação neura, suas diretrizem continuam em pleno funcionamento"
+- **Causa Raiz Identificada (Debug):**
+  - O modelo configurado no código era `gemini-2.0-flash`. A API do Google Generative Language descontinuou esse identificador, retornando HTTP 404: *"This model models/gemini-2.0-flash is no longer available. Please update your code to use models/gemini-3.8-flash"*.
+  - O mecanismo de resiliência da Grande Sábio capturou a resposta e entrou em modo de hibernação neural gracioso (HTTP 200), evitando queda do servidor.
+- **Correção Aplicada + Teste de Integração Real:**
+  1. Em [`geminiService.ts`](file:///workspaces/Skill-Grinding/apps/api/src/services/geminiService.ts): atualizado o modelo de chat para `gemini-3.8-flash`.
+  2. Em [`geminiService.ts`](file:///workspaces/Skill-Grinding/apps/api/src/services/geminiService.ts): atualizado o modelo de síntese de voz Kore para `gemini-3.8-flash-tts`.
+  3. Teste real de integração executado com sucesso: geração da árvore estruturada de projeto (`create_project_tree`) e síntese de áudio WAV via voz Kore (607KB gerados).
+- **Status:** [x] Validado pelo Usuário
+
+### Rodada 3 de Testes do Usuário (Telemetria de Tokens & Logs Neurais no Painel Dev)
+
+- **Feedback do Usuário:**
+  - "como posso ver o usage da api key?" e "Não há logs de chamadas neurais"
+- **Causa Raiz & Solução Aplicada:**
+  - Não havia agregação visual e persistente de consumo de tokens (prompt, completion, total) acessível diretamente na interface do app.
+  - Implementado em [`packages/shared/src/index.ts`](file:///workspaces/Skill-Grinding/packages/shared/src/index.ts) o schema `ChatUsageSchema`.
+  - Em [`geminiService.ts`](file:///workspaces/Skill-Grinding/apps/api/src/services/geminiService.ts): extração e devolução precisa de `usage: { prompt_tokens, completion_tokens, total_tokens }`.
+  - Em [`GsChatView.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/views/GsChatView.tsx): persistência de estatísticas acumuladas no IndexedDB (`localDb.setKv("ai_usage_stats", ...)`).
+  - Em [`DevPanel.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/DevPanel.tsx): adição de banner dourado de telemetria de tokens com totalizador de tokens consumidos, requisições feitas e modelos ativos, além de logs sob o filtro `ai (Canal Neural & Gemini)`.
+- **Status:** [x] Validado pelo Usuário
+
+### Rodada 4 de Testes do Usuário (Estética dos Botões & Remoção de Cantos Arredondados)
+
+- **Feedback do Usuário:**
+  - "não gostei dos botões, muito redondos, não tem a estetica de rpg"
+- **Causa Raiz & Redesign Aplicado:**
+  - `SystemButton.tsx` utilizava classes residuais de cantos arredondados (`rounded-md`, `rounded-lg`, `rounded-xl`), que quebravam a imersão gótica/medieval inspirada em *Tensura* e `docs/design.png`.
+  - Em [`SystemButton.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/system/SystemButton.tsx):
+    1. Removidas todas as classes arredondadas, aplicando estritamente `rounded-none`.
+    2. Adicionada moldura interna decorativa fina estilo placa/cartouche de RPG (`inset-[2px] border border-current opacity-20`).
+    3. Adicionados ornamentos de diamante nos cantos da cartela (`-top-[2px] -left-[2px] w-1 h-1 bg-[#dfa86c]`).
+    4. Adicionados entalhes centrais em losango cartouche (`rotate-45`) nos botões de destaque (primário e ouro).
+    5. Gradientes e bordas refinados em ouro antigo e obsidiana profunda.
+  - Em [`SystemBadge.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/system/SystemBadge.tsx): todos os badges convertidos de `rounded` para `rounded-none`.
+  - Suíte completa de testes executada com 100% de aprovação (161/161 testes passando).
+- **Status:** [ ] Aguardando validação visual do usuário
