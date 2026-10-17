@@ -13,3 +13,9 @@ body {
   color: #f8fafc;
   overflow-x: hidden;
 }
+
+@layer base {
+  *, ::before, ::after {
+    overflow-wrap: break-word;
+  }
+}

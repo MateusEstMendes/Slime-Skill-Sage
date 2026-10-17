@@ -10,6 +10,7 @@ import { ProjectsView } from "./projects/ProjectsView";
 import { SkillsView } from "./views/SkillsView";
 import { StatusView } from "./views/StatusView";
 import { GsChatView } from "./views/GsChatView";
+import { WorldVoiceModal } from "./system/WorldVoiceModal";
 
 interface HomeScreenProps {
   onDisconnect: () => void;
@@ -82,7 +83,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onDisconnect }) => {
           aria-hidden={activeTab !== "skills"}
           className={activeTab === "skills" ? "block" : "hidden"}
         >
-          <SkillsView />
+          <SkillsView isActive={activeTab === "skills"} />
         </div>
 
         <div
@@ -90,7 +91,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onDisconnect }) => {
           aria-hidden={activeTab !== "status"}
           className={activeTab === "status" ? "block" : "hidden"}
         >
-          <StatusView />
+          <StatusView isActive={activeTab === "status"} />
         </div>
 
         <div
@@ -127,6 +128,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onDisconnect }) => {
         isOpen={isDevPanelOpen}
         onClose={() => setIsDevPanelOpen(false)}
       />
+
+      {/* World Voice System Modal */}
+      <WorldVoiceModal />
     </div>
   );
 };

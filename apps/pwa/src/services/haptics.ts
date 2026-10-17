@@ -18,4 +18,7 @@ export const hapticFeedback = {
   success: () => triggerHaptic([25, 40, 25]),
   warning: () => triggerHaptic([35, 50]),
   error: () => triggerHaptic([50, 80, 50]),
+  levelUp: () => triggerHaptic([30, 40, 50, 40, 100]),
+  skillEvolved: () => triggerHaptic([40, 50, 60, 50, 150]),
+  epic: () => triggerHaptic([50, 60, 80, 60, 120]),
 };

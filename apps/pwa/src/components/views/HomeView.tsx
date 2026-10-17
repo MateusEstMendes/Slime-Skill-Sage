@@ -177,20 +177,20 @@ export const HomeView: React.FC<HomeViewProps> = ({
       {/* Hunter Status Banner (Level & XP) */}
       <div className="p-4 bg-gradient-to-r from-[#061226] via-[#091838] to-[#061226] border border-cyan-500/30 rounded-xl shadow-[0_0_20px_rgba(0,240,255,0.08)] font-mono">
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-cyan-950/80 border border-cyan-400/50 flex items-center justify-center font-bold text-cyan-300 text-sm">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div className="w-8 h-8 rounded-lg bg-cyan-950/80 border border-cyan-400/50 flex items-center justify-center font-bold text-cyan-300 text-sm shrink-0">
               L{levelProgress.level}
             </div>
-            <div>
-              <div className="text-xs font-bold text-white tracking-wide">
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-bold text-white tracking-wide truncate">
                 {profile?.name ?? "Rimuru Tempest"}
               </div>
-              <div className="text-[10px] text-cyan-400/80">
+              <div className="text-[10px] text-cyan-400/80 truncate">
                 {profile?.title ?? "Aspirante a Desperto"}
               </div>
             </div>
           </div>
-          <div className="text-right">
+          <div className="text-right shrink-0 pl-2">
             <div className="text-[10px] text-slate-400 uppercase">XP Acumulado</div>
             <div className="text-sm font-bold text-cyan-300">
               {profile?.total_xp ?? 0} <span className="text-[10px] text-slate-500">XP</span>
@@ -217,32 +217,32 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
       {/* Quick Stats Grid */}
       <div className="grid grid-cols-3 gap-3 font-mono">
-        <div className="p-3 bg-[#0a152e]/80 border border-cyan-500/25 rounded-xl shadow-[0_0_15px_rgba(0,240,255,0.06)]">
-          <div className="text-[10px] text-slate-400 uppercase flex items-center gap-1.5 mb-1">
-            <FolderGit2 className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Projetos</span>
+        <div className="p-3 bg-[#0a152e]/80 border border-cyan-500/25 rounded-xl shadow-[0_0_15px_rgba(0,240,255,0.06)] min-w-0">
+          <div className="text-[10px] text-slate-400 uppercase flex items-center gap-1.5 mb-1 truncate">
+            <FolderGit2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+            <span className="truncate">Projetos</span>
           </div>
-          <div className="text-lg md:text-xl font-bold text-cyan-300">
+          <div className="text-lg md:text-xl font-bold text-cyan-300 truncate">
             {totalProjectsCount}
           </div>
         </div>
 
-        <div className="p-3 bg-[#0a152e]/80 border border-cyan-400/30 rounded-xl shadow-[0_0_15px_rgba(0,240,255,0.1)]">
-          <div className="text-[10px] text-cyan-400 uppercase flex items-center gap-1.5 mb-1">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-300" />
-            <span>Disponíveis</span>
+        <div className="p-3 bg-[#0a152e]/80 border border-cyan-400/30 rounded-xl shadow-[0_0_15px_rgba(0,240,255,0.1)] min-w-0">
+          <div className="text-[10px] text-cyan-400 uppercase flex items-center gap-1.5 mb-1 truncate">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
+            <span className="truncate">Disponíveis</span>
           </div>
-          <div className="text-lg md:text-xl font-bold text-cyan-200">
+          <div className="text-lg md:text-xl font-bold text-cyan-200 truncate">
             {totalAvailableMissions}
           </div>
         </div>
 
-        <div className="p-3 bg-[#0a152e]/80 border border-emerald-500/25 rounded-xl">
-          <div className="text-[10px] text-emerald-400 uppercase flex items-center gap-1.5 mb-1">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Concluídas</span>
+        <div className="p-3 bg-[#0a152e]/80 border border-emerald-500/25 rounded-xl min-w-0">
+          <div className="text-[10px] text-emerald-400 uppercase flex items-center gap-1.5 mb-1 truncate">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span className="truncate">Concluídas</span>
           </div>
-          <div className="text-lg md:text-xl font-bold text-emerald-300">
+          <div className="text-lg md:text-xl font-bold text-emerald-300 truncate">
             {totalDoneMissions}
           </div>
         </div>
@@ -254,13 +254,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
           Sincronizando telemetria do projeto ativo...
         </div>
       ) : activeProject ? (
-        <div className="space-y-4">
+        <div className="space-y-4 min-w-0">
           <SystemPanel
             title="Diretriz Ativa em Foco"
             subtitle={
-              <div className="flex items-center gap-2 mt-1">
-                <SystemBadge type="area" areaId={activeProject.area_id} size="sm" />
-                <SystemBadge type="project-status" projectStatus={activeProject.status} size="sm" />
+              <div className="flex items-center gap-2 mt-1 flex-wrap min-w-0">
+                <SystemBadge type="area" areaId={activeProject.area_id} size="sm" className="shrink-0" />
+                <SystemBadge type="project-status" projectStatus={activeProject.status} size="sm" className="shrink-0" />
               </div>
             }
             headerAction={
@@ -270,16 +270,17 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 onClick={() => onNavigateToProjects(activeProject.id)}
                 aria-label={`Ver árvore do projeto ${activeProject.title}`}
                 icon={<ArrowRight className="w-4 h-4" />}
+                className="shrink-0"
               >
                 Ver Projeto
               </SystemButton>
             }
           >
-            <h3 className="font-mono font-bold text-base md:text-lg text-white mb-1">
+            <h3 className="font-mono font-bold text-base md:text-lg text-white mb-1 break-words [overflow-wrap:anywhere]">
               {activeProject.title}
             </h3>
             {activeProject.description && (
-              <p className="text-xs text-slate-400 font-sans mb-3">
+              <p className="text-xs text-slate-400 font-sans mb-3 break-words [overflow-wrap:anywhere]">
                 {activeProject.description}
               </p>
             )}

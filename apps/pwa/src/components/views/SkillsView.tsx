@@ -1,65 +1,477 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { SystemPanel } from "../system/SystemPanel";
-import { Sparkles, Cpu } from "lucide-react";
+import { SystemBadge } from "../system/SystemBadge";
+import { SystemButton } from "../system/SystemButton";
+import { SystemModal } from "../system/SystemModal";
+import { SystemInput, SystemSelect } from "../system/SystemFormControls";
+import { BASE_AREAS, type Skill, type AreaCode, type XpEvent } from "@slime-sage/shared";
+import { gameService } from "../../services/gameService";
+import { Sparkles, Plus, History, Filter, ArrowUpRight, Award, Zap } from "lucide-react";
 
-export const SkillsView: React.FC = () => {
+export interface SkillsViewProps {
+  isActive?: boolean;
+}
+
+export const SkillsView: React.FC<SkillsViewProps> = ({ isActive }) => {
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [selectedArea, setSelectedArea] = useState<string>("ALL");
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // New Skill Modal State
+  const [isNewSkillModalOpen, setIsNewSkillModalOpen] = useState<boolean>(false);
+  const [newSkillName, setNewSkillName] = useState<string>("");
+  const [newSkillArea, setNewSkillArea] = useState<AreaCode>("INT");
+  const [newSkillDesc, setNewSkillDesc] = useState<string>("");
+  const [formError, setFormError] = useState<string>("");
+
+  // History Modal State
+  const [historyModalSkill, setHistoryModalSkill] = useState<Skill | null>(null);
+  const [skillHistoryEvents, setSkillHistoryEvents] = useState<XpEvent[]>([]);
+  const [historyLoading, setHistoryLoading] = useState<boolean>(false);
+
+  const isMountedRef = React.useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const loadSkills = useCallback(async () => {
+    try {
+      setLoading(true);
+      const allSkills = await gameService.getSkills();
+      if (isMountedRef.current) {
+        setSkills(allSkills);
+      }
+    } catch {
+      // Ignore
+    } finally {
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadSkills();
+    const unsubscribe = gameService.subscribeToGameEvents(() => {
+      void loadSkills();
+    });
+    return unsubscribe;
+  }, [loadSkills]);
+
+  useEffect(() => {
+    if (isActive) {
+      void loadSkills();
+    }
+  }, [isActive, loadSkills]);
+
+  // Filter skills by area
+  const filteredSkills = skills.filter((s) => {
+    if (selectedArea === "ALL") return true;
+    return s.area_id === selectedArea;
+  });
+
+  const handleOpenCreateSkill = () => {
+    setNewSkillName("");
+    setNewSkillDesc("");
+    setNewSkillArea("INT");
+    setFormError("");
+    setIsNewSkillModalOpen(true);
+  };
+
+  const handleCreateSkillSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSkillName.trim()) {
+      setFormError("Informe o nome da habilidade.");
+      return;
+    }
+
+    try {
+      await gameService.createSkill({
+        name: newSkillName.trim(),
+        areaId: newSkillArea,
+        description: newSkillDesc.trim() || undefined,
+      });
+      setIsNewSkillModalOpen(false);
+      await loadSkills();
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Erro ao criar habilidade.");
+    }
+  };
+
+  const handleOpenHistory = async (skill: Skill) => {
+    setHistoryModalSkill(skill);
+    setHistoryLoading(true);
+    try {
+      const history = await gameService.getSkillHistory(skill.id);
+      if (isMountedRef.current) {
+        setSkillHistoryEvents(history);
+      }
+    } catch {
+      // Ignore
+    } finally {
+      if (isMountedRef.current) {
+        setHistoryLoading(false);
+      }
+    }
+  };
+
+  const areaOptions = [
+    { value: "ALL", label: `Todas as Áreas (${skills.length})` },
+    ...BASE_AREAS.map((a) => {
+      const count = skills.filter((s) => s.area_id === a.code).length;
+      return {
+        value: a.code,
+        label: `${a.name} [${a.code}] (${count})`,
+      };
+    }),
+  ];
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header with Title and Create Action */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl md:text-2xl font-bold font-mono text-white tracking-wide flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-cyan-400" />
             <span>ÁRVORE DE HABILIDADES // TENSURA</span>
           </h2>
           <p className="text-xs md:text-sm text-slate-400 font-mono mt-0.5">
-            Registro das habilidades ativas e caminhos de evolução do Caçador.
+            Registro das habilidades despertadas, progressão de maestria e evolução de tier.
           </p>
         </div>
+
+        <SystemButton
+          variant="primary"
+          size="sm"
+          onClick={handleOpenCreateSkill}
+          icon={<Plus className="w-4 h-4" />}
+        >
+          Adquirir Habilidade
+        </SystemButton>
       </div>
 
-      <SystemPanel
-        title="Protocolo de Evolução de Habilidades"
-        subtitle="Regras de transição vigentes no Sistema v1"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-2">
-          <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-xl">
-            <div className="text-xs font-mono font-bold text-slate-300 uppercase mb-1">
-              [Tier 1] Habilidade Comum
-            </div>
-            <p className="text-xs text-slate-400">
-              Desbloqueada ao atingir marcos iniciais ou via onboarding da Grande Sábio.
-            </p>
-            <div className="mt-3 text-[11px] font-mono text-cyan-400">Maestria: 0 / 100</div>
-          </div>
-
-          <div className="p-4 bg-slate-950/60 border border-cyan-500/30 rounded-xl">
-            <div className="text-xs font-mono font-bold text-cyan-300 uppercase mb-1">
-              [Tier 2] Habilidade Extra
-            </div>
-            <p className="text-xs text-slate-400">
-              Evolui automaticamente ao acumular 100 de maestria na habilidade.
-            </p>
-            <div className="mt-3 text-[11px] font-mono text-cyan-400">Maestria: 100 / 300</div>
-          </div>
-
-          <div className="p-4 bg-slate-950/60 border border-purple-500/40 rounded-xl shadow-[0_0_15px_rgba(168,85,247,0.15)]">
-            <div className="text-xs font-mono font-bold text-purple-300 uppercase mb-1">
-              [Tier 3] Habilidade Única
-            </div>
-            <p className="text-xs text-slate-400">
-              Exige 300 maestria + 1 projeto concluído + Roleta do Destino (30% base, +15% por falha, cooldown 24h).
-            </p>
-            <div className="mt-3 text-[11px] font-mono text-purple-400">Teto de Roleta: 95%</div>
-          </div>
+      {/* Filter Tabs / Bar by Area */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none font-mono text-xs">
+        <div className="flex items-center gap-1 text-slate-400 mr-2 shrink-0">
+          <Filter className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="text-[11px] uppercase tracking-wider">Filtro:</span>
         </div>
 
-        <div className="mt-4 p-3 bg-cyan-950/20 border border-cyan-500/30 rounded-lg flex items-center gap-3">
-          <Cpu className="w-5 h-5 text-cyan-400 shrink-0" />
-          <div className="text-xs font-mono text-slate-300">
-            [VOZ DO MUNDO]: O motor puro de cálculo de maestria e ledger imutável será integrado na <strong>Fase 4</strong>, com a interface visual de habilidades e roleta animada nas <strong>Fases 5 e 10</strong>.
+        {areaOptions.map((opt) => {
+          const isActive = selectedArea === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setSelectedArea(opt.value)}
+              className={`px-3 py-1.5 rounded-lg border transition-colors shrink-0 text-xs font-mono ${
+                isActive
+                  ? "bg-cyan-950/80 border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(0,243,255,0.2)]"
+                  : "bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700"
+              }`}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Skills List Grid */}
+      {loading ? (
+        <div className="p-12 text-center font-mono text-xs text-slate-500 animate-pulse">
+          Consultando a Árvore de Habilidades...
+        </div>
+      ) : filteredSkills.length === 0 ? (
+        <SystemPanel title="Nenhuma Habilidade Encontrada">
+          <div className="p-8 text-center font-mono text-xs text-slate-400 space-y-3">
+            <p>Nenhuma habilidade cadastrada para a área selecionada.</p>
+            <p className="text-slate-500 text-[11px]">
+              Complete missões vinculadas a habilidades ou adquira uma habilidade manualmente pelo botão acima.
+            </p>
+            <SystemButton
+              variant="secondary"
+              size="sm"
+              onClick={handleOpenCreateSkill}
+              className="mt-2"
+            >
+              Despertar Primeira Habilidade
+            </SystemButton>
+          </div>
+        </SystemPanel>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredSkills.map((skill) => {
+            const isComum = skill.tier === "comum";
+            const isExtra = skill.tier === "extra";
+            const isUnica = skill.tier === "unica";
+
+            const maxThreshold = isComum ? 100 : 300;
+            const progressPercent = Math.min(
+              100,
+              Math.round((skill.mastery / maxThreshold) * 100)
+            );
+
+            const tierColor = isUnica
+              ? "text-purple-400 border-purple-500/40 bg-purple-950/60"
+              : isExtra
+              ? "text-amber-300 border-amber-500/40 bg-amber-950/60 shadow-[0_0_15px_rgba(251,191,36,0.15)]"
+              : "text-cyan-300 border-cyan-500/40 bg-cyan-950/60";
+
+            return (
+              <div
+                key={skill.id}
+                data-testid={`skill-card-${skill.id}`}
+                className="bg-[#070c18] border border-cyan-500/20 hover:border-cyan-500/40 transition-all rounded-xl p-4.5 flex flex-col justify-between space-y-4 min-w-0 overflow-hidden"
+              >
+                {/* Top Badge & Tier */}
+                <div className="space-y-2 min-w-0">
+                  <div className="flex items-center justify-between gap-2 flex-wrap min-w-0">
+                    <span
+                      className={`text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border shrink-0 ${tierColor}`}
+                    >
+                      {skill.tier === "extra" ? "Habilidade Extra" : skill.tier === "unica" ? "Habilidade Única" : "Habilidade Comum"}
+                    </span>
+                    <SystemBadge type="area" areaId={skill.area_id} size="sm" className="shrink-0" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <h3 className="text-base font-bold font-mono text-white tracking-wide break-words [overflow-wrap:anywhere]">
+                      {skill.name}
+                    </h3>
+                    <p className="text-xs text-slate-400 font-sans mt-0.5 line-clamp-2 break-words [overflow-wrap:anywhere]">
+                      {skill.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Mastery Progress Bar */}
+                <div className="space-y-1.5 pt-2 border-t border-slate-800/80 font-mono">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400 flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5 text-cyan-400" />
+                      Maestria
+                    </span>
+                    <span className="text-cyan-300 font-bold">
+                      {skill.mastery} / {maxThreshold} pts ({progressPercent}%)
+                    </span>
+                  </div>
+
+                  <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
+                    <div
+                      className={`h-full transition-all duration-500 ${
+                        isUnica
+                          ? "bg-gradient-to-r from-purple-500 to-pink-400"
+                          : isExtra
+                          ? "bg-gradient-to-r from-amber-500 to-amber-300"
+                          : "bg-gradient-to-r from-cyan-500 to-cyan-300"
+                      }`}
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+
+                  {/* Evolution Hint */}
+                  <div className="text-[10px] text-slate-400 pt-0.5">
+                    {isComum && (
+                      <span>
+                        Faltam <strong className="text-cyan-300">{Math.max(0, 100 - skill.mastery)} pts</strong> para evoluir para <span className="text-amber-400">Habilidade Extra</span>.
+                      </span>
+                    )}
+                    {isExtra && (
+                      <span>
+                        Acumule 300 pts + 1 projeto concluído para habilitar a Roleta da <span className="text-purple-400">Habilidade Única</span>.
+                      </span>
+                    )}
+                    {isUnica && (
+                      <span className="text-purple-300 font-bold flex items-center gap-1">
+                        <Award className="w-3 h-3 text-purple-400" />
+                        Grau Máximo Desperto
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* History Button */}
+                <div className="pt-2 flex justify-end">
+                  <SystemButton
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleOpenHistory(skill)}
+                    icon={<History className="w-3.5 h-3.5 text-cyan-400" />}
+                    className="text-xs"
+                  >
+                    Histórico de Missões
+                  </SystemButton>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Protocol Reference Info Box */}
+      <SystemPanel
+        title="Protocolo de Evolução de Habilidades // Voz do Mundo"
+        subtitle="Regras de transição vigentes no Sistema v1"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 my-2 font-mono text-xs">
+          <div className="p-3.5 bg-slate-950/70 border border-slate-800 rounded-xl space-y-1">
+            <div className="font-bold text-slate-300">[Tier 1] Comum</div>
+            <p className="text-slate-400 text-[11px] font-sans">
+              Desbloqueada manualmente ou via onboarding. Maestria varia de 0 a 100.
+            </p>
+          </div>
+          <div className="p-3.5 bg-slate-950/70 border border-amber-500/30 rounded-xl space-y-1">
+            <div className="font-bold text-amber-300">[Tier 2] Extra</div>
+            <p className="text-slate-400 text-[11px] font-sans">
+              Evolui automaticamente ao cruzar 100 de maestria. Teto de 300 de maestria.
+            </p>
+          </div>
+          <div className="p-3.5 bg-slate-950/70 border border-purple-500/30 rounded-xl space-y-1">
+            <div className="font-bold text-purple-300">[Tier 3] Única</div>
+            <p className="text-slate-400 text-[11px] font-sans">
+              Exige 300 maestria + 1 projeto concluído + Roleta do Destino (Fase 10).
+            </p>
           </div>
         </div>
       </SystemPanel>
+
+      {/* Modal: Adquirir Nova Habilidade */}
+      <SystemModal
+        isOpen={isNewSkillModalOpen}
+        onClose={() => setIsNewSkillModalOpen(false)}
+        title="Adquirir Nova Habilidade"
+        subtitle="Voz do Mundo: Inscrição de Habilidade Comum"
+        maxWidth="md"
+      >
+        <form onSubmit={handleCreateSkillSubmit} className="space-y-4 font-mono">
+          <SystemInput
+            label="Nome da Habilidade"
+            placeholder="Ex: Análise Analítica, Resiliência Física..."
+            value={newSkillName}
+            onChange={(e) => setNewSkillName(e.target.value)}
+            required
+            autoFocus
+          />
+
+          <SystemSelect
+            label="Área Primária de Atributo"
+            value={newSkillArea}
+            onChange={(e) => setNewSkillArea(e.target.value as AreaCode)}
+            options={BASE_AREAS.map((a) => ({
+              value: a.code,
+              label: `${a.name} [${a.code}]`,
+            }))}
+          />
+
+          <SystemInput
+            label="Descrição / Efeito (Opcional)"
+            placeholder="Descreva o propósito e escopo desta habilidade..."
+            value={newSkillDesc}
+            onChange={(e) => setNewSkillDesc(e.target.value)}
+          />
+
+          {formError && (
+            <div className="p-2.5 rounded-lg bg-red-950/40 border border-red-500/40 text-red-300 text-xs">
+              {formError}
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            <SystemButton
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsNewSkillModalOpen(false)}
+            >
+              Cancelar
+            </SystemButton>
+            <SystemButton
+              type="submit"
+              variant="primary"
+              size="sm"
+              icon={<Sparkles className="w-4 h-4" />}
+            >
+              Despertar Habilidade
+            </SystemButton>
+          </div>
+        </form>
+      </SystemModal>
+
+      {/* Modal: Histórico de Missões da Habilidade */}
+      <SystemModal
+        isOpen={historyModalSkill !== null}
+        onClose={() => setHistoryModalSkill(null)}
+        title={historyModalSkill ? `Histórico // ${historyModalSkill.name}` : "Histórico"}
+        subtitle="Registro de transações no Ledger imutável vinculadas a esta habilidade"
+        maxWidth="lg"
+      >
+        {historyLoading ? (
+          <div className="p-8 text-center text-xs text-slate-400 font-mono animate-pulse">
+            Carregando transações do Ledger...
+          </div>
+        ) : skillHistoryEvents.length === 0 ? (
+          <div className="p-6 text-center text-xs text-slate-400 font-mono border border-dashed border-slate-800 rounded-xl my-2">
+            Nenhuma missão ou evento registrado para esta habilidade até o momento.
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-800/80 font-mono text-xs my-2 max-h-[360px] overflow-y-auto">
+            {skillHistoryEvents.map((ev) => {
+              const formattedDate = new Date(ev.created_at).toLocaleString("pt-BR", {
+                day: "2-digit",
+                month: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+
+              return (
+                <div
+                  key={ev.id}
+                  className="py-3 px-2 flex items-center justify-between gap-3 hover:bg-slate-900/30 rounded-lg min-w-0"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="p-1.5 rounded-lg bg-cyan-950/60 border border-cyan-500/30 text-cyan-400 shrink-0">
+                      <ArrowUpRight className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-slate-200 font-semibold break-words [overflow-wrap:anywhere]">{ev.description}</div>
+                      <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5 flex-wrap">
+                        <span className="shrink-0">{formattedDate}</span>
+                        <span>·</span>
+                        <span className="text-slate-400 shrink-0">
+                          {ev.entity_type === "mission" ? "Missão Concluída" : ev.entity_type}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0 pl-2">
+                    <div className="text-cyan-300 font-bold">
+                      +{ev.mastery_amount} Maestria
+                    </div>
+                    <div className="text-[10px] text-slate-400">
+                      +{ev.xp_amount} XP
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="flex justify-end pt-3 border-t border-slate-800 mt-2">
+          <SystemButton
+            variant="secondary"
+            size="sm"
+            onClick={() => setHistoryModalSkill(null)}
+          >
+            Fechar Histórico
+          </SystemButton>
+        </div>
+      </SystemModal>
     </div>
   );
 };

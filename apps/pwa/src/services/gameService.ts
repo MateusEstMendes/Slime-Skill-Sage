@@ -20,6 +20,7 @@ import {
   type LedgerAuditResult,
   type GameEvent,
   type AttributesMap,
+  normalizeSkillName,
 } from "@slime-sage/game";
 import { localDb } from "./db";
 import { projectRepository } from "./projectRepository";
@@ -192,6 +193,72 @@ export class GameService {
     return calculateAttributesFromLedger(events);
   }
 
+  // --- SKILL MANAGEMENT ---
+
+  public async getSkills(areaId?: AreaCode): Promise<Skill[]> {
+    const all = await this.db.getAll<Skill>("skill");
+    if (areaId) {
+      return all.filter((s) => s.area_id === areaId);
+    }
+    return all;
+  }
+
+  public async getSkillHistory(skillId: string): Promise<XpEvent[]> {
+    const all = await this.db.getAll<XpEvent>("xp_event");
+    return all
+      .filter((e) => e.skill_id === skillId)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }
+
+  public async createSkill(params: {
+    name: string;
+    areaId: AreaCode;
+    description?: string;
+  }): Promise<Skill> {
+    const existing = await this.db.getAll<Skill>("skill");
+    const normalized = normalizeSkillName(params.name);
+    if (!normalized) {
+      throw new Error("Nome da habilidade não pode ser vazio.");
+    }
+    const dup = existing.find(
+      (s) => normalizeSkillName(s.name).toLowerCase() === normalized.toLowerCase()
+    );
+    if (dup) {
+      throw new Error(`Habilidade '${params.name}' já está registrada.`);
+    }
+
+    const nowIso = new Date(this.clock.now()).toISOString();
+    const newSkill: Skill = {
+      id: `skl_${this.clock.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      name: normalized,
+      area_id: params.areaId,
+      tier: "comum",
+      mastery: 0,
+      description: params.description || `Habilidade vinculada à área ${params.areaId}`,
+      created_at: nowIso,
+      updated_at: nowIso,
+    };
+
+    await this.db.put("skill", newSkill);
+
+    const acquiredEvent: GameEvent = {
+      type: "SKILL_ACQUIRED",
+      payload: {
+        skillId: newSkill.id,
+        skillName: newSkill.name,
+        areaId: newSkill.area_id,
+      },
+    };
+    this.dispatchEvent(acquiredEvent);
+
+    void logger.info("game", `Nova habilidade adquirida: ${newSkill.name} [${newSkill.area_id}]`, {
+      skillId: newSkill.id,
+      areaId: newSkill.area_id,
+    });
+
+    return newSkill;
+  }
+
   // --- CORE TRANSACTIONS: COMPLETE & UNDO MISSION ---
 
   /**
@@ -219,7 +286,13 @@ export class GameService {
     const nowIso = new Date(this.clock.now()).toISOString();
     const xpReward = mission.xp_reward;
     const masteryDelta = options?.masteryAmount ?? 10;
-    const skillId = options?.skillId;
+    let skillId = options?.skillId;
+    if (!skillId) {
+      const areaSkills = await this.getSkills(areaId);
+      if (areaSkills.length > 0) {
+        skillId = areaSkills[0].id;
+      }
+    }
 
     const dispatchedEvents: GameEvent[] = [];
 

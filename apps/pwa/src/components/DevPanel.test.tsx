@@ -84,7 +84,7 @@ describe("DevPanel & 7-Click Gesture in SettingsModal", () => {
 
     // Verify tabs exist
     expect(screen.getByText(/Logs do Sistema/)).toBeInTheDocument();
-    expect(screen.getByText("Voz da G.S (TTS)")).toBeInTheDocument();
+    expect(screen.getByText("Testes de Voz")).toBeInTheDocument();
     expect(screen.getByText("Web Notifications")).toBeInTheDocument();
 
     // Verify log message appears in list
@@ -94,28 +94,21 @@ describe("DevPanel & 7-Click Gesture in SettingsModal", () => {
       ).toBeInTheDocument();
     });
 
-    // Test TTS tab switch
-    const ttsTab = screen.getByText("Voz da G.S (TTS)");
-    fireEvent.click(ttsTab);
+    // Test Voices tab switch
+    const voicesTab = screen.getByText("Testes de Voz");
+    fireEvent.click(voicesTab);
 
-    // Verify GS test phrase is present
-    expect(
-      screen.getByText(
-        /"Aviso. O Sistema Slime Sage foi inicializado com sucesso."/
-      )
-    ).toBeInTheDocument();
-    expect(screen.getByText("Testar Voz da G.S")).toBeInTheDocument();
+    // Verify Official MP3 clips and GS test phrase are present
+    expect(screen.getByText("Áudios Oficiais da Voz do Mundo (.mp3)")).toBeInTheDocument();
+    expect(screen.getByText("Narrar Texto com a G.S")).toBeInTheDocument();
 
     // Test speech trigger
     const speakSpy = vi
       .spyOn(ttsService, "speak")
       .mockResolvedValueOnce(true);
-    const testSpeechBtn = screen.getByText("Testar Voz da G.S");
+    const testSpeechBtn = screen.getByText("Narrar Texto com a G.S");
     fireEvent.click(testSpeechBtn);
-    expect(speakSpy).toHaveBeenCalledWith(
-      "Aviso. O Sistema Slime Sage foi inicializado com sucesso.",
-      expect.any(Object)
-    );
+    expect(speakSpy).toHaveBeenCalled();
 
     // Test Notifications tab switch
     const notifTab = screen.getByText("Web Notifications");

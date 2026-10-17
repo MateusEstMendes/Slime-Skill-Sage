@@ -1,0 +1,24 @@
+{
+  "voice": "Kore",
+  "speed": 0.95,
+  "pitch": 0.98,
+  "systemInstruction": "Você é a 'Voz do Mundo' do anime Tensura (Grande Sábio / Sistema de Solo Leveling). Fale em português do Brasil com dicção perfeita, tom mecânico, solene, calmo, imponente e divino. Mantenha pausas dramáticas nos pontos finais. Evite qualquer hesitação, riso ou inflexão emocional humana.",
+  "canonicalPhrases": {
+    "level-up": "Aviso. O indivíduo atingiu os requisitos necessários. Nível aumentado.",
+    "skill-acquired": "Aviso. Condições atendidas. Habilidade adquirida com sucesso.",
+    "skill-evolved-extra": "Confirmação. Requisitos preenchidos. A habilidade comum rompeu seus limites, ascendendo à habilidade extra.",
+    "skill-evolved-unique": "Aviso individual. O ritual de evolução foi concluído. Habilidade única despertada.",
+    "rank-up": "Aviso! Aviso! O usuário cumpriu os requisitos, a evolução de classe foi iniciada!",
+    "mission-complete": "Missão concluída. Recompensas e experiência concedidas.",
+    "focus-start": "Aceleração de Pensamento iniciada. Concentração aumentada.",
+    "focus-break": "Atenção. Desvio de atenção detectado. Foco interrompido."
+  },
+  "customSkillEvolutions": [
+    {
+      "id": "evolve_foco_para_aceleracao",
+      "baseSkill": "Foco",
+      "evolvedSkill": "Aceleração de Pensamento",
+      "filename": "skill-evolved-foco-aceleracao.mp3"
+    }
+  ]
+}

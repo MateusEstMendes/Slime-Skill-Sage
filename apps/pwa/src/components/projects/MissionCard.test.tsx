@@ -105,4 +105,27 @@ describe("MissionCard Component", () => {
     fireEvent.click(deleteBtn);
     expect(handleDelete).toHaveBeenCalledWith("m_1");
   });
+
+  it("renders very long mission titles and descriptions with word wrapping classes", () => {
+    const longTitle = "Atividade_com_nome_extremamente_longo_que_poderia_ultrapassar_o_componente_se_nao_houvesse_quebra_de_linha";
+    const longDescription = "Descricao_muito_longa_sem_espacos_para_garantir_que_o_container_nao_faca_overflow_ou_flutue_para_fora_do_card";
+
+    render(
+      <MissionCard
+        mission={{
+          ...baseMission,
+          title: longTitle,
+          description: longDescription,
+        }}
+      />,
+    );
+
+    const titleEl = screen.getByText(longTitle);
+    expect(titleEl).toBeInTheDocument();
+    expect(titleEl.className).toContain("break-words");
+
+    const descEl = screen.getByText(longDescription);
+    expect(descEl).toBeInTheDocument();
+    expect(descEl.className).toContain("break-words");
+  });
 });

@@ -51,13 +51,13 @@ export const MissionCard: React.FC<MissionCardProps> = ({
     <div
       data-testid={`mission-card-${mission.id}`}
       data-status={mission.status}
-      className={`relative rounded-xl border p-4 transition-all duration-200 flex flex-col justify-between gap-3 ${borderClasses}`}
+      className={`relative rounded-xl border p-4 transition-all duration-200 flex flex-col justify-between gap-3 min-w-0 overflow-hidden ${borderClasses}`}
     >
       {/* Top row: Badges and Quick Actions */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <SystemBadge type="mission-status" missionStatus={mission.status} size="sm" />
-          <SystemBadge type="xp" xp={mission.xp_reward} size="sm" />
+      <div className="flex items-start justify-between gap-2 min-w-0">
+        <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+          <SystemBadge type="mission-status" missionStatus={mission.status} size="sm" className="shrink-0" />
+          <SystemBadge type="xp" xp={mission.xp_reward} size="sm" className="shrink-0" />
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
@@ -83,16 +83,16 @@ export const MissionCard: React.FC<MissionCardProps> = ({
       </div>
 
       {/* Main Info */}
-      <div>
+      <div className="min-w-0">
         <h4
-          className={`font-mono text-sm md:text-base font-semibold tracking-wide ${
+          className={`font-mono text-sm md:text-base font-semibold tracking-wide break-words [overflow-wrap:anywhere] ${
             isDone ? "line-through text-slate-400" : isAvailable ? "text-cyan-200" : "text-slate-300"
           }`}
         >
           {mission.title}
         </h4>
         {mission.description && (
-          <p className="text-xs text-slate-400 mt-1 line-clamp-2 font-sans">
+          <p className="text-xs text-slate-400 mt-1 line-clamp-2 font-sans break-words [overflow-wrap:anywhere]">
             {mission.description}
           </p>
         )}
@@ -100,14 +100,14 @@ export const MissionCard: React.FC<MissionCardProps> = ({
 
       {/* Prerequisites section if blocked */}
       {isBlocked && prerequisiteMissions.length > 0 && (
-        <div className="bg-slate-900/60 border border-slate-800 rounded p-2 text-[11px] font-mono text-slate-400">
+        <div className="bg-slate-900/60 border border-slate-800 rounded p-2 text-[11px] font-mono text-slate-400 min-w-0">
           <div className="flex items-center gap-1 text-amber-400/90 font-medium mb-1">
-            <ArrowRight className="w-3 h-3" />
+            <ArrowRight className="w-3 h-3 shrink-0" />
             <span>Requisitos Pendentes:</span>
           </div>
-          <ul className="list-disc list-inside space-y-0.5 text-slate-400 pl-1">
+          <ul className="list-disc list-inside space-y-0.5 text-slate-400 pl-1 min-w-0">
             {prerequisiteMissions.map((prereq) => (
-              <li key={prereq.id} className="truncate">
+              <li key={prereq.id} className="truncate block">
                 {prereq.title}{" "}
                 <span className="text-[10px] text-slate-500">[{prereq.status}]</span>
               </li>
@@ -117,10 +117,10 @@ export const MissionCard: React.FC<MissionCardProps> = ({
       )}
 
       {/* Bottom Action Area */}
-      <div className="pt-2 border-t border-cyan-500/10 flex items-center justify-between gap-2">
+      <div className="pt-2 border-t border-cyan-500/10 flex items-center justify-between gap-2 min-w-0">
         {isDone ? (
-          <div className="flex items-center justify-between w-full">
-            <span className="text-[11px] font-mono text-emerald-400">
+          <div className="flex items-center justify-between w-full min-w-0 gap-2">
+            <span className="text-[11px] font-mono text-emerald-400 truncate min-w-0">
               {mission.completed_at
                 ? `Concluída em ${new Date(mission.completed_at).toLocaleDateString("pt-BR")}`
                 : "Concluída"}
@@ -155,8 +155,8 @@ export const MissionCard: React.FC<MissionCardProps> = ({
             </SystemButton>
           </div>
         ) : (
-          <div className="w-full flex items-center justify-between">
-            <span className="text-[11px] font-mono text-slate-500">
+          <div className="w-full flex items-center justify-between gap-2 min-w-0">
+            <span className="text-[11px] font-mono text-slate-500 truncate min-w-0">
               Desbloqueio aguardando pré-requisitos
             </span>
             <SystemButton
@@ -165,6 +165,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({
               disabled
               aria-label={`Missão bloqueada ${mission.title}`}
               data-testid={`button-blocked-${mission.id}`}
+              className="shrink-0"
             >
               Bloqueada
             </SystemButton>

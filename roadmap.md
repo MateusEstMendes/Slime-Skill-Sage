@@ -39,10 +39,10 @@ Legenda: `[ ]` Pendente | `[/]` Em andamento | `[x]` Concluído e Aprovado pelo 
 
 ## Fase 5 — Voz do Mundo (Modal + Haptics + Som + Web TTS) e Telas de Status e Habilidades
 
-- [ ] 5.1 Desenvolvimento
-- [ ] 5.2 Testes Automáticos
+- [x] 5.1 Desenvolvimento
+- [x] 5.2 Testes Automáticos
 - [ ] 5.3 Testes do Usuário
-- [ ] 5.4 Debug e Atualização de Handoff/Feedback
+- [ ] 5.4 Debug e Atualização de Handoff/Feedback1
 
 ## Fase 6 — Backend `/chat` (Streaming + Tools Schema) e Cliente de Chat com Cartões de Prévia
 

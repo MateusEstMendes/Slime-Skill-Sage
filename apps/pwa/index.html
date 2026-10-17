@@ -5,8 +5,88 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Slime Sage</title>
     <meta name="theme-color" content="#050811" />
-    <meta name="description" content="Gestor de projetos gamificado com IA (Grande Sábio)" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <script>
+      (function () {
+        // Controle de versão do PWA para auto-limpeza silenciosa de Service Workers e Workbox
+        var CURRENT_VERSION = "0.1.2";
+        var VERSION_KEY = "slime_sage_app_version";
+        var RELOAD_GUARD = "slime_sage_sw_cleaned_v" + CURRENT_VERSION;
+
+        function isNewer(vNew, vOld) {
+          if (!vOld) return true;
+          var pNew = vNew.split(".").map(Number);
+          var pOld = vOld.split(".").map(Number);
+          for (var i = 0; i < Math.max(pNew.length, pOld.length); i++) {
+            var n = pNew[i] || 0;
+            var o = pOld[i] || 0;
+            if (n > o) return true;
+            if (n < o) return false;
+          }
+          return false;
+        }
+
+        function purgeZombieServiceWorkers(shouldReload) {
+          var unregisterPromise = ("serviceWorker" in navigator)
+            ? navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                return Promise.all(registrations.map(function (reg) {
+                  return reg.unregister();
+                }));
+              })
+            : Promise.resolve();
+
+          var cachePromise = ("caches" in window)
+            ? caches.keys().then(function (names) {
+                return Promise.all(names.map(function (name) {
+                  return caches.delete(name);
+                }));
+              })
+            : Promise.resolve();
+
+          Promise.all([unregisterPromise, cachePromise])
+            .then(function () {
+              try {
+                localStorage.setItem(VERSION_KEY, CURRENT_VERSION);
+              } catch (_) {}
+
+              if (shouldReload && !sessionStorage.getItem(RELOAD_GUARD)) {
+                try {
+                  sessionStorage.setItem(RELOAD_GUARD, "true");
+                } catch (_) {}
+                window.location.reload();
+              }
+            })
+            .catch(function () {});
+        }
+
+        // 1. Verificação proativa de versão na inicialização
+        try {
+          var stored = localStorage.getItem(VERSION_KEY);
+          if (isNewer(CURRENT_VERSION, stored)) {
+            purgeZombieServiceWorkers(true);
+          }
+        } catch (_) {}
+
+        // 2. Auto-recuperação de emergência caso haja erro de carregamento de scripts por SW obsoleto
+        window.addEventListener(
+          "error",
+          function (e) {
+            var target = e.target || {};
+            var isScriptError =
+              target.tagName === "SCRIPT" ||
+              (e.message &&
+                /failed to fetch dynamically imported module|loading chunk|workbox/i.test(e.message));
+            if (isScriptError && !sessionStorage.getItem("slime_sage_healed")) {
+              try {
+                sessionStorage.setItem("slime_sage_healed", "true");
+              } catch (_) {}
+              purgeZombieServiceWorkers(true);
+            }
+          },
+          true
+        );
+      })();
+    </script>
   </head>
   <body class="bg-[#050811] text-slate-100 min-h-screen selection:bg-cyan-500/30 selection:text-cyan-200">
     <div id="root"></div>

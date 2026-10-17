@@ -70,22 +70,22 @@ export const SystemModal: React.FC<SystemModalProps> = ({
             <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-cyan-400 rounded-br pointer-events-none" />
 
             {/* Header */}
-            <div className="flex items-start justify-between gap-4 border-b border-cyan-500/20 pb-4 shrink-0">
-              <div className="flex items-center gap-3">
+            <div className="flex items-start justify-between gap-4 border-b border-cyan-500/20 pb-4 shrink-0 min-w-0">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
                 {icon && (
                   <div className="p-2 rounded-lg bg-cyan-950/60 border border-cyan-500/40 text-cyan-400 shrink-0">
                     {icon}
                   </div>
                 )}
-                <div>
+                <div className="min-w-0 flex-1">
                   <div className="text-[10px] font-mono tracking-widest text-cyan-400 uppercase">
                     [ INTERFACE DO SISTEMA ]
                   </div>
-                  <h3 className="text-lg md:text-xl font-bold font-mono text-white tracking-wide">
+                  <h3 className="text-lg md:text-xl font-bold font-mono text-white tracking-wide break-words [overflow-wrap:anywhere]">
                     {title}
                   </h3>
                   {subtitle && (
-                    <p className="text-xs text-slate-400 font-mono mt-0.5">{subtitle}</p>
+                    <p className="text-xs text-slate-400 font-mono mt-0.5 break-words [overflow-wrap:anywhere]">{subtitle}</p>
                   )}
                 </div>
               </div>
@@ -97,7 +97,7 @@ export const SystemModal: React.FC<SystemModalProps> = ({
                   onClose();
                 }}
                 aria-label="Fechar Modal"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-cyan-300 hover:bg-cyan-950/40 border border-transparent hover:border-cyan-500/30 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-cyan-300 hover:bg-cyan-950/40 border border-transparent hover:border-cyan-500/30 transition-colors shrink-0"
               >
                 <X className="w-5 h-5" />
               </button>

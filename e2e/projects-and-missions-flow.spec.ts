@@ -74,7 +74,7 @@ test.describe("Fase 3 — Design System, Navegação por Abas e CRUD de Projetos
     await page.getByRole("button", { name: /nova missão/i }).click();
     await page.getByLabel(/título da missão/i).fill("Missão 2 - Desafio Avançado");
     // Select Missão Raiz as prerequisite
-    await page.getByText("Missão Raiz - Fundamentos").click();
+    await page.getByTestId("mission-form").getByRole("button", { name: "Missão Raiz - Fundamentos" }).click();
     await page.getByRole("button", { name: /adicionar missão/i }).click();
 
     await expect(page.getByText("Missão 2 - Desafio Avançado")).toBeVisible();
@@ -85,8 +85,8 @@ test.describe("Fase 3 — Design System, Navegação por Abas e CRUD de Projetos
     await completeBtn.click();
 
     // 8. Verify cascade unlock: Missão 2 should now be disponível!
-    await expect(page.getByText("Missão Raiz - Fundamentos")).toBeVisible();
-    await expect(page.getByText("Concluída")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Missão Raiz - Fundamentos" })).toBeVisible();
+    await expect(page.getByTestId("badge-status-feita")).toBeVisible();
     await expect(page.getByTestId("badge-status-disponivel")).toBeVisible();
   });
 });

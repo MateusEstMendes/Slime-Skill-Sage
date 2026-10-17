@@ -8,10 +8,8 @@ import {
   Download,
   X,
   Play,
-  Square,
   ChevronDown,
   ChevronRight,
-  ShieldAlert,
   Database,
   Sparkles,
   CheckCircle2,
@@ -30,7 +28,6 @@ import {
   TABLE_NAMES,
 } from "@slime-sage/shared";
 import { logger } from "../services/logger";
-import { ttsService } from "../services/ttsService";
 import {
   notificationService,
   type NotificationStatus,
@@ -38,15 +35,14 @@ import {
 import { localDb } from "../services/db";
 import { gameService } from "../services/gameService";
 import { type LedgerAuditResult } from "@slime-sage/game";
+import { VoicesView } from "./views/VoicesView";
 
 interface DevPanelProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type TabKey = "logs" | "ledger" | "time" | "db" | "tts" | "notif";
-
-const GS_TEST_PHRASE = "Aviso. O Sistema Slime Sage foi inicializado com sucesso.";
+type TabKey = "logs" | "ledger" | "time" | "db" | "voices" | "notif";
 
 export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<TabKey>("logs");
@@ -72,14 +68,6 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
   const [isFakeClock, setIsFakeClock] = useState<boolean>(gameService.isFakeClock());
   const [simulatedTime, setSimulatedTime] = useState<number>(gameService.getClock().now());
   const [timeMessage, setTimeMessage] = useState("");
-
-  // TTS state
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [selectedVoice, setSelectedVoice] = useState<string>("");
-  const [ttsRate, setTtsRate] = useState<number>(1.0);
-  const [ttsPitch, setTtsPitch] = useState<number>(1.0);
-  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
-  const [ttsSupported, setTtsSupported] = useState<boolean>(true);
 
   // Notifications state
   const [notifPermission, setNotifPermission] =
@@ -166,22 +154,6 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
       setLogs((prev) => [newEntry, ...prev.slice(0, 1999)]);
     });
     return unsubscribe;
-  }, [isOpen]);
-
-  // Check TTS and voices
-  useEffect(() => {
-    if (!isOpen) return;
-    const supported = ttsService.isSupported();
-    setTtsSupported(supported);
-    if (supported) {
-      void ttsService.getAvailableVoices().then((loadedVoices) => {
-        setVoices(loadedVoices);
-        const defaultPt = ttsService.selectPtBrVoice(loadedVoices);
-        if (defaultPt) {
-          setSelectedVoice(defaultPt.name);
-        }
-      });
-    }
   }, [isOpen]);
 
   // Check Notifications permission
@@ -305,24 +277,6 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
     setTimeout(() => setTimeMessage(""), 4000);
   };
 
-  const handleSpeakGsPhrase = async () => {
-    setIsSpeaking(true);
-    try {
-      await ttsService.speak(GS_TEST_PHRASE, {
-        voiceName: selectedVoice,
-        rate: ttsRate,
-        pitch: ttsPitch,
-      });
-    } finally {
-      setIsSpeaking(false);
-    }
-  };
-
-  const handleStopTts = () => {
-    ttsService.stop();
-    setIsSpeaking(false);
-  };
-
   const handleRequestNotifPermission = async () => {
     const res = await notificationService.requestPermission();
     setNotifPermission(res);
@@ -439,15 +393,15 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
           </button>
 
           <button
-            onClick={() => setActiveTab("tts")}
+            onClick={() => setActiveTab("voices")}
             className={`px-3.5 py-2.5 text-xs font-mono font-medium border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
-              activeTab === "tts"
+              activeTab === "voices"
                 ? "border-cyan-400 text-cyan-300 bg-cyan-950/20"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
             <Volume2 className="w-3.5 h-3.5" />
-            <span>Voz da G.S (TTS)</span>
+            <span>Testes de Voz</span>
           </button>
 
           <button
@@ -572,12 +526,12 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                     {ledgerEvents.map((ev) => (
                       <div
                         key={ev.id}
-                        className="p-3 bg-slate-950/70 border border-slate-800 rounded-lg flex items-center justify-between text-xs"
+                        className="p-3 bg-slate-950/70 border border-slate-800 rounded-lg flex items-center justify-between gap-3 text-xs min-w-0"
                       >
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap min-w-0">
                             <span
-                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 ${
                                 ev.xp_amount >= 0
                                   ? "bg-emerald-950 text-emerald-400 border border-emerald-600/30"
                                   : "bg-red-950 text-red-400 border border-red-600/30"
@@ -585,19 +539,19 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                             >
                               {ev.xp_amount >= 0 ? `+${ev.xp_amount}` : ev.xp_amount} XP
                             </span>
-                            <span className="px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30 text-[10px]">
+                            <span className="px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30 text-[10px] shrink-0">
                               {ev.area_id}
                             </span>
-                            <span className="text-slate-400 text-[10px]">
+                            <span className="text-slate-400 text-[10px] shrink-0">
                               [{ev.entity_type}]
                             </span>
                             {ev.mastery_amount !== 0 && (
-                              <span className="text-amber-400 text-[10px]">
+                              <span className="text-amber-400 text-[10px] shrink-0">
                                 {ev.mastery_amount > 0 ? `+${ev.mastery_amount}` : ev.mastery_amount} Maestria
                               </span>
                             )}
                           </div>
-                          <div className="text-slate-200 text-xs font-sans">
+                          <div className="text-slate-200 text-xs font-sans break-words [overflow-wrap:anywhere]">
                             {ev.description}
                           </div>
                         </div>
@@ -999,117 +953,10 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {/* TAB: TTS */}
-          {activeTab === "tts" && (
-            <div className="space-y-5 max-w-xl mx-auto">
-              {!ttsSupported ? (
-                <div className="p-4 bg-amber-950/40 border border-amber-600/40 rounded-xl text-amber-300 text-xs flex items-center gap-3">
-                  <ShieldAlert className="w-5 h-5 flex-shrink-0" />
-                  <span>
-                    A Web Speech API (speechSynthesis) não é suportada neste
-                    navegador ou ambiente.
-                  </span>
-                </div>
-              ) : (
-                <div className="bg-[#0a1224]/70 border border-cyan-500/20 rounded-xl p-5 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-lg bg-cyan-950/70 border border-cyan-500/40 text-cyan-400">
-                      <Volume2 className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-white">
-                        Voz do Mundo & Grande Sábio (Web Speech API)
-                      </h3>
-                      <p className="text-xs text-slate-400">
-                        Síntese de fala offline e normalizador fonético pt-BR.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 font-mono text-xs">
-                    <div>
-                      <label className="text-slate-400 block mb-1">
-                        Selecione a Voz Instalada:
-                      </label>
-                      <select
-                        value={selectedVoice}
-                        onChange={(e) => setSelectedVoice(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400"
-                      >
-                        {voices.map((v) => (
-                          <option key={v.name} value={v.name}>
-                            {v.name} ({v.lang}) {v.default ? "★ Padrão" : ""}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-slate-400 block mb-1">
-                          Velocidade (Rate): {ttsRate.toFixed(1)}x
-                        </label>
-                        <input
-                          type="range"
-                          min="0.5"
-                          max="2"
-                          step="0.1"
-                          value={ttsRate}
-                          onChange={(e) =>
-                            setTtsRate(parseFloat(e.target.value))
-                          }
-                          className="w-full accent-cyan-400"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-slate-400 block mb-1">
-                          Tom (Pitch): {ttsPitch.toFixed(1)}
-                        </label>
-                        <input
-                          type="range"
-                          min="0.5"
-                          max="1.5"
-                          step="0.1"
-                          value={ttsPitch}
-                          onChange={(e) =>
-                            setTtsPitch(parseFloat(e.target.value))
-                          }
-                          className="w-full accent-cyan-400"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="pt-2">
-                      <div className="text-[11px] text-slate-400 mb-1.5">
-                        Frase de Teste:
-                      </div>
-                      <div className="p-3 bg-slate-950 rounded-lg border border-slate-800 text-cyan-300 italic text-xs">
-                        "{GS_TEST_PHRASE}"
-                      </div>
-                    </div>
-
-                    <div className="flex gap-3 pt-2">
-                      <button
-                        onClick={handleSpeakGsPhrase}
-                        disabled={isSpeaking}
-                        className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs font-mono transition-colors shadow-[0_0_15px_rgba(0,240,255,0.25)]"
-                      >
-                        <Play className="w-3.5 h-3.5 fill-current" />
-                        <span>{isSpeaking ? "Falando..." : "Testar Voz da G.S"}</span>
-                      </button>
-
-                      {isSpeaking && (
-                        <button
-                          onClick={handleStopTts}
-                          className="py-2.5 px-4 rounded-lg bg-red-950/80 border border-red-500/40 text-red-300 hover:bg-red-900/80 text-xs font-mono transition-colors"
-                        >
-                          <Square className="w-3.5 h-3.5 fill-current" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
+          {/* TAB: VOICES & TTS */}
+          {activeTab === "voices" && (
+            <div className="space-y-5">
+              <VoicesView isActive={activeTab === "voices"} />
             </div>
           )}
 

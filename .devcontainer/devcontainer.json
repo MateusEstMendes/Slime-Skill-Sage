@@ -1,0 +1,15 @@
+{
+  "name": "Slime Sage",
+  "forwardPorts": [5173, 3000],
+  "portsAttributes": {
+    "5173": {
+      "label": "Slime Sage PWA",
+      "onAutoForward": "openBrowser",
+      "visibility": "public"
+    },
+    "3000": {
+      "label": "Slime Sage API",
+      "visibility": "public"
+    }
+  }
+}

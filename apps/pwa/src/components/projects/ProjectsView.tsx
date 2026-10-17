@@ -237,14 +237,14 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
               key={p.id}
               className="flex flex-col justify-between hover:border-cyan-400/60 transition-all group"
             >
-              <div>
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-1.5">
-                    <SystemBadge type="area" areaId={p.area_id} size="sm" />
-                    <SystemBadge type="project-status" projectStatus={p.status} size="sm" />
+              <div className="min-w-0">
+                <div className="flex items-start justify-between gap-2 mb-2 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                    <SystemBadge type="area" areaId={p.area_id} size="sm" className="shrink-0" />
+                    <SystemBadge type="project-status" projectStatus={p.status} size="sm" className="shrink-0" />
                   </div>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => handleOpenEdit(p)}
                       aria-label={`Editar projeto ${p.title}`}
@@ -262,11 +262,11 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
                   </div>
                 </div>
 
-                <h3 className="font-mono font-bold text-base text-white group-hover:text-cyan-200 transition-colors">
+                <h3 className="font-mono font-bold text-base text-white group-hover:text-cyan-200 transition-colors break-words [overflow-wrap:anywhere]">
                   {p.title}
                 </h3>
                 {p.description && (
-                  <p className="text-xs text-slate-400 mt-1 line-clamp-2 font-sans">
+                  <p className="text-xs text-slate-400 mt-1 line-clamp-2 font-sans break-words [overflow-wrap:anywhere]">
                     {p.description}
                   </p>
                 )}

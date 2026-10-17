@@ -82,4 +82,32 @@ if (typeof window !== "undefined") {
     // @ts-expect-error mock assignment
     window.Notification = MockNotification;
   }
+
+  if (!window.AudioContext) {
+    class MockAudioContext {
+      currentTime = 0;
+      state = "running";
+      destination = {};
+      createOscillator = vi.fn(() => ({
+        type: "sine",
+        frequency: {
+          setValueAtTime: vi.fn(),
+          exponentialRampToValueAtTime: vi.fn(),
+        },
+        connect: vi.fn(),
+        start: vi.fn(),
+        stop: vi.fn(),
+      }));
+      createGain = vi.fn(() => ({
+        gain: {
+          setValueAtTime: vi.fn(),
+          exponentialRampToValueAtTime: vi.fn(),
+        },
+        connect: vi.fn(),
+      }));
+      resume = vi.fn().mockResolvedValue(undefined);
+    }
+    // @ts-expect-error mock assignment
+    window.AudioContext = MockAudioContext;
+  }
 }

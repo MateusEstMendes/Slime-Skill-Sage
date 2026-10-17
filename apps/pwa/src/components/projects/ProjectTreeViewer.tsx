@@ -201,14 +201,14 @@ export const ProjectTreeViewer: React.FC<ProjectTreeViewerProps> = ({
       <SystemPanel
         title={project.title}
         subtitle={
-          <div className="flex items-center gap-2 mt-1">
-            <SystemBadge type="area" areaId={project.area_id} size="sm" />
-            <SystemBadge type="project-status" projectStatus={project.status} size="sm" />
+          <div className="flex items-center gap-2 mt-1 flex-wrap min-w-0">
+            <SystemBadge type="area" areaId={project.area_id} size="sm" className="shrink-0" />
+            <SystemBadge type="project-status" projectStatus={project.status} size="sm" className="shrink-0" />
           </div>
         }
       >
         {project.description && (
-          <p className="text-sm text-slate-300 font-sans mb-4">
+          <p className="text-sm text-slate-300 font-sans mb-4 break-words [overflow-wrap:anywhere]">
             {project.description}
           </p>
         )}

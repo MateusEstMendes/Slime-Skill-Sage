@@ -5,7 +5,8 @@
   "packageManager": "pnpm@12.3.4",
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "pnpm --parallel --filter @slime-sage/pwa --filter @slime-sage/api dev",
+    "dev:turbo": "turbo run dev",
     "lint": "eslint .",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",

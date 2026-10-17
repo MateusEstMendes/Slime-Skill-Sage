@@ -19,12 +19,16 @@ describe("TabBar and Screen Navigation", () => {
       expect(screen.getByTestId("tab-gs")).toBeInTheDocument();
       expect(screen.getByTestId("tab-skills")).toBeInTheDocument();
       expect(screen.getByTestId("tab-status")).toBeInTheDocument();
+      expect(screen.queryByTestId("tab-voices")).not.toBeInTheDocument();
 
       fireEvent.click(screen.getByTestId("tab-projects"));
       expect(handleSelect).toHaveBeenCalledWith("projects");
 
       fireEvent.click(screen.getByTestId("tab-gs"));
       expect(handleSelect).toHaveBeenCalledWith("gs");
+
+      fireEvent.click(screen.getByTestId("tab-skills"));
+      expect(handleSelect).toHaveBeenCalledWith("skills");
     });
   });
 
