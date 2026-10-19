@@ -260,4 +260,54 @@
      - Clique ou toque em qualquer vértice, eixo ou label destaca o caminho com halo luminoso e expande o Card/Tooltip Rúnico com o título do Grau, maestria atual, pontos restantes para o próximo grau, teto do horizonte vivo e barra de progresso do Grau.
 - **Status:** [x] Validado com 100% de Testes Monorepo Passando (120 testes PWA, 71 testes Game, 11 testes Shared, 11 testes API).
 
+## Fase 9 — Motor de Jogo (Parte 2): Classes por Área e Evolução com Desafio Autodeclarado
+
+### Rodada 1 de Testes do Usuário (Carregamento de Módulos no Codespaces & Calibração de Dificuldade com 10 Patamares e Formatação [Nome da Classe IV])
+
+- **Feedback do Usuário:**
+  1. *"Falha no carregamento do módulo com origem em https://...-5173.app.github.dev/src/main.tsx... @react-refresh, @vite-plugin-pwa, @vite/client"*
+  2. *"sobre as coisas que eu testei, as classes por area e os titulos, devem ser mais dificeis de ocnseguir, assim como os patamarares, alem disso nos patamares, deve ser mostrado o nivel tipo: [analista metodico IV] para ser mais facil entender"*
+  3. Via `/grill-me`: Alinhado que os patamares de classe e títulos devem seguir a escala de 1 a 10 patamares predefinidos do plano (1 a 50.000 pts de maestria), com o formato canônico com colchetes e numerais romanos `[Nome da Classe <ROMAN>]` em tudo (título equipado, cards de área, modal de seleção e anúncios da Voz do Mundo), provações escalonadas e atalhos rápidos no Painel Dev (+1k, +5k).
+
+- **Causa Raiz Identificada & Correções Aplicadas:**
+  1. **Bloqueio de Host no Vite 6 em Ambientes Remotos (`apps/pwa/vite.config.ts`):**
+     - O Vite 6 introduziu verificação estrita de host por padrão, rejeitando requisições com header `Host: *.app.github.dev` com HTTP 403 Forbidden.
+     - Configurado `server.allowedHosts: true` e `server.hmr: { clientPort: 443 }` para túnel seguro do GitHub Codespaces.
+  2. **Escala Canônica de 10 Patamares Alinhada com 50.000 pts (`packages/game/src/classes.ts`):**
+     - Substituída a escala inicial de 5 patamares (0 a 3.000 pts) pela escala completa de **10 Patamares Canônicos (1 a 10)** alinhada à progressão de maestria até 50.000 pts:
+       - Tier I: Aprendiz (0 pts)
+       - Tier II: Iniciante (5.000 pts)
+       - Tier III: Adepto (10.000 pts)
+       - Tier IV: Veterano (15.000 pts)
+       - Tier V: Especialista (20.000 pts)
+       - Tier VI: Mestre (25.000 pts)
+       - Tier VII: Grão-Mestre (30.000 pts)
+       - Tier VIII: Sábio (35.000 pts)
+       - Tier IX: Monarca (40.000 pts)
+       - Tier X: Lendário (45.000 pts / Ápice 50.000 pts)
+  3. **Formatação Canônica com Colchetes e Numerais Romanos `[Nome da Classe <ROMAN>]`:**
+     - Criada a função pura idempotente `formatClassTitle(name, tier)` em `packages/game/src/classes.ts`.
+     - Integrada em `BASE_CLASS_NAMES` (ex: `[Aprendiz da Lógica I]`), `proposeChallenge`, `completeChallenge`, `equipTitle`, `StatusView.tsx` e `WorldVoiceModal`.
+     - O Título Principal, cards das 5 áreas, modal de seleção de títulos e anúncios cerimoniais agora exibem de forma elegante e clara o nível exato: ex: `[Analista Metódico II]`, `[Decifrador de Padrões IV]`, `[A Onisciência Absoluta X]`.
+  4. **Desafios Determinísticos Escalonados para os 10 Patamares:**
+     - O banco determinístico offline e o gerador de desafios cobrem todos os patamares de 2 a 10, com complexidade e prestígio crescentes.
+     - A tool `propose_class_challenge` no backend Hono (`apps/api/src/services/geminiService.ts`) foi atualizada para gerar desafios de tiers 2 a 10 exigindo a formatação `[Nome da Classe <ROMAN>]`.
+- **Status:** [x] Implementado com Sucesso e Validado nos Testes Automáticos (234/234 testes passando, 97.3% cobertura em game)
+
+### Rodada 2 de Testes do Usuário (Reatividade Imediata de XP/Maestria no Diagrama de Atributos e nos Cards de Área)
+
+- **Feedback do Usuário:**
+  - *"nem o diagrama de atributos, nem os cartõe por area estão demonstrando a mudança de xp"*
+- **Causa Raiz Identificada & Correção Aplicada:**
+  1. **Cálculo de Atributos Restrito a Habilidades (`gameService.ts`):**
+     - Em `getAttributes()`, havia a verificação `if (skills.length > 0) return calculateAttributesFromSkills(skills);`. Quando o Escolhido já possuía qualquer habilidade no banco, o método ignorava todos os registros de `xp_event` do Ledger imutável que não estivessem atrelados a uma habilidade específica (como a maestria manual de teste injetada pelo Painel Dev ou missões gerais da área).
+     - **Correção:** `getAttributes()` agora calcula os atributos diretamente do Ledger (`calculateAttributesFromLedger(events)`), mesclando com o teto de habilidades existentes via `Math.max(ledgerAttrs[code], skillAttrs[code])`.
+  2. **Ausência de Despacho de Evento Reativo em `addManualMastery` (`gameService.ts`):**
+     - O método `addManualMastery` persistia o evento no Ledger e reconciliava o perfil, mas não chamava `this.dispatchEvent(...)`. Como a `StatusView` escuta o barramento de `gameService.subscribeToGameEvents(...)`, ela não era notificada em tempo real para recarregar o diagrama e os cartões.
+     - **Correção:** Adicionado o evento `MASTERY_GAINED` à união `GameEvent` em `packages/game/src/ledger.ts` e disparado imediatamente em `addManualMastery`, atualizando também `area.current_xp`.
+  3. **Legenda Desatualizada em `StatusView.tsx`:**
+     - Atualizado o subtítulo de `Classes por Área` para refletir os *"10 Patamares Canônicos de Maestria (1 a 50.000 pts · Escala do Escolhido I a X)"*.
+- **Status:** [x] Validado pelo Usuário (100% de testes aprovados — 235/235 testes monorepo, 97.3% cobertura em game).
+
+
 

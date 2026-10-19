@@ -27,6 +27,7 @@ import {
   type LogScope,
   type TableName,
   type XpEvent,
+  type AreaCode,
   TABLE_NAMES,
 } from "@slime-sage/shared";
 import { logger } from "../services/logger";
@@ -303,6 +304,18 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
       setLedgerMessage("Erro ao reconciliar perfil com o ledger.");
     } finally {
       setLedgerLoading(false);
+    }
+  };
+
+  const handleAddManualMastery = async (areaId: AreaCode, amount: number) => {
+    try {
+      await gameService.addManualMastery(areaId, amount);
+      setLedgerMessage(`+${amount} Maestria adicionada com sucesso na esfera ${areaId}!`);
+      await loadLedgerData();
+      setTimeout(() => setLedgerMessage(""), 4000);
+    } catch (err) {
+      console.error("Erro ao adicionar maestria manual:", err);
+      setLedgerMessage("Erro ao registrar maestria manual.");
     }
   };
 
@@ -700,6 +713,68 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                     <span>{ledgerMessage}</span>
                   </div>
                 )}
+
+                {/* Shortcut Maestria na Área (Fase 9: 1 a 10 Patamares) */}
+                <div className="p-3 bg-[#040814] border border-[#dfa86c]/30 space-y-2">
+                  <div className="text-[11px] font-fantasy font-bold text-[#dfa86c] uppercase tracking-wider flex items-center justify-between">
+                    <span>Simular Maestria de Classe (Fase 9 — 10 Patamares):</span>
+                    <span className="text-[10px] text-[#c5b08f] font-mono">1 a 50.000 pts</span>
+                  </div>
+
+                  {/* +5.000: Salto de 1 Tier Completo */}
+                  <div className="space-y-1">
+                    <div className="text-[10px] font-mono text-[#fde047] font-semibold">
+                      ✦ Salto de Tier (+5.000 pts):
+                    </div>
+                    <div className="grid grid-cols-5 gap-1.5">
+                      {(["INT", "FOR", "DIS", "CRI", "SOC"] as const).map((area) => (
+                        <button
+                          key={`5k_${area}`}
+                          onClick={() => handleAddManualMastery(area, 5000)}
+                          className="py-1 px-1 bg-[#1c1308] border border-[#fde047]/60 hover:border-[#fde047] hover:bg-[#2a1d0b] text-[#fde047] text-[11px] font-mono font-bold transition-all text-center shadow-[0_0_8px_rgba(253,224,71,0.2)]"
+                        >
+                          +5k {area}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* +1.000: Sub-Grade */}
+                  <div className="space-y-1">
+                    <div className="text-[10px] font-mono text-[#c5b08f]">
+                      ✦ Avanço de Grau (+1.000 pts):
+                    </div>
+                    <div className="grid grid-cols-5 gap-1.5">
+                      {(["INT", "FOR", "DIS", "CRI", "SOC"] as const).map((area) => (
+                        <button
+                          key={`1k_${area}`}
+                          onClick={() => handleAddManualMastery(area, 1000)}
+                          className="py-1 px-1 bg-[#060e20] border border-[#dfa86c]/40 hover:border-[#fde047] hover:bg-[#1c1308] text-[#fde047] text-[11px] font-mono font-bold transition-all text-center"
+                        >
+                          +1k {area}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* +150: Micro-teste */}
+                  <div className="space-y-1">
+                    <div className="text-[10px] font-mono text-[#a39171]">
+                      ✦ Micro-ajuste (+150 pts):
+                    </div>
+                    <div className="grid grid-cols-5 gap-1.5">
+                      {(["INT", "FOR", "DIS", "CRI", "SOC"] as const).map((area) => (
+                        <button
+                          key={`150_${area}`}
+                          onClick={() => handleAddManualMastery(area, 150)}
+                          className="py-0.5 px-1 bg-[#060e20] border border-[#dfa86c]/30 hover:border-[#dfa86c] text-[#c5b08f] text-[10px] font-mono transition-all text-center"
+                        >
+                          +150 {area}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
 
                 {/* Action Reconcile button */}
                 <div className="flex items-center justify-end">

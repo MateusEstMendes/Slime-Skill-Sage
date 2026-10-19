@@ -84,4 +84,42 @@ describe("StatusView & AttributesRadarChart", () => {
       expect(descEl.className).toContain("break-words");
     });
   });
+
+  it("renders classes section, displays eligibility banner at 5000 mastery and allows completing challenge", async () => {
+    // 1. Add 5000 mastery in INT via manual ledger transaction
+    await gameService.addManualMastery("INT", 5000, "Treino Intensivo de Algoritmos");
+
+    render(<StatusView />);
+
+    // Wait for the eligibility banner to appear for INT
+    await waitFor(() => {
+      expect(screen.getByTestId("eligibility-banner-INT")).toBeInTheDocument();
+      expect(screen.getByText(/Elegível:.*Analista Metódico II/i)).toBeInTheDocument();
+    });
+
+    // Click "Solicitar Desafio da G.S"
+    const requestBtn = screen.getByRole("button", { name: /solicitar desafio da g\.s/i });
+    requestBtn.click();
+
+    // Verify active challenge card appears with "Consegui concluir o desafio!"
+    await waitFor(() => {
+      expect(screen.getByTestId("active-challenge-card")).toBeInTheDocument();
+      expect(screen.getByText("✦ PROVAÇÃO ATIVA EM ANDAMENTO ✦")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /consegui concluir o desafio!/i })).toBeInTheDocument();
+    });
+
+    // Click "Consegui concluir o desafio!"
+    const completeBtn = screen.getByRole("button", { name: /consegui concluir o desafio!/i });
+    completeBtn.click();
+
+    // After completion, the active challenge card is dismissed, and INT class is promoted to Tier 2 (II)
+    await waitFor(() => {
+      expect(screen.queryByTestId("active-challenge-card")).not.toBeInTheDocument();
+      const intCard = screen.getByTestId("class-area-card-INT");
+      expect(intCard).toHaveTextContent("Tier II");
+      expect(intCard).toHaveTextContent("Iniciante");
+      expect(intCard).toHaveTextContent(/\[.+ II\]/);
+    });
+  });
 });
+

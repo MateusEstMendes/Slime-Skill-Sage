@@ -306,6 +306,28 @@ Top 10 Habilidades (Híbrido: Maestria + Prática Recente): ${
         explanation: z.string().optional(),
       }),
     }),
+
+    propose_class_challenge: tool({
+      description:
+        "Propor um desafio de provação autodeclarado para o Escolhido ascender de classe em uma Área ao atingir a maestria necessária. O desafio deve ser um feito real, prático e mensurável.",
+      inputSchema: z.object({
+        area_id: AreaCodeSchema.describe("Área de atributo: INT, FOR, DIS, CRI, SOC"),
+        target_tier: z
+          .number()
+          .int()
+          .min(2)
+          .max(10)
+          .describe("Patamar alvo: 2 a 10 (Tier II: Iniciante, Tier III: Adepto, Tier IV: Veterano, ..., Tier X: Lendário)"),
+        name_class: z
+          .string()
+          .describe("Nome épico da nova classe formatado canonicamente com colchetes e numeral romano '[Nome da Classe <ROMAN>]' (ex: '[Analista Metódico IV]', '[Decifrador de Algoritmos II]')"),
+        challenge_title: z.string().describe("Título arcano do desafio de provação"),
+        challenge_description: z
+          .string()
+          .describe("Descrição clara e acionável da tarefa prática real que o Escolhido deve cumprir"),
+        explanation: z.string().optional().describe("Justificativa solene da Grande Sábio para esta provação"),
+      }),
+    }),
   };
 
   let lastError: unknown;
@@ -458,6 +480,32 @@ Top 10 Habilidades (Híbrido: Maestria + Prática Recente): ${
                 explanation: args.explanation,
               };
             }
+          } else if (firstCall.toolName === "propose_class_challenge") {
+            const args = (callPayload || {}) as {
+              area_id?: "INT" | "FOR" | "DIS" | "CRI" | "SOC";
+              target_tier?: number;
+              name_class?: string;
+              challenge_title?: string;
+              challenge_description?: string;
+              explanation?: string;
+            };
+            if (
+              args.area_id &&
+              args.target_tier &&
+              args.name_class &&
+              args.challenge_title &&
+              args.challenge_description
+            ) {
+              proposedAction = {
+                type: "propose_class_challenge",
+                area_id: args.area_id,
+                target_tier: args.target_tier,
+                name_class: args.name_class,
+                challenge_title: args.challenge_title,
+                challenge_description: args.challenge_description,
+                explanation: args.explanation,
+              };
+            }
           }
         }
 
@@ -472,6 +520,8 @@ Top 10 Habilidades (Híbrido: Maestria + Prática Recente): ${
             spokenText = `Ajuste de parâmetros da missão formulado para sua aprovação.`;
           } else if (proposedAction.type === "delete_mission") {
             spokenText = `Proposta de exclusão de missão submetida ao seu consentimento.`;
+          } else if (proposedAction.type === "propose_class_challenge") {
+            spokenText = `Provação para a ascensão à classe "${proposedAction.name_class}" formulada e submetida ao seu julgamento.`;
           }
         } else if (result.text.length < 150) {
           spokenText = result.text.replace(/[*#_`]/g, "").trim();

@@ -197,5 +197,28 @@ describe("GameService & Transactional Ledger", () => {
 
     unsubscribe();
   });
+
+  it("updates attributes and notifies subscribers immediately when manual mastery is added", async () => {
+    const receivedEvents: GameEvent[] = [];
+    const unsubscribe = gameService.subscribeToGameEvents((event) => {
+      receivedEvents.push(event);
+    });
+
+    // Also create a skill to ensure getAttributes doesn't ignore manual mastery when skills exist
+    await gameService.createSkill({
+      name: "Algoritmos",
+      areaId: "INT",
+    });
+
+    await gameService.addManualMastery("INT", 5000, "Injeção de Teste");
+
+    const attrs = await gameService.getAttributes();
+    expect(attrs.INT).toBe(5000);
+
+    // Verify subscriber was notified
+    expect(receivedEvents.length).toBeGreaterThan(0);
+
+    unsubscribe();
+  });
 });
 

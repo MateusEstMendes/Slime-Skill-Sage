@@ -20,6 +20,7 @@ import {
   Users,
   Flame,
   ArrowRight,
+  Award,
 } from "lucide-react";
 
 interface ProposalCardProps {
@@ -94,6 +95,12 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({
           title: "PROPOSTA // EXPURGO DE MISSÃO",
           icon: <Trash2 className="w-4 h-4 text-rose-400" />,
           badgeColor: "border-rose-500/50 text-rose-400",
+        };
+      case "propose_class_challenge":
+        return {
+          title: "PROPOSTA // PROVAÇÃO DE CLASSE",
+          icon: <Award className="w-4 h-4 text-[#fde047]" />,
+          badgeColor: "border-[#fde047]/50 text-[#fde047]",
         };
     }
   };
@@ -346,6 +353,30 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({
           <p className="text-[11px] text-rose-300/80">
             Atenção: A remoção excluirá esta missão da árvore.
           </p>
+        </div>
+      )}
+
+      {proposal.type === "propose_class_challenge" && (
+        <div className="space-y-3 font-sans">
+          <div className="p-3 bg-[#040814]/85 border border-[#dfa86c]/35 space-y-2">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <span className="font-fantasy text-sm text-[#fde047] font-bold tracking-wider">
+                Classe Alvo: {proposal.name_class}
+              </span>
+              <span className="font-mono text-[10px] px-2 py-0.5 bg-[#dfa86c]/20 border border-[#dfa86c]/40 text-[#fde047] uppercase">
+                Tier {proposal.target_tier} · {AREA_MAP[proposal.area_id]?.label || proposal.area_id}
+              </span>
+            </div>
+
+            <div className="pt-2 border-t border-[#dfa86c]/20 space-y-1">
+              <div className="font-fantasy text-xs text-[#f8ecd5] font-semibold">
+                ✦ {proposal.challenge_title}
+              </div>
+              <p className="font-mono text-xs text-[#c5b08f] leading-relaxed">
+                {proposal.challenge_description}
+              </p>
+            </div>
+          </div>
         </div>
       )}
 

@@ -128,5 +128,24 @@ export type GameEvent =
   | {
       type: "ONBOARDING_RESET";
       payload: Record<string, never>;
+    }
+  | {
+      type: "CLASS_EVOLVED";
+      payload: {
+        areaId: AreaCode;
+        tier: number;
+        tierName: string;
+        className: string;
+        challengeId?: string;
+      };
+    }
+  | {
+      type: "MASTERY_GAINED";
+      payload: {
+        areaId: AreaCode;
+        amount: number;
+        totalXp: number;
+        level: number;
+      };
     };
 

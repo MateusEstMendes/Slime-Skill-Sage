@@ -23,9 +23,13 @@ import {
   type GameEvent,
   type AttributesMap,
   normalizeSkillName,
+  CLASS_TIER_CONFIG,
+  BASE_ATTRIBUTE_CODES,
+  createEmptyAttributes,
 } from "@slime-sage/game";
 import { localDb } from "./db";
 import { projectRepository } from "./projectRepository";
+import { classRepository } from "./classRepository";
 import { logger } from "./logger";
 import { hapticFeedback } from "./haptics";
 
@@ -148,6 +152,7 @@ export class GameService {
       };
       await this.db.put("profile", profile);
     }
+    void classRepository.initBaseClasses();
     return profile;
   }
 
@@ -251,12 +256,15 @@ export class GameService {
   }
 
   public async getAttributes(): Promise<AttributesMap> {
-    const skills = await this.db.getAll<Skill>("skill");
-    if (skills.length > 0) {
-      return calculateAttributesFromSkills(skills);
-    }
     const events = await this.db.getAll<XpEvent>("xp_event");
-    return calculateAttributesFromLedger(events);
+    const ledgerAttrs = calculateAttributesFromLedger(events);
+    const skills = await this.db.getAll<Skill>("skill");
+    const skillAttrs = calculateAttributesFromSkills(skills);
+    const result = createEmptyAttributes();
+    for (const code of BASE_ATTRIBUTE_CODES) {
+      result[code] = Math.max(ledgerAttrs[code] || 0, skillAttrs[code] || 0);
+    }
+    return result;
   }
 
   // --- SKILL MANAGEMENT ---
@@ -582,6 +590,105 @@ export class GameService {
       profile,
       events: [],
     };
+  }
+
+  // --- MANUAL MASTERY / DEV PANEL ---
+
+  /**
+   * Adds manual mastery and XP to an Area via an immutable Ledger transaction.
+   * Reconciles profile level and XP immediately.
+   */
+  public async addManualMastery(
+    areaId: AreaCode,
+    amount: number,
+    description?: string
+  ): Promise<void> {
+    const nowIso = new Date(this.clock.now()).toISOString();
+    const xpEvent: XpEvent = {
+      id: `xpe_${this.clock.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      entity_type: "manual",
+      entity_id: `manual_${areaId.toLowerCase()}`,
+      area_id: areaId,
+      xp_amount: amount,
+      mastery_amount: amount,
+      description: description || `Bônus Manual: +${amount} Maestria em ${areaId}`,
+      created_at: nowIso,
+    };
+    await this.db.put("xp_event", xpEvent);
+
+    // Update Area current_xp
+    const area = await this.db.get<Area>("area", areaId);
+    if (area) {
+      area.current_xp += amount;
+      area.updated_at = nowIso;
+      await this.db.put("area", area);
+    }
+
+    // Reconcile Profile with Ledger
+    const profile = await this.reconcileProfileWithLedger();
+
+    // Dispatch GameEvent to immediately notify all reactive UI subscribers (StatusView, HomeView, DevPanel)
+    const manualEvent: GameEvent = {
+      type: "MASTERY_GAINED",
+      payload: {
+        areaId,
+        amount,
+        totalXp: profile.total_xp,
+        level: profile.level,
+      },
+    };
+    this.dispatchEvent(manualEvent);
+
+    void logger.info("game", `[Maestria Manual Adicionada] +${amount} em ${areaId}`, {
+      areaId,
+      amount,
+    });
+  }
+
+  // --- CLASS CHALLENGE COMPLETION ---
+
+  /**
+   * Completes a class challenge, records the new Class, updates profile title,
+   * and dispatches the CLASS_EVOLVED GameEvent.
+   */
+  public async completeClassChallenge(
+    challengeId: string,
+    options?: { autoEquipTitle?: boolean }
+  ): Promise<{
+    challenge: import("@slime-sage/shared").ClassChallenge;
+    unlockedClass: import("@slime-sage/shared").Class;
+    profile: Profile;
+  }> {
+    const result = await classRepository.completeChallenge(challengeId, options);
+    const { unlockedClass, challenge } = result;
+
+    const tierName =
+      CLASS_TIER_CONFIG[unlockedClass.tier - 1]?.name ?? `Tier ${unlockedClass.tier}`;
+
+    const evolvedEvent: GameEvent = {
+      type: "CLASS_EVOLVED",
+      payload: {
+        areaId: unlockedClass.area_id,
+        tier: unlockedClass.tier,
+        tierName,
+        className: unlockedClass.name,
+        challengeId: challenge.id,
+      },
+    };
+
+    this.dispatchEvent(evolvedEvent);
+
+    void logger.info(
+      "game",
+      `[Provação Concluída] O Escolhido ascendeu ao patamar ${tierName} (${unlockedClass.name}) em ${unlockedClass.area_id}`,
+      {
+        areaId: unlockedClass.area_id,
+        tier: unlockedClass.tier,
+        className: unlockedClass.name,
+      }
+    );
+
+    return result;
   }
 }
 

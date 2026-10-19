@@ -27,6 +27,7 @@ import {
   AddMissionsProposalSchema,
   UpdateMissionProposalSchema,
   DeleteMissionProposalSchema,
+  ProposeClassChallengeProposalSchema,
   HunterContextSchema,
   ChatRequestSchema,
   ChatResponseSchema,
@@ -365,6 +366,18 @@ describe("Shared Schemas", () => {
     };
     expect(DeleteMissionProposalSchema.safeParse(deleteMission).success).toBe(true);
     expect(ProposalSchema.safeParse(deleteMission).success).toBe(true);
+
+    const proposeClassChallenge = {
+      type: "propose_class_challenge",
+      area_id: "INT",
+      target_tier: 2,
+      name_class: "Erudito Arcano",
+      challenge_title: "A Provação dos Tomos Esquecidos",
+      challenge_description: "Estude documentação técnica por 45 minutos.",
+      explanation: "Ascensão ao patamar Iniciante.",
+    };
+    expect(ProposeClassChallengeProposalSchema.safeParse(proposeClassChallenge).success).toBe(true);
+    expect(ProposalSchema.safeParse(proposeClassChallenge).success).toBe(true);
   });
 
   it("validates HunterContextSchema, ChatRequestSchema and ChatResponseSchema", () => {

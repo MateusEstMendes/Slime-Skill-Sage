@@ -173,4 +173,33 @@ describe("ProposalCard", () => {
     expect(screen.getByText("✦ PROPOSTA ARQUIVADA PELO CAÇADOR ✦")).toBeInTheDocument();
     expect(screen.queryByText("Aceitar Decreto")).not.toBeInTheDocument();
   });
+
+  it("renders propose_class_challenge proposal correctly", () => {
+    const proposal = {
+      type: "propose_class_challenge" as const,
+      area_id: "INT" as const,
+      target_tier: 2,
+      name_class: "Erudito Arcano",
+      challenge_title: "A Provação dos Tomos Esquecidos",
+      challenge_description: "Estude por 45 minutos documentação técnica complexa.",
+      explanation: "A Grande Sábio atesta a saturação dos fundamentos elementares.",
+    };
+
+    render(
+      <ProposalCard
+        proposal={proposal}
+        status="pendente"
+        onAccept={vi.fn()}
+        onReject={vi.fn()}
+        onAdjust={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("PROPOSTA // PROVAÇÃO DE CLASSE")).toBeInTheDocument();
+    expect(screen.getByText(/Classe Alvo: Erudito Arcano/)).toBeInTheDocument();
+    expect(screen.getByText(/Tier 2 · Inteligência/)).toBeInTheDocument();
+    expect(screen.getByText("✦ A Provação dos Tomos Esquecidos")).toBeInTheDocument();
+    expect(screen.getByText(/Estude por 45 minutos/)).toBeInTheDocument();
+    expect(screen.getByText("Aceitar Decreto")).toBeInTheDocument();
+  });
 });

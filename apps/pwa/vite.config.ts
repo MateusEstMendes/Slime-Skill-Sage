@@ -6,6 +6,12 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+    allowedHosts: true,
+    hmr: process.env.CODESPACES
+      ? {
+          clientPort: 443,
+        }
+      : undefined,
     proxy: {
       "/api": {
         target: "http://127.0.0.1:3000",

@@ -12,6 +12,7 @@ import {
 import { chatRepository, MAIN_THREAD_ID } from "../../services/chatRepository";
 import { localDb } from "../../services/db";
 import { projectRepository } from "../../services/projectRepository";
+import { classRepository } from "../../services/classRepository";
 import { gameService } from "../../services/gameService";
 import { buildMemorySnapshot } from "../../services/memorySnapshotBuilder";
 import { sendChatMessage } from "../../services/apiClient";
@@ -515,6 +516,15 @@ export const GsChatView: React.FC = () => {
         await projectRepository.updateMission(proposal.mission_id, proposal.updates);
       } else if (proposal.type === "delete_mission") {
         await projectRepository.deleteMission(proposal.mission_id);
+      } else if (proposal.type === "propose_class_challenge") {
+        const challenge = await classRepository.proposeChallenge({
+          areaId: proposal.area_id,
+          targetTier: proposal.target_tier,
+          name_class: proposal.name_class,
+          challenge_title: proposal.challenge_title,
+          challenge_description: proposal.challenge_description,
+        });
+        await classRepository.acceptChallenge(challenge.id);
       }
 
       await chatRepository.updateMessageProposalStatus(msgId, "aprovada");
@@ -549,6 +559,8 @@ export const GsChatView: React.FC = () => {
       prompt = `Grande Sábio, sobre o projeto "${proposal.project.title}", faça o seguinte ajuste: `;
     } else if (proposal.type === "add_missions") {
       prompt = `Grande Sábio, sobre as novas missões, altere: `;
+    } else if (proposal.type === "propose_class_challenge") {
+      prompt = `Grande Sábio, sobre a provação para a classe "${proposal.name_class}", altere: `;
     }
     setInputValue(prompt);
     inputRef.current?.focus();

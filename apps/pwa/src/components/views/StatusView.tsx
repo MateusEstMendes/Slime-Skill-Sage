@@ -1,8 +1,16 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { SystemPanel } from "../system/SystemPanel";
 import { SystemBadge } from "../system/SystemBadge";
+import { SystemModal } from "../system/SystemModal";
 import { GildedCorners } from "../system/GildedCorners";
-import { BASE_AREAS, type Profile, type AreaCode, type XpEvent } from "@slime-sage/shared";
+import {
+  BASE_AREAS,
+  type Profile,
+  type AreaCode,
+  type XpEvent,
+  type Class,
+  type ClassChallenge,
+} from "@slime-sage/shared";
 import {
   getAttributeRank,
   type AttributesMap,
@@ -10,9 +18,24 @@ import {
   calculateLevelFromTotalXp,
   calculateDynamicAttributeCeiling,
   type LedgerAuditResult,
+  checkClassEligibility,
+  generateDeterministicChallenge,
+  CLASS_TIER_CONFIG,
 } from "@slime-sage/game";
 import { gameService } from "../../services/gameService";
-import { Activity, CheckCircle2, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { classRepository } from "../../services/classRepository";
+import {
+  Activity,
+  CheckCircle2,
+  AlertTriangle,
+  RefreshCw,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Crown,
+  Award,
+  Sparkles,
+  Check,
+} from "lucide-react";
 import { SystemButton } from "../system/SystemButton";
 import { AttributesRadarChart } from "../status/AttributesRadarChart";
 
@@ -25,6 +48,17 @@ export const StatusView: React.FC<StatusViewProps> = ({ isActive }) => {
   const [attributes, setAttributes] = useState<AttributesMap>(createEmptyAttributes());
   const [auditResult, setAuditResult] = useState<LedgerAuditResult | null>(null);
   const [recentEvents, setRecentEvents] = useState<XpEvent[]>([]);
+  const [unlockedClasses, setUnlockedClasses] = useState<Class[]>([]);
+  const [highestClasses, setHighestClasses] = useState<Record<AreaCode, Class | null>>({
+    INT: null,
+    FOR: null,
+    DIS: null,
+    CRI: null,
+    SOC: null,
+  });
+  const [activeChallenge, setActiveChallenge] = useState<ClassChallenge | null>(null);
+  const [isTitleModalOpen, setIsTitleModalOpen] = useState(false);
+  const [isProcessingChallenge, setIsProcessingChallenge] = useState(false);
   const [loading, setLoading] = useState<boolean>(true);
 
   const isMountedRef = React.useRef(true);
@@ -39,17 +73,34 @@ export const StatusView: React.FC<StatusViewProps> = ({ isActive }) => {
   const loadStatusData = useCallback(async () => {
     try {
       setLoading(true);
-      const [prof, attrs, audit, events] = await Promise.all([
+      const [prof, attrs, audit, events, allUnlocked, activeCh] = await Promise.all([
         gameService.getProfile(),
         gameService.getAttributes(),
         gameService.auditLedger(),
         gameService.getLedgerEvents(10),
+        classRepository.getAllUnlockedClasses(),
+        classRepository.getActiveChallenge(),
       ]);
+
+      const highestByArea: Record<AreaCode, Class | null> = {
+        INT: null,
+        FOR: null,
+        DIS: null,
+        CRI: null,
+        SOC: null,
+      };
+      for (const area of BASE_AREAS) {
+        highestByArea[area.code] = await classRepository.getHighestUnlockedClass(area.code);
+      }
+
       if (isMountedRef.current) {
         setProfile(prof);
         setAttributes(attrs);
         setAuditResult(audit);
         setRecentEvents(events);
+        setUnlockedClasses(allUnlocked);
+        setHighestClasses(highestByArea);
+        setActiveChallenge(activeCh);
       }
     } catch {
       // Ignora erro
@@ -62,10 +113,16 @@ export const StatusView: React.FC<StatusViewProps> = ({ isActive }) => {
 
   useEffect(() => {
     void loadStatusData();
-    const unsubscribe = gameService.subscribeToGameEvents(() => {
+    const unsubGame = gameService.subscribeToGameEvents(() => {
       void loadStatusData();
     });
-    return unsubscribe;
+    const unsubClass = classRepository.subscribe(() => {
+      void loadStatusData();
+    });
+    return () => {
+      unsubGame();
+      unsubClass();
+    };
   }, [loadStatusData]);
 
   useEffect(() => {
@@ -73,6 +130,73 @@ export const StatusView: React.FC<StatusViewProps> = ({ isActive }) => {
       void loadStatusData();
     }
   }, [isActive, loadStatusData]);
+
+  const handleRequestChallenge = async (areaId: AreaCode) => {
+    const currentClass = highestClasses[areaId];
+    const currentTier = currentClass?.tier ?? 1;
+    const masteryVal = attributes[areaId] ?? 0;
+    const eligibility = checkClassEligibility(areaId, currentTier, masteryVal);
+
+    if (!eligibility.isEligible || !eligibility.nextTier) return;
+
+    try {
+      setIsProcessingChallenge(true);
+      const template = generateDeterministicChallenge(areaId, eligibility.nextTier);
+      const challenge = await classRepository.proposeChallenge({
+        areaId,
+        targetTier: eligibility.nextTier,
+        name_class: template.name_class,
+        challenge_title: template.challenge_title,
+        challenge_description: template.challenge_description,
+      });
+      await classRepository.acceptChallenge(challenge.id);
+      await loadStatusData();
+    } catch (err) {
+      console.error("Erro ao solicitar desafio:", err);
+    } finally {
+      setIsProcessingChallenge(false);
+    }
+  };
+
+  const handleAcceptChallenge = async (challengeId: string) => {
+    try {
+      setIsProcessingChallenge(true);
+      await classRepository.acceptChallenge(challengeId);
+      await loadStatusData();
+    } finally {
+      setIsProcessingChallenge(false);
+    }
+  };
+
+  const handleCompleteChallenge = async (challengeId: string) => {
+    try {
+      setIsProcessingChallenge(true);
+      await gameService.completeClassChallenge(challengeId, { autoEquipTitle: true });
+      await loadStatusData();
+    } finally {
+      setIsProcessingChallenge(false);
+    }
+  };
+
+  const handleAbandonChallenge = async (challengeId: string) => {
+    try {
+      setIsProcessingChallenge(true);
+      await classRepository.abandonChallenge(challengeId);
+      await loadStatusData();
+    } finally {
+      setIsProcessingChallenge(false);
+    }
+  };
+
+  const handleEquipTitle = async (title: string) => {
+    try {
+      await classRepository.equipTitle(title);
+      setIsTitleModalOpen(false);
+      await loadStatusData();
+    } catch (err) {
+      console.error("Erro ao equipar título:", err);
+    }
+  };
 
   const levelProgress = calculateLevelFromTotalXp(profile?.total_xp ?? 0);
   const totalAttributeScore = Object.values(attributes).reduce((acc, val) => acc + val, 0);
@@ -151,6 +275,291 @@ export const StatusView: React.FC<StatusViewProps> = ({ isActive }) => {
           </div>
         </div>
       </SystemPanel>
+
+      {/* Classes & Progression Section */}
+      <SystemPanel
+        title="Classes por Área & Título do Escolhido"
+        subtitle="10 Patamares Canônicos de Maestria (1 a 50.000 pts · Escala do Escolhido I a X)"
+        glow
+      >
+        <div className="space-y-4 my-2">
+          {/* Active Equipped Title Bar */}
+          <div className="relative p-3.5 bg-[#040814]/90 border border-[#dfa86c]/45 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-[inset_0_0_12px_rgba(223,168,108,0.06)]">
+            <GildedCorners size="xs" withInnerFrame={false} />
+            <div className="relative z-10 flex items-center gap-3">
+              <div className="w-9 h-9 border border-[#fde047]/60 bg-[#1c1308] flex items-center justify-center shrink-0 shadow-[0_0_8px_rgba(253,224,71,0.3)]">
+                <Crown className="w-5 h-5 text-[#fde047]" />
+              </div>
+              <div>
+                <span className="text-[10px] font-fantasy uppercase tracking-widest text-[#c5b08f] block">
+                  Título Principal Equipado
+                </span>
+                <span className="text-base font-fantasy font-bold text-[#fde047] tracking-wider">
+                  {profile?.title || "Aspirante a Desperto"}
+                </span>
+              </div>
+            </div>
+
+            <SystemButton
+              variant="secondary"
+              size="sm"
+              onClick={() => setIsTitleModalOpen(true)}
+              className="relative z-10 shrink-0"
+              icon={<Award className="w-3.5 h-3.5 text-[#dfa86c]" />}
+            >
+              Trocar Título Principal
+            </SystemButton>
+          </div>
+
+          {/* Active Class Challenge Card */}
+          {activeChallenge && (
+            <div
+              data-testid="active-challenge-card"
+              className="relative p-4 bg-gradient-to-r from-[#1c1308] via-[#060e20] to-[#1c1308] border-2 border-[#fde047]/70 shadow-[0_0_25px_rgba(253,224,71,0.18)]"
+            >
+              <GildedCorners size="sm" color="#fde047" diamondColor="#dfa86c" withInnerFrame={false} />
+              <div className="relative z-10 space-y-3">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#fde047] animate-pulse" />
+                    <span className="text-xs font-fantasy font-bold tracking-wider uppercase text-[#fde047]">
+                      {activeChallenge.status === "aceita"
+                        ? "✦ PROVAÇÃO ATIVA EM ANDAMENTO ✦"
+                        : "✦ PROVAÇÃO PROPOSTA PELA GRANDE SÁBIO ✦"}
+                    </span>
+                  </div>
+                  <span className="font-mono text-[10px] px-2 py-0.5 bg-[#dfa86c]/20 border border-[#dfa86c]/50 text-[#fde047] uppercase font-bold">
+                    Tier {CLASS_TIER_CONFIG[activeChallenge.target_tier - 1]?.roman || activeChallenge.target_tier} · {activeChallenge.area_id}
+                  </span>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-xs font-mono text-[#c5b08f]">
+                    Ascensão Alvo:{" "}
+                    <strong className="text-sm font-fantasy text-[#fde047] tracking-wide">
+                      {activeChallenge.name_class}
+                    </strong>
+                  </div>
+                  <div className="font-fantasy text-sm text-[#f8ecd5] font-semibold">
+                    ✦ {activeChallenge.challenge_title}
+                  </div>
+                  <p className="font-mono text-xs text-[#c5b08f] leading-relaxed">
+                    {activeChallenge.challenge_description}
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t border-[#dfa86c]/30 flex flex-wrap items-center justify-end gap-2">
+                  {activeChallenge.status === "proposta" ? (
+                    <>
+                      <SystemButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleAbandonChallenge(activeChallenge.id)}
+                        disabled={isProcessingChallenge}
+                      >
+                        Recusar
+                      </SystemButton>
+                      <SystemButton
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleAcceptChallenge(activeChallenge.id)}
+                        disabled={isProcessingChallenge}
+                      >
+                        Aceitar Provação
+                      </SystemButton>
+                    </>
+                  ) : (
+                    <>
+                      <SystemButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleAbandonChallenge(activeChallenge.id)}
+                        disabled={isProcessingChallenge}
+                      >
+                        Desistir do Desafio
+                      </SystemButton>
+                      <SystemButton
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleCompleteChallenge(activeChallenge.id)}
+                        disabled={isProcessingChallenge}
+                        className="shadow-[0_0_15px_rgba(253,224,71,0.5)] font-bold text-black bg-gradient-to-r from-[#dfa86c] to-[#fde047]"
+                      >
+                        Consegui concluir o desafio!
+                      </SystemButton>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 5 Area Classes Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {BASE_AREAS.map((area) => {
+              const currentClass = highestClasses[area.code];
+              const currentTier = currentClass?.tier ?? 1;
+              const currentClassName = currentClass?.name ?? `Aprendiz de ${area.name}`;
+              const masteryVal = attributes[area.code] ?? 0;
+              const eligibility = checkClassEligibility(area.code, currentTier, masteryVal);
+
+              const nextTierConfig = eligibility.nextTier
+                ? CLASS_TIER_CONFIG[eligibility.nextTier - 1]
+                : null;
+              const prevTierReq = CLASS_TIER_CONFIG[currentTier - 1]?.minMastery ?? 0;
+              const targetTierReq = nextTierConfig?.minMastery ?? 3000;
+              const tierSpan = Math.max(1, targetTierReq - prevTierReq);
+              const progressPct = eligibility.nextTier
+                ? Math.min(100, Math.max(0, Math.round(((masteryVal - prevTierReq) / tierSpan) * 100)))
+                : 100;
+
+              const isChallengingThisArea =
+                activeChallenge && activeChallenge.area_id === area.code;
+
+              return (
+                <div
+                  key={area.id}
+                  data-testid={`class-area-card-${area.code}`}
+                  className="relative p-3 bg-[#060e20]/90 border border-[#c89b55]/45 flex flex-col justify-between gap-3 overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
+                >
+                  <GildedCorners size="xs" withInnerFrame={false} />
+                  <div className="relative z-10 space-y-2">
+                    <div className="flex items-center justify-between gap-1 flex-wrap">
+                      <SystemBadge type="area" areaId={area.code} size="sm" />
+                      <span className="text-[9px] font-fantasy font-bold px-1.5 py-0.5 bg-[#1c1308] text-[#fde047] border border-[#dfa86c]/60">
+                        Tier {CLASS_TIER_CONFIG[currentTier - 1]?.roman || currentTier} · {CLASS_TIER_CONFIG[currentTier - 1]?.name}
+                      </span>
+                    </div>
+
+                    <div>
+                      <div
+                        className="font-fantasy font-bold text-xs text-[#f8ecd5] truncate"
+                        title={currentClassName}
+                      >
+                        {currentClassName}
+                      </div>
+                      <div className="text-[10px] text-[#c5b08f] font-mono mt-0.5">
+                        Maestria: <strong className="text-[#fde047]">{masteryVal} pts</strong>
+                      </div>
+                    </div>
+
+                    {/* Progress Bar towards Next Tier */}
+                    <div className="space-y-1 font-mono text-[9px]">
+                      <div className="flex justify-between text-[#c5b08f]">
+                        <span className="truncate max-w-[120px]" title={eligibility.nextTier ? `Rumo a ${eligibility.nextTierFormatted || eligibility.nextTierName}` : "Ápice Atingido"}>
+                          {eligibility.nextTier ? `Rumo a ${eligibility.nextTierFormatted || eligibility.nextTierName}` : "Ápice Atingido"}
+                        </span>
+                        <span>{eligibility.nextTier ? `${targetTierReq} pts` : "Max"}</span>
+                      </div>
+                      <div className="w-full bg-[#040814] h-1.5 overflow-hidden border border-[#c89b55]/40 p-[1px]">
+                        <div
+                          className="bg-gradient-to-r from-[#966422] to-[#fde047] h-full transition-all duration-500"
+                          style={{ width: `${progressPct}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Eligibility Banner & Action */}
+                  <div className="relative z-10 pt-2 border-t border-[#dfa86c]/20">
+                    {eligibility.isEligible && !activeChallenge ? (
+                      <div
+                        data-testid={`eligibility-banner-${area.code}`}
+                        className="p-2 bg-gradient-to-r from-[#dfa86c]/15 to-[#fde047]/20 border border-[#fde047]/60 space-y-1.5 text-center"
+                      >
+                        <div className="text-[10px] font-fantasy font-bold text-[#fde047] tracking-wider uppercase flex items-center justify-center gap-1">
+                          <Sparkles className="w-3 h-3 text-[#fde047]" />
+                          <span>Elegível: {eligibility.nextTierFormatted || eligibility.nextTierName}!</span>
+                        </div>
+                        <SystemButton
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleRequestChallenge(area.code)}
+                          disabled={isProcessingChallenge}
+                          className="w-full text-[10px] py-1"
+                        >
+                          Solicitar Desafio da G.S
+                        </SystemButton>
+                      </div>
+                    ) : isChallengingThisArea ? (
+                      <div className="text-[10px] font-mono text-center text-[#fde047] py-1 bg-[#dfa86c]/10 border border-[#dfa86c]/30">
+                        Provação Ativa
+                      </div>
+                    ) : (
+                      <div className="text-[10px] font-mono text-center text-[#a39171] py-1">
+                        {eligibility.pointsRemaining > 0
+                          ? `Faltam ${eligibility.pointsRemaining} pts`
+                          : "Patamar Máximo"}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </SystemPanel>
+
+      {/* Title Selection Modal */}
+      <SystemModal
+        isOpen={isTitleModalOpen}
+        onClose={() => setIsTitleModalOpen(false)}
+        title="TÍTULOS DISPONÍVEIS // ESCOLHIDO"
+        subtitle="Selecione uma das suas classes desbloqueadas para equipar como Título Principal"
+        icon={<Crown className="w-5 h-5 text-[#fde047]" />}
+      >
+        <div className="space-y-3 font-sans">
+          <div className="text-xs font-mono text-[#c5b08f]">
+            O título escolhido será proclamado pela Grande Sábio e exibido publicamente no seu registro.
+          </div>
+
+          <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+            {unlockedClasses.map((cls) => {
+              const isEquipped = profile?.title === cls.name;
+              return (
+                <div
+                  key={cls.id}
+                  className={`p-3 border flex items-center justify-between gap-2 transition-all cursor-pointer ${
+                    isEquipped
+                      ? "bg-[#1c1308] border-[#fde047] shadow-[0_0_12px_rgba(253,224,71,0.25)]"
+                      : "bg-[#060e20]/80 border-[#dfa86c]/30 hover:border-[#dfa86c]/70 hover:bg-[#0b1329]"
+                  }`}
+                  onClick={() => handleEquipTitle(cls.name)}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-fantasy font-bold text-xs text-[#f8ecd5]">
+                        {cls.name}
+                      </span>
+                      <span className="text-[9px] font-mono px-1.5 py-0.5 bg-[#dfa86c]/20 border border-[#dfa86c]/40 text-[#fde047]">
+                        Tier {CLASS_TIER_CONFIG[cls.tier - 1]?.roman || cls.tier} · {cls.area_id}
+                      </span>
+                    </div>
+                    {cls.description && (
+                      <p className="text-[11px] text-[#c5b08f] line-clamp-1 mt-0.5">
+                        {cls.description}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="shrink-0">
+                    {isEquipped ? (
+                      <span className="text-[10px] font-fantasy font-bold px-2 py-1 bg-[#dfa86c] text-black flex items-center gap-1">
+                        <Check className="w-3 h-3" />
+                        Equipado
+                      </span>
+                    ) : (
+                      <SystemButton variant="ghost" size="sm" onClick={() => handleEquipTitle(cls.name)}>
+                        Equipar
+                      </SystemButton>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </SystemModal>
 
       {/* Pentagon Radar Chart & Attributes Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

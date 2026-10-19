@@ -3,6 +3,7 @@ import { gameService } from "./gameService";
 import { soundService } from "./soundService";
 import { hapticFeedback } from "./haptics";
 import { ttsService } from "./ttsService";
+import { gsVoiceService } from "./gsVoiceService";
 import { localDb } from "./db";
 import { logger } from "./logger";
 
@@ -10,7 +11,7 @@ export const WORLD_VOICE_TTS_KEY = "world_voice_tts_enabled";
 
 export interface WorldVoiceItem {
   id: string;
-  type: "LEVEL_UP" | "SKILL_EVOLVED_EXTRA" | "SKILL_ACQUIRED" | "PROJECT_COMPLETE";
+  type: "LEVEL_UP" | "SKILL_EVOLVED_EXTRA" | "SKILL_ACQUIRED" | "PROJECT_COMPLETE" | "CLASS_EVOLVED";
   title: string;
   subtitle: string;
   description: string;
@@ -25,6 +26,9 @@ export interface WorldVoiceItem {
     mastery?: number;
     areaId?: string;
     skillTier?: string;
+    className?: string;
+    tier?: number;
+    tierName?: string;
   };
 }
 
@@ -33,6 +37,7 @@ export const OFFICIAL_AUDIO_MAP: Record<string, string> = {
   SKILL_ACQUIRED: "/audio/voice/skill-acquired.mp3",
   SKILL_EVOLVED_EXTRA: "/audio/voice/skill-evolved-extra.mp3",
   PROJECT_COMPLETE: "/audio/voice/skill-acquired.mp3",
+  CLASS_EVOLVED: "/audio/voice/level-up.mp3",
 };
 
 class WorldVoiceService {
@@ -108,6 +113,7 @@ class WorldVoiceService {
       this.currentAudio = null;
     }
     ttsService.stop();
+    gsVoiceService.stopCurrentSpeech();
     if (this.queue.length > 0) {
       const next = this.queue.shift()!;
       this.currentItem = next;
@@ -147,6 +153,11 @@ class WorldVoiceService {
     const isEnabled = await this.isTtsEnabled();
     if (!isEnabled) return;
 
+    if (this.currentItem.type === "CLASS_EVOLVED") {
+      const spoke = await gsVoiceService.speakWithGs(this.currentItem.spokenText);
+      if (spoke) return;
+    }
+
     const audioSrc = OFFICIAL_AUDIO_MAP[this.currentItem.type];
     if (audioSrc && typeof Audio !== "undefined") {
       if (this.currentAudio) {
@@ -162,7 +173,7 @@ class WorldVoiceService {
   private async triggerPresentation(item: WorldVoiceItem): Promise<void> {
     // 1. Play Sound
     try {
-      if (item.type === "LEVEL_UP") {
+      if (item.type === "LEVEL_UP" || item.type === "CLASS_EVOLVED") {
         soundService.playLevelUp();
       } else if (item.type === "SKILL_EVOLVED_EXTRA") {
         soundService.playSkillEvolved();
@@ -177,7 +188,7 @@ class WorldVoiceService {
 
     // 2. Trigger Haptic
     try {
-      if (item.type === "LEVEL_UP") {
+      if (item.type === "LEVEL_UP" || item.type === "CLASS_EVOLVED") {
         hapticFeedback.levelUp();
       } else if (item.type === "SKILL_EVOLVED_EXTRA") {
         hapticFeedback.skillEvolved();
@@ -188,10 +199,15 @@ class WorldVoiceService {
       // Ignore
     }
 
-    // 3. Play Official Voice MP3 Audio if enabled
+    // 3. Play Speech Audio if enabled
     try {
       const isEnabled = await this.isTtsEnabled();
       if (isEnabled) {
+        if (item.type === "CLASS_EVOLVED") {
+          const spoken = await gsVoiceService.speakWithGs(item.spokenText);
+          if (spoken) return;
+        }
+
         const audioSrc = OFFICIAL_AUDIO_MAP[item.type];
         if (audioSrc && typeof Audio !== "undefined") {
           if (this.currentAudio) {
@@ -290,6 +306,24 @@ class WorldVoiceService {
           },
         });
       }
+    } else if (event.type === "CLASS_EVOLVED") {
+      const { areaId, tier, tierName, className } = event.payload;
+      const spokenText = `Aviso da Voz do Mundo. Provação da esfera ${areaId} superada. O Escolhido ascendeu ao patamar de ${tierName}, consagrado com o título de ${className}.`;
+      this.enqueue({
+        id,
+        type: "CLASS_EVOLVED",
+        title: `ASCENSÃO DE CLASSE: ${className.toUpperCase()}`,
+        subtitle: `[VOZ DO MUNDO // PATAMAR ${tierName.toUpperCase()} — ${areaId}]`,
+        description: `Aviso da Voz do Mundo. A provação prática da esfera [${areaId}] foi concluída com sucesso. O Escolhido ascendeu ao patamar ${tier} (${tierName}) e recebeu o título honorífico de '${className}'. Registro de classe gravado no Sistema.`,
+        spokenText,
+        colorVariant: "gold",
+        details: {
+          areaId,
+          className,
+          tier,
+          tierName,
+        },
+      });
     }
   }
 }

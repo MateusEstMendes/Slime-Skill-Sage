@@ -145,15 +145,27 @@ export const ClassSchema = z.object({
 export type Class = z.infer<typeof ClassSchema>;
 
 // 4. Class Challenge
-export const ClassChallengeStatusSchema = z.enum(["pendente", "concluido", "falho"]);
+export const ClassChallengeStatusSchema = z.enum([
+  "proposta",
+  "aceita",
+  "concluida",
+  "desistida",
+  "pendente",
+  "falho",
+]);
 export type ClassChallengeStatus = z.infer<typeof ClassChallengeStatusSchema>;
 
 export const ClassChallengeSchema = z.object({
   id: z.string(),
-  class_id: z.string(),
-  title: z.string(),
-  description: z.string(),
-  status: ClassChallengeStatusSchema.default("pendente"),
+  class_id: z.string().optional(),
+  area_id: AreaCodeSchema.default("INT"),
+  target_tier: z.number().int().min(2).max(5).default(2),
+  name_class: z.string().default("Iniciante"),
+  challenge_title: z.string().default("Provação de Classe"),
+  challenge_description: z.string().default("Conclua a provação prática."),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  status: ClassChallengeStatusSchema.default("proposta"),
   completed_at: z.string().nullable().default(null),
   created_at: z.string(),
 });
@@ -390,11 +402,23 @@ export const DeleteMissionProposalSchema = z.object({
 });
 export type DeleteMissionProposal = z.infer<typeof DeleteMissionProposalSchema>;
 
+export const ProposeClassChallengeProposalSchema = z.object({
+  type: z.literal("propose_class_challenge"),
+  area_id: AreaCodeSchema,
+  target_tier: z.number().int().min(2).max(5),
+  name_class: z.string().min(1),
+  challenge_title: z.string().min(1),
+  challenge_description: z.string().min(1),
+  explanation: z.string().optional(),
+});
+export type ProposeClassChallengeProposal = z.infer<typeof ProposeClassChallengeProposalSchema>;
+
 export const ProposalSchema = z.discriminatedUnion("type", [
   CreateProjectTreeProposalSchema,
   AddMissionsProposalSchema,
   UpdateMissionProposalSchema,
   DeleteMissionProposalSchema,
+  ProposeClassChallengeProposalSchema,
 ]);
 export type Proposal = z.infer<typeof ProposalSchema>;
 

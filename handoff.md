@@ -2,8 +2,8 @@
 
 ## Status Atual
 
-- **Última Fase Concluída:** Fase 7 — Modo Coordenador da G.S, Validação Anti-Duplicatas, Snapshot de Memória, Densificação de Atividades e Áudios Oficiais de Projeto
-- **Próxima Fase:** Fase 8 — Onboarding: Apresentação da G.S com Áudios Oficiais, Typewriter e Revelação Inicial via API
+- **Última Fase Concluída:** Fase 9 — Motor de Jogo (Parte 2): Classes por Área e Evolução com Desafio Autodeclarado
+- **Próxima Fase:** Fase 10 — Evolução de Habilidades (7 Níveis Canônicos), Roleta Animada (SVG + Framer Motion) e Festival da Colheita com Altar de Fusão/Sacrifício
 - **Data da Atualização:** 2026-10-19
 
 ## Histórico de Fases Concluídas
@@ -238,17 +238,106 @@
   - Typecheck: 0 erros
   - Lint: 0 erros
 
-- **Pontos de Atenção para a Próxima Fase (Fase 8 — Onboarding: 5 Perguntas da G.S, Revelação de Raça Tensura e Rank de Ameaça):**
+### Fase 8 — Onboarding: Apresentação da G.S com Áudios Oficiais, Efeito Typewriter e Revelação Inicial via API
+
+- **Mudanças Implementadas:**
   - **1. Sequência Cinemática de Onboarding (Tela Cheia):**
-    - Efeito typewriter em texto gótico Dark Fantasy simulando o despertar da consciência da Grande Sábio.
-    - Questionário pré-determinado de 5 perguntas com áudios em MP3 da voz oficial `Kore` (`onboarding-q1.mp3` a `q5.mp3`).
+    - Criado componente `OnboardingScreen.tsx` em modo tela cheia com estética Dark Fantasy Gilded RPG e animação typewriter inspirada no despertar da Grande Sábio em *Tensura*.
+    - Integração de 5 perguntas fixas com áudios em MP3 gravados pela voz neural `Kore` (`onboarding-q1.mp3` a `onboarding-q5.mp3`) em `public/audio/voice/`.
+    - Suporte a seleção por toque e digitação fluida.
   - **2. Motor Puro de Determinação de Raça e Rank (`@slime-sage/game`):**
-    - Determina a Raça (*Tensura*: Slime, Kijin, Draconiano, Majin, Homem-Fera) e o Rank de Ameaça (*Tensura*: Classe Menor, Hazard, Calamity) a partir da matriz de respostas das 5 perguntas.
-    - Impacto cosmético/narrativo no perfil sem quebrar o ledger imutável de XP.
-  - **3. Revelação Cerimonial e Transição:**
-    - Proclamação da G.S via API (`POST /tts`) com voz `Kore`, gravação no `profile` (`race`, `rank_threat`, `onboarding_done: true`) e redirecionamento direto para o Chat da G.S com o gatilho da primeira conquista (criação do projeto denso de 7 a 12 missões).
-  - **4. Controle Dev:**
-    - Botão "Resetar Onboarding (Re-despertar)" no `DevPanel.tsx`.
+    - Criado `packages/game/src/onboarding.ts` e testes em `onboarding.test.ts`.
+    - Matriz determinística mapeando respostas das 5 perguntas para as 5 Raças canônicas de *Tensura* (`Slime`, `Kijin`, `Draconiano`, `Majin`, `Homem-Fera`) e Ranks de Ameaça (`Classe Menor`, `Hazard`, `Calamity`).
+    - Atribuição canônica de atributo primário da Raça e concessão de Habilidade Intrínseca inicial (+25 pontos de maestria no despertar).
+  - **3. Revelação Cerimonial & Transição de Despertar:**
+    - Proclamação da Grande Sábio com voz neural `Kore`, gravação no `profile` (`race`, `rank_threat`, `onboarding_done: true`) e redirecionamento direto para a tela principal/chat da G.S.
+    - Persistência e auditoria de concessão da Habilidade Intrínseca no Ledger imutável (`xp_event`).
+  - **4. Controles Dev:**
+    - Botão "Resetar Onboarding (Re-despertar)" adicionado ao `DevPanel.tsx` para reiniciar a experiência do zero a qualquer momento.
+  - **5. Melhorias de UI / UX e Debug da Fase 8:**
+    - Correção dos sliders e barras de abas esmagadas no `DevPanel.tsx` e `SettingsModal.tsx` (`shrink-0` e `min-h-0` + estilização dourada de `::-webkit-scrollbar`).
+    - Voz da G.S sincronizada com o texto no chat (`gsVoiceService.prepareSpeech` antes da exibição do balão de resposta).
+    - Slider configurável de velocidade de fala (`1.0x` a `2.0x`, padrão `1.25x`).
+    - Botões de cancelamento de requisição (`AbortSignal`), cancelamento de áudio, regerar resposta e edição de mensagens anteriores com reconstituição de contexto.
+    - Rolagem exclusiva no container de mensagens do chat (`h-[100dvh]` na viewport com caixa de entrada fixa).
+    - Barramento reativo `projectRepository.subscribe()` atualizando instantaneamente Projetos, Home e Skills ao aceitar decretos.
+    - Redesign do Diagrama de Atributos com "Horizonte Vivo" (escala dinâmica que expande e recua por patamar), curva de aprendizado exponencial suave (expoente 1.25), aura sintonizada pela cor do atributo dominante, nebulosa de mana SVG e runas flutuantes.
+    - Unificação canônica da identidade do usuário como **"O Escolhido"** em toda a base de código.
+- **Arquivos Criados / Modificados:**
+  - `packages/game/src/onboarding.ts`, `packages/game/src/onboarding.test.ts`, `packages/game/src/attributes.ts`, `packages/game/src/skills.ts`
+  - `apps/pwa/src/components/OnboardingScreen.tsx`, `apps/pwa/src/components/OnboardingScreen.test.tsx`
+  - `apps/pwa/public/audio/voice/onboarding-*.mp3`, `apps/pwa/src/services/gsVoiceService.ts`
+  - `apps/pwa/src/components/views/GsChatView.tsx`, `apps/pwa/src/components/views/StatusView.tsx`, `apps/pwa/src/components/system/RadarChart.tsx`
+  - `apps/pwa/src/components/DevPanel.tsx`, `apps/pwa/src/components/SettingsModal.tsx`
+- **Estado dos Testes Automáticos:**
+  - Monorepo: 4/4 pacotes passando | 215/215 testes passando (100% verde)
+
+### Fase 9 — Motor de Jogo (Parte 2): Classes por Área e Evolução com Desafio Autodeclarado
+
+- **Mudanças Implementadas:**
+  - **1. Escala Canônica de 10 Patamares de Classe por Área (`packages/game/src/classes.ts`):**
+    - Mapeamento rigoroso dos 10 Patamares (Tier 1 a 10) alinhados à progressão de maestria de 0 a 50.000 pontos:
+      - `Tier I: Aprendiz (0 pts)`
+      - `Tier II: Iniciante (5.000 pts)`
+      - `Tier III: Adepto (10.000 pts)`
+      - `Tier IV: Veterano (15.000 pts)`
+      - `Tier V: Especialista (20.000 pts)`
+      - `Tier VI: Mestre (25.000 pts)`
+      - `Tier VII: Grão-Mestre (30.000 pts)`
+      - `Tier VIII: Sábio (35.000 pts)`
+      - `Tier IX: Monarca (40.000 pts)`
+      - `Tier X: Lendário (45.000 pts / Ápice 50.000 pts)`
+    - Formatação canônica unificada com colchetes e numerais romanos `[Nome da Classe <ROMAN>]` via função pura `formatClassTitle(name, tier)` (ex: `[Analista Metódico IV]`, `[Aprendiz da Lógica I]`, `[A Onisciência Absoluta X]`).
+    - Classes base canônicas por área: `INT: "[Aprendiz da Lógica I]"`, `FOR: "[Corpo Desperto I]"`, `DIS: "[Iniciante da Vontade I]"`, `CRI: "[Discípulo do Traço I]"`, `SOC: "[Ouvinte Atento I]"`.
+  - **2. Máquina de Estados de Desafios e Banco Determinístico:**
+    - Transições estritas de `ClassChallengeStatus`: `proposta -> aceita -> concluida / desistida` via função pura `transitionChallengeStatus`.
+    - Banco offline determinístico e gerador puro de desafios de provação para todos os patamares 2 a 10.
+    - Suporte a geração dinâmica via IA pela tool `propose_class_challenge` no backend Hono (`apps/api/src/services/geminiService.ts`).
+  - **3. Repositório IndexedDB de Classes e Perfil (`classRepository.ts`):**
+    - Auto-inicialização auto-curável das 5 classes base com formato `[Nome <ROMAN>]`.
+    - Transações de proposição, aceitação, desistência e conclusão de desafio.
+    - Concessão de nova classe e equipamento de Título Principal com auditoria no perfil.
+  - **4. Integração Reativa no Ledger e GameService (`gameService.ts`):**
+    - Eventos `CLASS_EVOLVED` e `MASTERY_GAINED` adicionados ao Ledger imutável.
+    - `getAttributes()` refatorado para calcular atributos diretamente de todos os eventos do Ledger (`calculateAttributesFromLedger`), mesclando com o teto de habilidades existentes via `Math.max`.
+    - `addManualMastery(areaId, amount)` atualiza `area.current_xp` e despacha `MASTERY_GAINED`, garantindo atualização imediata do Radar e dos Cartões de Área.
+  - **5. Interface de Usuário & Anúncio Solene da Voz do Mundo:**
+    - `StatusView.tsx`: exibição dos 5 cartões de área com badges de Tier em numerais romanos, barra de progresso para o próximo patamar, banner de elegibilidade dourado, card de provação ativa e modal de seleção de Título Principal.
+    - Anúncio cerimonial da Voz do Mundo via `worldVoiceService.ts` com síntese neural `Kore`, som de subida de nível e haptics.
+    - `DevPanel.tsx`: atalhos rápidos `+5k` (salto de tier), `+1k` (sub-grau) e `+150` (micro-ajuste) por área.
+  - **6. Correções de Infraestrutura (Vite 6 no Codespaces):**
+    - Configurado `allowedHosts: true` e `hmr: { clientPort: 443 }` em `apps/pwa/vite.config.ts` para contornar bloqueio de host em túneis HTTPS do GitHub Codespaces.
+- **Arquivos Criados / Modificados:**
+  - `packages/game/src/classes.ts`, `packages/game/src/classes.test.ts`, `packages/game/src/classesEvals.test.ts`, `packages/game/src/ledger.ts`, `packages/game/src/index.ts`
+  - `packages/shared/src/index.ts` — [schemas ClassChallenge e ProposeClassChallengeProposal]
+  - `apps/api/src/services/geminiService.ts` — [tool propose_class_challenge com suporte a 10 patamares e [Nome <ROMAN>]]
+  - `apps/pwa/src/services/classRepository.ts`, `apps/pwa/src/services/classRepository.test.ts`
+  - `apps/pwa/src/services/gameService.ts`, `apps/pwa/src/services/gameService.test.ts`, `apps/pwa/src/services/worldVoiceService.ts`
+  - `apps/pwa/src/components/views/StatusView.tsx`, `apps/pwa/src/components/views/StatusView.test.tsx`
+  - `apps/pwa/src/components/DevPanel.tsx`, `apps/pwa/vite.config.ts`
+  - `roadmap.md`, `feedback.md`, `handoff.md`
+- **Estado dos Testes Automáticos:**
+  - Monorepo: 4/4 pacotes passando | 37/37 suítes | 235/235 testes passando (100% verde)
+    - `@slime-sage/pwa`: 127/127 testes (28 arquivos)
+    - `@slime-sage/game`: 86/86 testes (8 arquivos — 97.3% de cobertura)
+    - `@slime-sage/shared`: 11/11 testes (1 arquivo)
+    - `@slime-sage/api`: 11/11 testes (1 arquivo)
+  - Typecheck: 0 erros
+  - Lint: 0 erros
+
+- **Pontos de Atenção para a Próxima Fase (Fase 10 — Evolução de Habilidades (7 Níveis Canônicos), Roleta Animada (SVG + Framer Motion) e Festival da Colheita com Altar de Fusão/Sacrifício):**
+  - **1. Escada Canônica de Habilidades (7 Níveis):**
+    - `Intrínseca` (25 pts no despertar) → `Comum` (0-100 pts) → `Especial` (100-300 pts) → `Extra` (300-600 pts) → `Única` (600-1200 pts) → `Suprema` (1200-2500 pts) → `Primordial` (2500+ pts).
+    - Habilidades pertencentes ao atributo primário da Raça do Escolhido recebem **+2 pontos fixos de maestria extra** por missão concluída.
+  - **2. Roleta Esotérica Animada (Evolução a partir do Grau Extra):**
+    - De `Extra` para cima, a evolução não é automática: ativa a **Roleta Esotérica** (Padrão Hardcore: 20% de chance base, +10% de piedade cumulativa por tentativa falhada, teto de 80%, cooldown de 48h, sem perda de maestria adquirida).
+    - Animação imersiva com SVG concêntrico, círculos mágicos, runas reluzentes e desaceleração suave via Framer Motion.
+  - **3. Festival da Colheita & Altar de Fusão/Sacrifício:**
+    - Ativação manual após 100% das metas da semana/mês serem batidas na Agenda, concedendo celebração solene da Grande Sábio, efeito visual de mana transbordante e 2x XP.
+    - Abertura do **Altar de Sacrifício e Fusão de Habilidades**:
+      - Detecção de sinergias 100% determinística (sem IA) por Matriz de Domínios e Tags com fios de mana em SVG.
+      - Desafio de Provação gerado pela G.S em 2 disparos atômicos (economia de 70% de tokens), respondido no celular com Pílulas de Escolha Rápida (1 toque) e suporte a digitação por voz (Speech-to-Text).
+      - Exigência de cumprimento de âncoras reais de telemetria do PWA (Modo Foco e entregas).
 
 
 

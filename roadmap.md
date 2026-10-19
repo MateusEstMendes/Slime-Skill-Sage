@@ -65,12 +65,12 @@ Legenda: `[ ]` Pendente | `[/]` Em andamento | `[x]` Concluído e Aprovado pelo 
 - [x] 8.3 Testes do Usuário
 - [x] 8.4 Debug e Atualização de Handoff/Feedback
 
-## Fase 9 — Motor de Jogo (Parte 2): Classes por  Área e Evolução com Desafio Autodeclarado
+## Fase 9 — Motor de Jogo (Parte 2): Classes por Área e Evolução com Desafio Autodeclarado
 
-- [ ] 9.1 Desenvolvimento
-- [ ] 9.2 Testes Automáticos
-- [ ] 9.3 Testes do Usuário
-- [ ] 9.4 Debug e Atualização de Handoff/Feedback
+- [x] 9.1 Desenvolvimento
+- [x] 9.2 Testes Automáticos
+- [x] 9.3 Testes do Usuário
+- [x] 9.4 Debug e Atualização de Handoff/Feedback
 
 ## Fase 10 — Evolução de Habilidades (7 Níveis Canônicos), Roleta Animada (SVG + Framer Motion) e Festival da Colheita com Altar de Fusão/Sacrifício
 
