@@ -66,7 +66,7 @@ export class GsVoiceService {
 
     const cleanText = text.trim();
     const hash = computeTextHash(cleanText);
-    const cacheKey = `tts_cache_${hash}`;
+    const cacheKey = `tts_v2_cache_${hash}`;
 
     try {
       // 1. Tenta recuperar do cache local no IndexedDB

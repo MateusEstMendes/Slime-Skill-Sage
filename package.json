@@ -10,6 +10,8 @@
     "lint": "eslint .",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "eval": "pnpm --filter @slime-sage/game test src/coordinatorEvals.test.ts",
+    "eval:live": "pnpm --filter @slime-sage/api exec tsx ../../evals/run-live-evals.ts",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
   },
   "devDependencies": {

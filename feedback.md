@@ -123,7 +123,7 @@
   3. Em [`vite.config.ts`](file:///workspaces/Skill-Grinding/apps/pwa/vite.config.ts) e [`apiClient.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/apiClient.ts): configurado listener de erro no proxy do Vite para retornar HTTP 503 com payload JSON descritivo (`BACKEND_OFFLINE`), e mensagens de erro no frontend agora instruem com clareza a verificação do comando `pnpm dev`.
   4. Em [`server.ts`](file:///workspaces/Skill-Grinding/apps/api/src/server.ts): suporte a múltiplos caminhos de resolução do arquivo `.env`.
   5. Suíte completa de testes executada e 100% verde (161/161 testes passando).
-- **Status:** [ ] Aguardando validação do usuário
+- **Status:** [x] Validado pelo Usuário
 
 ### Rodada 2 de Testes do Usuário (Depreciação de Modelo Gemini & Modo de Hibernação Neural)
 
@@ -164,4 +164,28 @@
     5. Gradientes e bordas refinados em ouro antigo e obsidiana profunda.
   - Em [`SystemBadge.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/system/SystemBadge.tsx): todos os badges convertidos de `rounded` para `rounded-none`.
   - Suíte completa de testes executada com 100% de aprovação (161/161 testes passando).
-- **Status:** [ ] Aguardando validação visual do usuário
+- **Status:** [x] Validado pelo Usuário
+
+## Fase 7 — Modo Coordenador da G.S, Validação Anti-Duplicatas, Snapshot de Memória e Áudios Oficiais de Projeto
+
+### Rodada 1 de Testes do Usuário (Densificação de Atividades, Áudios de Início/Fim e Preparação Silenciosa de Evolução)
+
+- **Feedback do Usuário:**
+  - "Algo que eu queria adicionar é que a G.S tem que ter um audio já pronto quanto um plano for aceito e a habilidade ja foi especificada, e ai quando ele termina o projeto a habilidade tem um audio dado, já pronto, entretanto eu quero que apenas seja isso caso, alem disso queria que a G.S desse mais atividades, são poucas atividades para muitas coisas, aprender rust por exemplo, tem muita coisa que precisa aprender teria que ser tipo, atv 1( variaveis) , condicionais e etc"
+  - "então as coisas da fase 10 coloque no plan.md e começe a fazer os outros 2 topicos"
+- **Implementações e Soluções Aplicadas:**
+  1. **Densificação de Missões do Modo Coordenador (7 a 12 atividades em DAG Misto):**
+     - Em [`packages/shared/src/index.ts`](file:///workspaces/Skill-Grinding/packages/shared/src/index.ts) e [`apps/api/src/services/geminiService.ts`](file:///workspaces/Skill-Grinding/apps/api/src/services/geminiService.ts): atualizadas as diretrizes da G.S (`GS_COORDINATOR_RULES` e schema de `create_project_tree`) para que tópicos amplos/técnicos gerem planos granulares e realistas com entre 7 e 12 missões dispostas em topologia DAG mista (paralelas + dependências lineares onde essencial).
+  2. **Preparação Oculta de Evolução de Habilidade:**
+     - A G.S gera silenciosamente `next_evolution_name` e `next_evolution_description` para `target_skill` durante a formulação do plano e **nunca** revela esse nome no chat para preservar o mistério arcano.
+     - Persistência garantida no IndexedDB (`projectRepository.ts`) e preservação no diff de habilidades (`classifySkillsDiff` e `preCardValidator.ts`).
+  3. **Áudio de Início de Projeto (`project-start.mp3`):**
+     - Gerado clipe de voz oficial com o modelo `gemini-3.8-flash-tts` e voz neural `Kore`: *"Aviso da Grande Sábio. Parâmetros do projeto aceitos. Protocolo de treino iniciado."* salvo em [`apps/pwa/public/audio/voice/project-start.mp3`](file:///workspaces/Skill-Grinding/apps/pwa/public/audio/voice/project-start.mp3).
+     - Em [`GsChatView.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/views/GsChatView.tsx): ao aceitar uma proposta (`handleAcceptProposal`), se o projeto possuir `target_skill`, dispara `worldVoiceService.playVoiceClip("/audio/voice/project-start.mp3")`.
+  4. **Áudio Solene de Conclusão de Projeto Vinculado a Skill:**
+     - Ao concluir a última missão de um projeto no [`gameService.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/gameService.ts), o evento `PROJECT_COMPLETE` é emitido com `hasSkill: true/false`.
+     - Em [`worldVoiceService.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/worldVoiceService.ts): o modal cerimonial e o áudio solene de habilidade adquirida (`/audio/voice/skill-acquired.mp3`) são disparados **exclusivamente** quando `hasSkill === true`.
+  5. **Planejamento da Fase 10 em `plan.md`:**
+     - Documentada a mecânica de ascensão Comum → Extra aos 100 pontos de maestria consumindo o segredo previamente arquivado na criação do projeto, com modal cerimonial e anúncio solene da G.S.
+- **Status:** [/] Aguardando Validação do Usuário
+

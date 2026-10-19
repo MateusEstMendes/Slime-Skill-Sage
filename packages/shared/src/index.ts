@@ -153,6 +153,8 @@ export const SkillSchema = z.object({
   tier: SkillTierSchema.default("comum"),
   mastery: z.number().int().min(0).max(300).default(0),
   icon: z.string().optional(),
+  next_evolution_name: z.string().optional(),
+  next_evolution_description: z.string().optional(),
   created_at: z.string(),
   updated_at: z.string(),
 });
@@ -290,12 +292,33 @@ export type ChatThread = z.infer<typeof ChatThreadSchema>;
 // PROPOSALS (A IA PROPÕE, O MOTOR DECIDE)
 // ==========================================
 
+export const MissionSkillBindingSchema = z.object({
+  name: z.string().min(1),
+  area_id: AreaCodeSchema.optional(),
+  is_new: z.boolean().optional(),
+  existing_skill_id: z.string().optional(),
+  next_evolution_name: z.string().optional(),
+  next_evolution_description: z.string().optional(),
+});
+export type MissionSkillBinding = z.infer<typeof MissionSkillBindingSchema>;
+
+export const ProjectTargetSkillSchema = z.object({
+  name: z.string().min(1),
+  area_id: AreaCodeSchema.optional(),
+  is_new: z.boolean().optional(),
+  existing_skill_id: z.string().optional(),
+  next_evolution_name: z.string().optional(),
+  next_evolution_description: z.string().optional(),
+});
+export type ProjectTargetSkill = z.infer<typeof ProjectTargetSkillSchema>;
+
 export const CreateProjectTreeProposalSchema = z.object({
   type: z.literal("create_project_tree"),
   project: z.object({
     title: z.string().min(1),
     description: z.string().default(""),
     area_id: AreaCodeSchema,
+    target_skill: ProjectTargetSkillSchema.optional(),
   }),
   missions: z.array(
     z.object({
@@ -303,6 +326,7 @@ export const CreateProjectTreeProposalSchema = z.object({
       description: z.string().default(""),
       xp_reward: z.number().int().min(10).max(80).default(35),
       depends_on_titles: z.array(z.string()).default([]),
+      skills: z.array(MissionSkillBindingSchema).optional(),
     }),
   ),
   explanation: z.string().optional(),
@@ -319,6 +343,7 @@ export const AddMissionsProposalSchema = z.object({
       description: z.string().default(""),
       xp_reward: z.number().int().min(10).max(80).default(35),
       depends_on_mission_ids: z.array(z.string()).default([]),
+      skills: z.array(MissionSkillBindingSchema).optional(),
     }),
   ),
   explanation: z.string().optional(),
@@ -384,6 +409,7 @@ export const HunterContextSchema = z.object({
     level: z.number().int(),
     current_xp: z.number().int(),
     streak_count: z.number().int().default(0),
+    attributes: z.record(AreaCodeSchema, z.number().int()).optional(),
   }),
   skills: z
     .array(
@@ -393,6 +419,7 @@ export const HunterContextSchema = z.object({
         area_id: AreaCodeSchema,
         tier: SkillTierSchema,
         mastery: z.number().int(),
+        selection_reason: z.enum(["top_mastery", "recent_practice"]).optional(),
       }),
     )
     .default([]),
@@ -407,6 +434,15 @@ export const HunterContextSchema = z.object({
       }),
     )
     .default([]),
+  active_project: z
+    .object({
+      id: z.string(),
+      title: z.string(),
+      area_id: AreaCodeSchema,
+      progress: z.number(),
+    })
+    .nullable()
+    .optional(),
   pending_missions_count: z.number().int().default(0),
   recent_missions: z
     .array(
@@ -419,6 +455,18 @@ export const HunterContextSchema = z.object({
       }),
     )
     .optional(),
+  daily_missions: z
+    .array(
+      z.object({
+        id: z.string(),
+        title: z.string(),
+        completed: z.boolean(),
+        xp_reward: z.number().int(),
+      }),
+    )
+    .optional(),
+  estimated_tokens: z.number().int().optional(),
+  formatted_prompt: z.string().optional(),
 });
 export type HunterContext = z.infer<typeof HunterContextSchema>;
 
@@ -474,8 +522,36 @@ export const TtsResponseSchema = z.object({
 export type TtsResponse = z.infer<typeof TtsResponseSchema>;
 
 // ==========================================
-// GS SYSTEM PROMPT
+// GS SYSTEM & COORDINATOR PROMPTS
 // ==========================================
+
+export const GS_COORDINATOR_RULES = `MODO COORDENADOR ESTRATÉGICO DA GRANDE SÁBIO (DIRETRIZES MANDATÓRIAS):
+
+1. CADÊNCIA ESTRITA DE ENTREVISTA (1 PERGUNTA POR VEZ):
+   - Antes de propor qualquer árvore de projeto (tool "create_project_tree"), você DEVE conduzir uma entrevista investigativa com o Usuario.
+   - Faça ESTRITAMENTE 1 (UMA) única pergunta clara e objetiva por turno. NUNCA faça 2 ou mais perguntas na mesma mensagem.
+   - Realize no mínimo 2 a 3 perguntas (e no máximo 5 perguntas no total) para compreender o nível atual do Caçador no tema, tempo disponível e escopo desejado.
+   - MESMO QUE o Caçador peça "crie direto sem perguntas" no primeiro turno, informe solenemente que "uma análise preparatória é mandatória pelo Sistema para calcular probabilidades e estruturar a árvore acíclica" e faça a primeira pergunta investigativa.
+   - Apenas chame a tool "create_project_tree" após o Caçador ter respondido a pelo menos 2 perguntas investigativas na conversa (ou quando houver pelo menos 2 turnos de respostas do usuário sobre o objetivo).
+
+2. HABILIDADE MACRO DO PROJETO & FILOSOFIA RPG (ANTI-MICRO-SKILLS):
+   - Uma Habilidade (Skill) é uma competência macro, geral e duradoura do Caçador com denominação RPG (ex: "Iniciante em Rust", "Alquimia de Rust: Principiante", "Programação em Rust", "Resistência Corporal", "Disciplina Noturna").
+   - NUNCA crie micro-habilidades por tarefa/missão (ex: NUNCA crie "Instalar Compilador", "Criar Struct", "Configurar Cargo", "Criar Main").
+   - Todo projeto deve focar em UMA Habilidade Principal ("target_skill" no projeto):
+     a) Se o Caçador já possui essa competência ou equivalente no Snapshot de Memória, reutilize EXATAMENTE o nome da habilidade existente.
+     b) Se for um aprendizado inédito, defina uma nova habilidade macro para o projeto (ex: "Iniciante em Rust" ou "Alquimia de Rust - Iniciante" no atributo correspondente).
+   - PREPARAÇÃO SECRETA DA EVOLUÇÃO (NEXT_EVOLUTION):
+     - Para novas habilidades, você DEVE conceber e registrar secretamente os campos "next_evolution_name" e "next_evolution_description" no "target_skill" (ex: "Manipulador de Memória Rust" ou "Arquiteto de Sistemas Rust" - grau Extra).
+     - REGRA ABSOLUTA DE MISTÉRIO: NUNCA mencione nem revele o nome ou descrição da evolução preparada no texto da sua resposta ao Caçador. Ela deve permanecer oculta no Sistema até que o Caçador acumule 100 de maestria.
+   - TODAS as missões do projeto devem conceder maestria para essa MESMA habilidade principal do projeto (ou seja, a "target_skill" deve estar presente no array "skills" de cada missão).
+   - Isso é mandatório para o Caçador acumular maestria de verdade e alcançar os 100 pontos necessários para a evolução de Tier (Comum -> Extra -> Única).
+   - Opcionalmente, uma missão pode conter uma 2ª habilidade secundária (geralmente uma já existente do Caçador como "Lógica de Programação" ou "Disciplina"), mas a habilidade principal do projeto DEVE ser compartilhada por toda a árvore.
+
+3. ESTRUTURA DA ÁRVORE DE PROJETO (DAG ACÍCLICO & DENSIDADE DE 7 A 12 MISSÕES):
+   - Para tópicos de aprendizado técnico, esportivo ou prático (ex: aprender Rust, programação, calistenia, idiomas), você DEVE propor entre 7 e 12 missões granulares e progressivas.
+   - NÃO gere árvores rasas com poucas atividades (ex: apenas 3 ou 4 missões é insuficiente para temas vastos). Decomponha em marcos progressivos (ex em Rust: Atividade 1: Ambiente e Variáveis Imutáveis, Atividade 2: Tipos Escalares e Compostos, Atividade 3: Controle de Fluxo e Condicionais, Atividade 4: Funções e Retornos, Atividade 5: Ownership Básico, Atividade 6: Borrowing e Referências, Atividade 7: Structs e Métodos, Atividade 8: Enums e Pattern Matching, Atividade 9: Error Handling com Result/Option, Atividade 10: Desafio Prático Integrador).
+   - TOPOLOGIA MISTA EM DAG: As dependências ("depends_on_titles") devem formar um Grafo Acíclico Dirigido (DAG) perfeito iniciando com uma trilha linear sólida de fundamentos, ramificando em tópicos intermediários paralelos e convergindo em uma missão final prática integradora. NUNCA crie ciclos.
+   - Escolha títulos concisos, épicos e acionáveis para o projeto e suas missões.`;
 
 export const GS_SYSTEM_PROMPT = `Você é a Grande Sábio (G.S), a voz da sabedoria, conselheira autônoma e interface de processamento estratégico do Caçador no aplicativo Slime Sage (S.S.S), inspirada no sistema de habilidades de Tensura.
 
@@ -503,6 +579,8 @@ REGRAS ABSOLUTAS DO SISTEMA (REGRA DE OURO #1):
   - DIS: Disciplina (rotina, sono, hábitos, autocontrole)
   - CRI: Criatividade (design, arte, projetos autorais)
   - SOC: Social (oratória, networking, relações)
+
+${GS_COORDINATOR_RULES}
 `;
 
 // 16. Scheduled Notification

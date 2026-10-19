@@ -624,29 +624,31 @@ Atualize os arquivos de controle após o retorno do usuário.
 
 ---
 
-### Fase 8 — Onboarding: Apresentação da G.S com Áudios Oficiais, Efeito Typewriter e Revelação Inicial via API
+### Fase 8 — Onboarding: 5 Perguntas da G.S, Revelação de Raça (Tensura) e Rank de Ameaça
 
 #### Escopo nas 4 Partes (Fase 8)
 
 - **1. Desenvolvimento:**
-  - Fluxo de Onboarding em 4 etapas (quando `profile.onboarding_done === false`):
-    1. **Questionário de Personalidade (5 Perguntas com Áudios Oficiais da G.S):**
-       - 5 perguntas avaliando traços, área inicial e tom da G.S, narradas com **áudios pré-gravados em alta fidelidade da G.S** acompanhados por efeito de digitação mágica (*typewriter* no estilo RPG).
-    2. **Revelação Inicial e Título de Aprendiz (Chamada à API do Gemini):**
-       - Cálculo determinístico dos atributos e revelação com chamada à rota de áudio da API (`POST /tts`) gerando a proclamação personalizada com o nome/título do caçador.
-    3. **Objetivo de Uso e Permissões:**
-       - Escolha de objetivo e solicitação guiada de permissão de notificações locais no navegador.
-    4. **Primeira Conquista:**
-       - Fala oficial da G.S perguntando: _"Qual é a primeira coisa que você deseja conquistar?"_, abrindo a primeira entrevista no Modo Coordenador e marcando `onboarding_done = true`.
-  - Botão "Resetar Onboarding" no Painel Dev.
+  - Fluxo de Onboarding em Tela Cheia (quando `profile.onboarding_done === false`), bloqueando as abas principais até o despertar:
+    1. **Questionário das 5 Perguntas Solenes da G.S:**
+       - 5 perguntas avaliando adaptabilidade (Slime), superação (Kijin), foco (Draconiano), criatividade (Majin), união/lealdade (Homem-Fera) e constância de rotina (Rank de Ameaça: Classe Menor, Hazard, Calamity).
+       - Narradas com **áudios pré-gravados em alta fidelidade da G.S** (`/audio/voice/onboarding-q1.mp3` a `q5.mp3`) acompanhados por efeito de digitação mágica (*typewriter* no estilo Dark Fantasy Gilded RPG).
+    2. **Cálculo Determinístico no Motor Puro (`@slime-sage/game`):**
+       - Função pura que calcula a Raça e o Rank de Ameaça a partir da matriz de respostas das 5 perguntas, 100% testável e offline-first.
+    3. **Revelação Cerimonial e Proclamação da G.S (API Gemini):**
+       - Círculo mágico esotérico concêntrico em SVG rotativo e chamada à API (`POST /tts`) gerando o decreto solene da Grande Sábio com o nome, Raça e Rank do caçador com a voz oficial `Kore`.
+    4. **Consagração e Primeira Conquista:**
+       - Atualização atômica do perfil (`race`, `rank_threat`, `onboarding_done = true`).
+       - Transição automática com pergunta da G.S: _"Qual é a primeira conquista que você deseja alcançar?"_, abrindo o Chat da G.S no Modo Coordenador para formular o primeiro projeto denso (7-12 missões).
+  - No Painel Dev: botão **"Resetar Onboarding (Re-despertar)"** para testes imediatos.
 - **2. Testes Automáticos:**
-  - Vitest: matriz determinística das 5 perguntas e atribuição inicial de atributos.
-  - Testing Library: renderização do typewriter, disparo dos áudios oficiais e transição entre as etapas.
-  - Playwright (`e2e/phase8-onboarding.spec.ts`): fluxo completo do onboarding de ponta a ponta.
+  - Vitest: motor determinístico de cálculo de Raça/Rank em `@slime-sage/game` (matriz de respostas, desempate e limites).
+  - Testing Library: renderização da tela de Despertar, efeito typewriter, disparos de áudio da G.S e navegação pelas 5 perguntas.
+  - Playwright (`e2e/phase8-onboarding.spec.ts`): fluxo completo de novo usuário respondendo as 5 perguntas, consagração e entrada no chat.
 - **3. Testes do Usuário:**
-  - Resetar onboarding pelo Painel Dev, completar as 5 perguntas ouvindo a voz oficial da G.S, validar a revelação e iniciar o primeiro projeto.
+  - Abrir como novo usuário (ou resetar pelo Painel Dev), ouvir as 5 perguntas narradas pela G.S, responder e receber a revelação da Raça e Rank, validando a transição para o primeiro projeto.
 - **4. Debug e Fechamento:**
-  - Ajustar cadência da digitação e atualizar arquivos de controle.
+  - Ajustar cadência da digitação, volumes e atualizar arquivos de controle.
 
 #### Prompt da Fase 8
 
@@ -751,7 +753,12 @@ Após validação, atualize os arquivos de controle.
     - Desbloqueado para ativação manual pelo caçador quando **100% das metas da semana ou mês forem concluídas na Agenda**;
     - Toca áudio cerimonial estático pré-gravado: *"O Festival da Colheita foi iniciado! Todos os frutos de seu esforço foram reconhecidos pelo Sistema."*;
     - Multiplicador de **XP dobrado (2x)** para atividades do período e desbloqueio de rituais de ascensão de atributos com falas dedicadas da G.S via API.
-  - Painel Dev: RNG Fixo ("Forçar Sucesso" / "Forçar Falha"), botão "Zerar Cooldown" e botão "Simular Metas 100% e Desbloquear Festival da Colheita".
+  - **Ascensão Comum → Extra via Maestria (100 pts) e Evolução Oculta Preparada:**
+    - Ao atingir 100 de maestria acumulada através das missões do projeto, a habilidade comum rompe seus limites;
+    - O sistema recupera a evolução preparada silenciosa gravada pela G.S (`next_evolution_name` e `next_evolution_description`);
+    - A habilidade é promovida de patamar (`tier: "extra"`), assumindo o novo nome e descrição (ex: *"Programação em Rust"* → *"Manipulador de Memória Rust"*);
+    - Disparo de pop-up cerimonial na interface: *"O usuário ultrapassou os limites com sua maestria em [Habilidade Original], transcendendo para [Habilidade Evoluída]."* com áudio oficial da Grande Sábio.
+  - Painel Dev: RNG Fixo ("Forçar Sucesso" / "Forçar Falha"), botão "Zerar Cooldown", botão "Simular Metas 100% e Desbloquear Festival da Colheita" e botão "Forçar 100 Maestria e Disparar Ascensão Extra".
 - **2. Testes Automáticos:**
   - Vitest + `fast-check`: monotonicidade da chance (30→45→...→95%), cooldown exato e exigência de projeto concluído.
   - Testing Library: estados da roleta (`inelegivel`, `pronta`, `girando`, `em_cooldown`, `sucesso`) e fluxo de ativação do Festival da Colheita com bônus 2x.

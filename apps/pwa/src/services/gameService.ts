@@ -344,6 +344,32 @@ export class GameService {
     // 3. Update mission status & cascade through project repository
     const { updatedMission } = await projectRepository.updateMissionStatus(missionId, "feita");
 
+    // Check if project has just been completed
+    const currentProject = await this.db.get<Project>("project", mission.project_id);
+    if (currentProject && currentProject.status === "concluido" && project?.status !== "concluido") {
+      let projectSkillName: string | undefined;
+      let hasSkill = false;
+      if (skillId) {
+        const linkedSkill = await this.db.get<Skill>("skill", skillId);
+        if (linkedSkill) {
+          hasSkill = true;
+          projectSkillName = linkedSkill.name;
+        }
+      }
+      const projectCompleteEvent: GameEvent = {
+        type: "PROJECT_COMPLETE",
+        payload: {
+          projectId: currentProject.id,
+          projectTitle: currentProject.title,
+          hasSkill,
+          skillId,
+          skillName: projectSkillName,
+        },
+      };
+      dispatchedEvents.push(projectCompleteEvent);
+      this.dispatchEvent(projectCompleteEvent);
+    }
+
     // 4. Update Profile XP & Level
     const profile = await this.getProfile();
     const previousLevel = profile.level;

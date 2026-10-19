@@ -18,12 +18,17 @@ describe("ProposalCard", () => {
           description: "Entender referências",
           xp_reward: 35,
           depends_on_titles: [],
+          skills: [
+            { name: "Lógica de Programação", area_id: "INT", is_new: false },
+            { name: "Memória Segura", area_id: "INT", is_new: true },
+          ],
         },
         {
           title: "Lifetimes e Generics",
           description: "Tipos complexos",
           xp_reward: 55,
           depends_on_titles: ["Ownership e Borrowing"],
+          skills: [{ name: "Abstração de Tipos", area_id: "INT", is_new: true }],
         },
       ],
       explanation: "Arquitetura recomendada para maximizar inteligência.",
@@ -45,6 +50,10 @@ describe("ProposalCard", () => {
     expect(screen.getByText("Ownership e Borrowing")).toBeInTheDocument();
     expect(screen.getByText("Lifetimes e Generics")).toBeInTheDocument();
     expect(screen.getByText("Requer: Ownership e Borrowing")).toBeInTheDocument();
+    expect(screen.getByText("Lógica de Programação")).toBeInTheDocument();
+    expect(screen.getByText("[EXISTENTE]")).toBeInTheDocument();
+    expect(screen.getByText("Memória Segura")).toBeInTheDocument();
+    expect(screen.getAllByText("[NOVA · INT]")).toHaveLength(2);
     expect(screen.getByText("+35 XP")).toBeInTheDocument();
     expect(screen.getByText("+55 XP")).toBeInTheDocument();
     expect(screen.getByText(/Arquitetura recomendada/)).toBeInTheDocument();

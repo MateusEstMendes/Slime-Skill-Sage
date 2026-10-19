@@ -151,33 +151,115 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({
             })()}
           </div>
 
+          {/* Banner de Habilidade Alvo do Projeto (RPG Skill) */}
+          {proposal.project.target_skill && (() => {
+            const ts = proposal.project.target_skill;
+            const attr = (ts.area_id || proposal.project.area_id) as AreaCode;
+            const attrInfo = AREA_MAP[attr] || AREA_MAP.INT;
+            return (
+              <div
+                className="p-2 border flex items-center justify-between text-xs font-mono bg-black/60"
+                style={{ borderColor: ts.is_new ? `${attrInfo.color}70` : "rgba(223, 168, 108, 0.6)" }}
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 shrink-0" style={{ color: attrInfo.color }} />
+                  <div>
+                    <span className="text-[10px] uppercase text-[#c5b08f] block leading-tight">
+                      Habilidade Alvo do Projeto (RPG):
+                    </span>
+                    <span className="font-fantasy font-bold text-[#f8ecd5] tracking-wide text-xs">
+                      {ts.name}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {ts.is_new ? (
+                    <span
+                      className="px-1.5 py-0.5 text-[9px] font-bold tracking-wider uppercase border"
+                      style={{
+                        borderColor: `${attrInfo.color}80`,
+                        color: attrInfo.color,
+                        backgroundColor: `${attrInfo.color}20`,
+                      }}
+                    >
+                      [NOVA · {attr}]
+                    </span>
+                  ) : (
+                    <span className="px-1.5 py-0.5 text-[9px] font-bold tracking-wider uppercase text-[#dfa86c] bg-[#dfa86c]/20 border border-[#dfa86c]/50">
+                      [EXISTENTE]
+                    </span>
+                  )}
+                  <span className="text-[10px] text-[#fde047] font-mono">+10 Mst/missão</span>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Lista de Missões Sequenciadas */}
           <div className="space-y-2 pt-1">
             <span className="text-[11px] font-mono uppercase text-[#dfa86c] tracking-wider flex items-center gap-1">
               <span>Árvore de Missões Propostas:</span>
               <span className="text-xs font-bold text-[#fde047]">({proposal.missions.length})</span>
             </span>
-            <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+            <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
               {proposal.missions.map((m, idx) => (
                 <div
                   key={idx}
-                  className="p-2 bg-[#040814]/80 border border-[#dfa86c]/25 flex items-center justify-between text-xs gap-2"
+                  className="p-2.5 bg-[#040814]/80 border border-[#dfa86c]/25 flex flex-col gap-1.5 text-xs"
                 >
-                  <div className="min-w-0 flex-1">
-                    <div className="font-fantasy text-[#f8ecd5] truncate flex items-center gap-1.5">
-                      <span className="text-[10px] font-mono text-[#dfa86c]/70">{idx + 1}.</span>
-                      <span className="truncate">{m.title}</span>
-                    </div>
-                    {m.depends_on_titles && m.depends_on_titles.length > 0 && (
-                      <div className="text-[10px] font-mono text-[#c5b08f]/80 flex items-center gap-1 mt-0.5 truncate">
-                        <ArrowRight className="w-2.5 h-2.5 text-[#dfa86c] shrink-0" />
-                        <span className="truncate">Requer: {m.depends_on_titles.join(", ")}</span>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-fantasy text-[#f8ecd5] flex items-center gap-1.5 break-words">
+                        <span className="text-[10px] font-mono text-[#dfa86c]/70 shrink-0">{idx + 1}.</span>
+                        <span className="break-words [overflow-wrap:anywhere]">{m.title}</span>
                       </div>
-                    )}
+                      {m.depends_on_titles && m.depends_on_titles.length > 0 && (
+                        <div className="text-[10px] font-mono text-[#c5b08f]/80 flex items-center gap-1 mt-0.5 truncate">
+                          <ArrowRight className="w-2.5 h-2.5 text-[#dfa86c] shrink-0" />
+                          <span className="truncate">Requer: {m.depends_on_titles.join(", ")}</span>
+                        </div>
+                      )}
+                    </div>
+                    <span className="font-mono text-[10px] text-[#fde047] px-1.5 py-0.5 bg-[#dfa86c]/15 border border-[#dfa86c]/30 shrink-0">
+                      +{m.xp_reward ?? 35} XP
+                    </span>
                   </div>
-                  <span className="font-mono text-[10px] text-[#fde047] px-1.5 py-0.5 bg-[#dfa86c]/15 border border-[#dfa86c]/30 shrink-0">
-                    +{m.xp_reward ?? 35} XP
-                  </span>
+
+                  {/* Badges de Habilidades ([EXISTENTE] / [NOVA · ATTR]) */}
+                  {m.skills && m.skills.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-[#dfa86c]/15">
+                      {m.skills.map((s, sIdx) => {
+                        const attr = (s.area_id || proposal.project.area_id) as AreaCode;
+                        const attrInfo = AREA_MAP[attr] || AREA_MAP.INT;
+                        return (
+                          <div
+                            key={sIdx}
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-mono border rounded-none bg-black/50"
+                            style={{
+                              borderColor: s.is_new ? `${attrInfo.color}65` : "rgba(223, 168, 108, 0.45)",
+                            }}
+                          >
+                            <span className="text-[#f8ecd5] font-semibold">{s.name}</span>
+                            {s.is_new ? (
+                              <span
+                                className="px-1 py-[1px] text-[9px] font-bold tracking-wider uppercase"
+                                style={{
+                                  color: attrInfo.color,
+                                  backgroundColor: `${attrInfo.color}20`,
+                                }}
+                              >
+                                [NOVA · {attr}]
+                              </span>
+                            ) : (
+                              <span className="px-1 py-[1px] text-[9px] font-bold tracking-wider uppercase text-[#dfa86c] bg-[#dfa86c]/15">
+                                [EXISTENTE]
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -196,15 +278,35 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({
             {proposal.missions.map((m, idx) => (
               <div
                 key={idx}
-                className="p-2 bg-[#040814]/80 border border-[#dfa86c]/25 flex items-center justify-between text-xs gap-2"
+                className="p-2 bg-[#040814]/80 border border-[#dfa86c]/25 flex flex-col gap-1.5 text-xs"
               >
-                <div className="min-w-0 flex-1">
-                  <span className="font-fantasy text-[#f8ecd5] truncate block">{m.title}</span>
-                  {m.description && <p className="text-[10px] text-[#c5b08f] truncate">{m.description}</p>}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <span className="font-fantasy text-[#f8ecd5] truncate block">{m.title}</span>
+                    {m.description && <p className="text-[10px] text-[#c5b08f] truncate">{m.description}</p>}
+                  </div>
+                  <span className="font-mono text-[10px] text-[#fde047] px-1.5 py-0.5 bg-[#dfa86c]/15 border border-[#dfa86c]/30 shrink-0">
+                    +{m.xp_reward ?? 35} XP
+                  </span>
                 </div>
-                <span className="font-mono text-[10px] text-[#fde047] px-1.5 py-0.5 bg-[#dfa86c]/15 border border-[#dfa86c]/30 shrink-0">
-                  +{m.xp_reward ?? 35} XP
-                </span>
+                {m.skills && m.skills.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-[#dfa86c]/15">
+                    {m.skills.map((s, sIdx) => {
+                      const attr = (s.area_id || "INT") as AreaCode;
+                      return (
+                        <span
+                          key={sIdx}
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-mono border border-[#dfa86c]/35 text-[#f8ecd5] bg-black/40"
+                        >
+                          <span>{s.name}</span>
+                          <span className="text-[9px] text-[#fde047]">
+                            {s.is_new ? `[NOVA · ${attr}]` : "[EXISTENTE]"}
+                          </span>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             ))}
           </div>

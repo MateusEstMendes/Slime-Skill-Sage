@@ -46,65 +46,74 @@ export async function synthesizeSpeech(
   }
 
   let lastError: unknown;
+  const ttsModels = ["gemini-3.8-flash-tts", "gemini-2.5-flash-preview-tts"];
 
   for (const apiKey of keysToTry) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash-tts:generateContent?key=${apiKey}`;
-      const payload = {
-        contents: [
-          {
-            parts: [
-              {
-                text: `Fale o seguinte texto com a voz solene, serena e precisa da Grande Sábio:\n\n${text}`,
-              },
-            ],
-          },
-        ],
-        generationConfig: {
-          responseModalities: ["AUDIO"],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: {
-                voiceName: voice || "Kore",
+    for (const ttsModel of ttsModels) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${ttsModel}:generateContent?key=${apiKey}`;
+        const cleanSpeechText =
+          text
+            .replace(/```[\s\S]*?```/g, "")
+            .replace(/[*#_`>]/g, "")
+            .trim() || "Análise concluída, Caçador.";
+
+        const payload = {
+          contents: [
+            {
+              parts: [
+                {
+                  text: cleanSpeechText,
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            responseModalities: ["AUDIO"],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: {
+                  voiceName: voice || "Kore",
+                },
               },
             },
           },
-        },
-      };
+        };
 
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
 
-      if (!res.ok) {
-        const errorText = await res.text();
-        const error = new Error(`Gemini Audio API error (${res.status}): ${errorText}`);
-        (error as unknown as { status: number }).status = res.status;
-        throw error;
+        if (!res.ok) {
+          const errorText = await res.text();
+          const error = new Error(`Gemini Audio API error (${res.status}): ${errorText}`);
+          (error as unknown as { status: number }).status = res.status;
+          throw error;
+        }
+
+        const json = await res.json();
+        const inlineData = json?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+
+        if (!inlineData?.data) {
+          throw new Error("Resposta da API Gemini não continha dados de áudio.");
+        }
+
+        return {
+          audioBase64: inlineData.data,
+          mimeType: inlineData.mimeType || "audio/wav",
+          source: "gemini",
+        };
+      } catch (err: unknown) {
+        lastError = err;
+        const status = (err as { status?: number }).status;
+        // Em caso de cota da chave (429), pula imediatamente para a chave reserva
+        if (status === 429) {
+          break;
+        }
+        // Em caso de alta demanda do modelo (503), tenta o próximo modelo TTS
       }
-
-      const json = await res.json();
-      const inlineData = json?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
-
-      if (!inlineData?.data) {
-        throw new Error("Resposta da API Gemini não continha dados de áudio.");
-      }
-
-      return {
-        audioBase64: inlineData.data,
-        mimeType: inlineData.mimeType || "audio/wav",
-        source: "gemini",
-      };
-    } catch (err: unknown) {
-      lastError = err;
-      const status = (err as { status?: number }).status;
-      // Se for 429 (quota) ou 503 (serviço indisponível), tenta a próxima chave
-      if (status === 429 || status === 503) {
-        continue;
-      }
-      // Outros erros imediatos também tentam o fallback se houver
     }
   }
 
@@ -137,40 +146,71 @@ export async function handleGsChat(
     };
   }
 
-  // Prepara o contexto do caçador como prompt de sistema enriquecido
+  // Prepara o contexto do caçador como prompt de sistema enriquecido (~500 tokens)
   let contextPrompt = "";
   if (hunterContext) {
-    contextPrompt = `\n--- ESTADO ATUAL DO CAÇADOR (TELEMETRIA DO SISTEMA) ---
+    if (hunterContext.formatted_prompt) {
+      contextPrompt = `\n${hunterContext.formatted_prompt}\n`;
+    } else {
+      contextPrompt = `\n--- SNAPSHOT DE MEMÓRIA DO CAÇADOR (TELEMETRIA DO SISTEMA) ---
 Nome: ${hunterContext.profile.name}
 Título: ${hunterContext.profile.title}
 Nível: ${hunterContext.profile.level} (XP Atual: ${hunterContext.profile.current_xp})
 Ofensiva (Streak): ${hunterContext.profile.streak_count} dias consecutivos
-Habilidades Ativas: ${
-      hunterContext.skills.length > 0
-        ? hunterContext.skills.map((s) => `${s.name} [${s.tier.toUpperCase()}, ${s.mastery}/300 maestria]`).join(", ")
-        : "Nenhuma habilidade registrada ainda."
+Projeto Ativo: ${
+        hunterContext.active_project
+          ? `"${hunterContext.active_project.title}" [Área: ${hunterContext.active_project.area_id}, Progresso: ${hunterContext.active_project.progress}%]`
+          : hunterContext.projects.length > 0
+            ? hunterContext.projects.map((p) => `"${p.title}" [Área: ${p.area_id}, Progresso: ${p.progress}%]`).join(", ")
+            : "Nenhum projeto ativo no momento."
+      }
+Próximas Missões Disponíveis: ${
+        hunterContext.recent_missions && hunterContext.recent_missions.length > 0
+          ? hunterContext.recent_missions.map((m) => `"${m.title}" (+${m.xp_reward} XP)`).join(", ")
+          : `${hunterContext.pending_missions_count} missões pendentes.`
+      }
+Top 10 Habilidades (Híbrido: Maestria + Prática Recente): ${
+        hunterContext.skills.length > 0
+          ? hunterContext.skills.map((s) => `${s.name} [${s.area_id} · ${s.tier.toUpperCase()} · ${s.mastery}/300]`).join(", ")
+          : "Nenhuma habilidade registrada ainda."
+      }
+--------------------------------------------------------------\n`;
     }
-Projetos Ativos: ${
-      hunterContext.projects.length > 0
-        ? hunterContext.projects.map((p) => `"${p.title}" [Área: ${p.area_id}, Progresso: ${p.progress}%]`).join(", ")
-        : "Nenhum projeto ativo no momento."
-    }
-Missões Pendentes: ${hunterContext.pending_missions_count}
---------------------------------------------------------\n`;
   }
 
   const systemInstruction = `${GS_SYSTEM_PROMPT}\n${contextPrompt}`;
 
-  // Definição das ferramentas estruturadas da Fase 6
+  // Definição das ferramentas estruturadas (Fase 6 & Fase 7)
   const tools = {
     create_project_tree: tool({
       description:
-        "Propor a criação de um novo projeto com uma árvore acíclica de missões estruturadas. Esta ação gera um Cartão de Prévia que o Caçador deverá aprovar.",
+        "Propor a criação de um novo projeto com uma árvore acíclica de missões e uma Habilidade Macro RPG compartilhada por toda a árvore. Chame apenas após realizar as perguntas investigativas do Modo Coordenador.",
       inputSchema: z.object({
         project: z.object({
           title: z.string().describe("Título épico e focado do projeto"),
           description: z.string().default("").describe("Objetivo ou escopo do projeto"),
           area_id: AreaCodeSchema.describe("Área de atributo: INT, FOR, DIS, CRI, SOC"),
+          target_skill: z
+            .object({
+              name: z
+                .string()
+                .describe(
+                  "Nome macro da Habilidade Geral do Projeto com sabor RPG (ex: 'Iniciante em Rust' ou 'Alquimia de Rust - Iniciante', 'Resistência Muscular', etc.). NUNCA use micro-tarefas.",
+                ),
+              area_id: AreaCodeSchema.optional().describe("Atributo da habilidade (INT, FOR, DIS, CRI, SOC)"),
+              next_evolution_name: z
+                .string()
+                .optional()
+                .describe(
+                  "Nome da evolução futura de grau Extra preparada secretamente pela G.S (ex: 'Manipulador de Memória Rust'). NUNCA mencione este nome na resposta em texto para o Caçador.",
+                ),
+              next_evolution_description: z
+                .string()
+                .optional()
+                .describe("Descrição arcana da transcendência futura da habilidade."),
+            })
+            .optional()
+            .describe("Habilidade principal/macro que todo o projeto treina e desenvolve"),
         }),
         missions: z
           .array(
@@ -187,11 +227,27 @@ Missões Pendentes: ${hunterContext.pending_missions_count}
               depends_on_titles: z
                 .array(z.string())
                 .default([])
-                .describe("Nomes de outras missões deste projeto que devem ser concluídas antes"),
+                .describe("Nomes de outras missões deste projeto que devem ser concluídas antes (DAG acíclico)"),
+              skills: z
+                .array(
+                  z.object({
+                    name: z
+                      .string()
+                      .describe(
+                        "Nome da habilidade. DEVE conter a habilidade macro do projeto para que o Caçador acumule maestria nela. NUNCA invente micro-skills por missão.",
+                      ),
+                    area_id: AreaCodeSchema.optional().describe("Atributo da habilidade: INT, FOR, DIS, CRI, SOC"),
+                  }),
+                )
+                .min(1)
+                .max(3)
+                .describe("1 a 3 habilidades (incluindo obrigatoriamente a habilidade principal do projeto)"),
             }),
           )
           .min(1)
-          .describe("Lista de missões sequenciadas para o projeto"),
+          .describe(
+            "Lista de missões sequenciadas para o projeto. Para aprendizados amplos/técnicos, elabore entre 7 e 12 missões progressivas em DAG mista.",
+          ),
         explanation: z.string().optional().describe("Justificativa estratégica da Grande Sábio"),
       }),
     }),
@@ -209,6 +265,16 @@ Missões Pendentes: ${hunterContext.pending_missions_count}
               description: z.string().default("").describe("Critério de conclusão"),
               xp_reward: z.number().int().min(10).max(80).default(35).describe("XP (10, 20, 35, 55, 80)"),
               depends_on_mission_ids: z.array(z.string()).default([]),
+              skills: z
+                .array(
+                  z.object({
+                    name: z.string().describe("Nome da habilidade associada"),
+                    area_id: AreaCodeSchema.optional(),
+                  }),
+                )
+                .min(1)
+                .max(3)
+                .optional(),
             }),
           )
           .min(1),
@@ -243,156 +309,191 @@ Missões Pendentes: ${hunterContext.pending_missions_count}
   };
 
   let lastError: unknown;
+  const chatModels = [
+    "gemini-3-flash-preview",
+    "gemini-flash-lite-latest",
+    "gemini-3.8-flash",
+  ];
+
+  // Sanitiza mensagens para a API Gemini: garante formato consistente e que inicie com mensagem de 'user'
+  let promptMessages = messages
+    .filter((m) => m.role === "user" || m.role === "assistant")
+    .map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: m.content.trim(),
+    }))
+    .filter((m) => m.content.length > 0);
+
+  while (promptMessages.length > 0 && promptMessages[0].role === "assistant") {
+    promptMessages.shift();
+  }
+
+  if (promptMessages.length === 0) {
+    promptMessages = [{ role: "user", content: "Iniciar análise do Sistema." }];
+  }
 
   for (const apiKey of keysToTry) {
-    try {
-      const google = createGoogleGenerativeAI({ apiKey });
-      const model = google("gemini-3.8-flash");
+    const google = createGoogleGenerativeAI({ apiKey });
 
-      // Sanitiza mensagens para a API Gemini: garante formato consistente e que inicie com mensagem de 'user'
-      let promptMessages = messages
-        .filter((m) => m.role === "user" || m.role === "assistant")
-        .map((m) => ({
-          role: m.role as "user" | "assistant",
-          content: m.content.trim(),
-        }))
-        .filter((m) => m.content.length > 0);
+    for (const modelName of chatModels) {
+      try {
+        const model = google(modelName);
 
-      while (promptMessages.length > 0 && promptMessages[0].role === "assistant") {
-        promptMessages.shift();
-      }
+        const result = await generateText({
+          model,
+          system: systemInstruction,
+          messages: promptMessages,
+          tools,
+          maxRetries: 1,
+        });
 
-      if (promptMessages.length === 0) {
-        promptMessages = [{ role: "user", content: "Iniciar análise do Sistema." }];
-      }
+        let proposedAction: Proposal | undefined = undefined;
 
-      const result = await generateText({
-        model,
-        system: systemInstruction,
-        messages: promptMessages,
-        tools,
-      });
-
-      let proposedAction: Proposal | undefined = undefined;
-
-      // Se houver chamada de ferramenta, converte em proposta para o Cartão de Prévia
-      if (result.toolCalls && result.toolCalls.length > 0) {
-        const firstCall = result.toolCalls[0] as unknown as {
-          toolName: string;
-          input?: unknown;
-          args?: unknown;
-        };
-        const callPayload = (firstCall.input ?? firstCall.args) as Record<string, unknown>;
-
-        if (firstCall.toolName === "create_project_tree") {
-          const args = (callPayload || {}) as {
-            project?: { title?: string; description?: string; area_id?: "INT" | "FOR" | "DIS" | "CRI" | "SOC" };
-            missions?: Array<{ title?: string; description?: string; xp_reward?: number; depends_on_titles?: string[] }>;
-            explanation?: string;
+        // Se houver chamada de ferramenta, converte em proposta para o Cartão de Prévia
+        if (result.toolCalls && result.toolCalls.length > 0) {
+          const firstCall = result.toolCalls[0] as unknown as {
+            toolName: string;
+            input?: unknown;
+            args?: unknown;
           };
-          if (args.project?.title && Array.isArray(args.missions) && args.missions.length > 0) {
-            proposedAction = {
-              type: "create_project_tree",
-              project: {
-                title: args.project.title,
-                description: args.project.description || "",
-                area_id: args.project.area_id || "INT",
-              },
-              missions: args.missions.map((m) => ({
-                title: m.title || "Missão Sem Título",
-                description: m.description || "",
-                xp_reward: m.xp_reward ?? 35,
-                depends_on_titles: m.depends_on_titles || [],
-              })),
-              explanation: args.explanation,
-            };
-          }
-        } else if (firstCall.toolName === "add_missions") {
-          const args = (callPayload || {}) as {
-            project_id?: string;
-            project_title?: string;
-            missions?: Array<{ title?: string; description?: string; xp_reward?: number; depends_on_mission_ids?: string[] }>;
-            explanation?: string;
-          };
-          if (args.project_id && Array.isArray(args.missions) && args.missions.length > 0) {
-            proposedAction = {
-              type: "add_missions",
-              project_id: args.project_id,
-              project_title: args.project_title,
-              missions: args.missions.map((m) => ({
-                title: m.title || "Nova Missão",
-                description: m.description || "",
-                xp_reward: m.xp_reward ?? 35,
-                depends_on_mission_ids: m.depends_on_mission_ids || [],
-              })),
-              explanation: args.explanation,
-            };
-          }
-        } else if (firstCall.toolName === "update_mission") {
-          const args = (callPayload || {}) as {
-            mission_id?: string;
-            current_title?: string;
-            updates?: { title?: string; description?: string; xp_reward?: number };
-            explanation?: string;
-          };
-          if (args.mission_id && args.updates) {
-            proposedAction = {
-              type: "update_mission",
-              mission_id: args.mission_id,
-              current_title: args.current_title,
-              updates: args.updates,
-              explanation: args.explanation,
-            };
-          }
-        } else if (firstCall.toolName === "delete_mission") {
-          const args = (callPayload || {}) as {
-            mission_id?: string;
-            mission_title?: string;
-            explanation?: string;
-          };
-          if (args.mission_id && args.mission_title) {
-            proposedAction = {
-              type: "delete_mission",
-              mission_id: args.mission_id,
-              mission_title: args.mission_title,
-              explanation: args.explanation,
-            };
-          }
-        }
-      }
+          const callPayload = (firstCall.input ?? firstCall.args) as Record<string, unknown>;
 
-      // Constrói texto falado conciso para a síntese neural da G.S
-      let spokenText = "Análise concluída, Caçador.";
-      if (proposedAction) {
-        if (proposedAction.type === "create_project_tree") {
-          spokenText = `Proposta para o novo projeto "${proposedAction.project.title}" formulada e submetida ao seu julgamento.`;
-        } else if (proposedAction.type === "add_missions") {
-          spokenText = `Novas diretrizes de missão elaboradas para sua aprovação, Caçador.`;
-        } else if (proposedAction.type === "update_mission") {
-          spokenText = `Ajuste de parâmetros da missão formulado para sua aprovação.`;
-        } else if (proposedAction.type === "delete_mission") {
-          spokenText = `Proposta de exclusão de missão submetida ao seu consentimento.`;
-        }
-      } else if (result.text.length < 150) {
-        spokenText = result.text.replace(/[*#_`]/g, "").trim();
-      }
-
-      return {
-        role: "assistant",
-        content: result.text || "Análise concluída. Diretrizes formuladas.",
-        proposal: proposedAction,
-        spoken_text: spokenText,
-        usage: result.usage
-          ? {
-              prompt_tokens: result.usage.inputTokens ?? 0,
-              completion_tokens: result.usage.outputTokens ?? 0,
-              total_tokens: result.usage.totalTokens ?? 0,
+          if (firstCall.toolName === "create_project_tree") {
+            const args = (callPayload || {}) as {
+              project?: { title?: string; description?: string; area_id?: "INT" | "FOR" | "DIS" | "CRI" | "SOC" };
+              missions?: Array<{
+                title?: string;
+                description?: string;
+                xp_reward?: number;
+                depends_on_titles?: string[];
+                skills?: Array<{ name?: string; area_id?: "INT" | "FOR" | "DIS" | "CRI" | "SOC"; is_new?: boolean }>;
+              }>;
+              explanation?: string;
+            };
+            if (args.project?.title && Array.isArray(args.missions) && args.missions.length > 0) {
+              const defaultArea = args.project.area_id || "INT";
+              proposedAction = {
+                type: "create_project_tree",
+                project: {
+                  title: args.project.title,
+                  description: args.project.description || "",
+                  area_id: defaultArea,
+                },
+                missions: args.missions.map((m) => ({
+                  title: m.title || "Missão Sem Título",
+                  description: m.description || "",
+                  xp_reward: m.xp_reward ?? 35,
+                  depends_on_titles: m.depends_on_titles || [],
+                  skills: (m.skills && m.skills.length > 0
+                    ? m.skills
+                    : [{ name: args.project?.title || "Domínio Técnico", area_id: defaultArea }]
+                  ).map((s) => ({
+                    name: s.name || "Habilidade",
+                    area_id: s.area_id || defaultArea,
+                    is_new: s.is_new ?? false,
+                  })),
+                })),
+                explanation: args.explanation,
+              };
             }
-          : undefined,
-      };
-    } catch (err: unknown) {
-      lastError = err;
-      // Continua para tentar fallback se houver
+          } else if (firstCall.toolName === "add_missions") {
+            const args = (callPayload || {}) as {
+              project_id?: string;
+              project_title?: string;
+              missions?: Array<{
+                title?: string;
+                description?: string;
+                xp_reward?: number;
+                depends_on_mission_ids?: string[];
+                skills?: Array<{ name?: string; area_id?: "INT" | "FOR" | "DIS" | "CRI" | "SOC"; is_new?: boolean }>;
+              }>;
+              explanation?: string;
+            };
+            if (args.project_id && Array.isArray(args.missions) && args.missions.length > 0) {
+              proposedAction = {
+                type: "add_missions",
+                project_id: args.project_id,
+                project_title: args.project_title,
+                missions: args.missions.map((m) => ({
+                  title: m.title || "Nova Missão",
+                  description: m.description || "",
+                  xp_reward: m.xp_reward ?? 35,
+                  depends_on_mission_ids: m.depends_on_mission_ids || [],
+                  skills: (m.skills || []).map((s) => ({
+                    name: s.name || "Habilidade",
+                    area_id: s.area_id || "INT",
+                    is_new: s.is_new ?? false,
+                  })),
+                })),
+                explanation: args.explanation,
+              };
+            }
+          } else if (firstCall.toolName === "update_mission") {
+            const args = (callPayload || {}) as {
+              mission_id?: string;
+              current_title?: string;
+              updates?: { title?: string; description?: string; xp_reward?: number };
+              explanation?: string;
+            };
+            if (args.mission_id && args.updates) {
+              proposedAction = {
+                type: "update_mission",
+                mission_id: args.mission_id,
+                current_title: args.current_title,
+                updates: args.updates,
+                explanation: args.explanation,
+              };
+            }
+          } else if (firstCall.toolName === "delete_mission") {
+            const args = (callPayload || {}) as {
+              mission_id?: string;
+              mission_title?: string;
+              explanation?: string;
+            };
+            if (args.mission_id && args.mission_title) {
+              proposedAction = {
+                type: "delete_mission",
+                mission_id: args.mission_id,
+                mission_title: args.mission_title,
+                explanation: args.explanation,
+              };
+            }
+          }
+        }
+
+        // Constrói texto falado conciso para a síntese neural da G.S
+        let spokenText = "Análise concluída, Caçador.";
+        if (proposedAction) {
+          if (proposedAction.type === "create_project_tree") {
+            spokenText = `Proposta para o novo projeto "${proposedAction.project.title}" formulada e submetida ao seu julgamento.`;
+          } else if (proposedAction.type === "add_missions") {
+            spokenText = `Novas diretrizes de missão elaboradas para sua aprovação, Caçador.`;
+          } else if (proposedAction.type === "update_mission") {
+            spokenText = `Ajuste de parâmetros da missão formulado para sua aprovação.`;
+          } else if (proposedAction.type === "delete_mission") {
+            spokenText = `Proposta de exclusão de missão submetida ao seu consentimento.`;
+          }
+        } else if (result.text.length < 150) {
+          spokenText = result.text.replace(/[*#_`]/g, "").trim();
+        }
+
+        return {
+          role: "assistant",
+          content: result.text || "Análise concluída. Diretrizes formuladas.",
+          proposal: proposedAction,
+          spoken_text: spokenText,
+          usage: result.usage
+            ? {
+                prompt_tokens: result.usage.inputTokens ?? 0,
+                completion_tokens: result.usage.outputTokens ?? 0,
+                total_tokens: result.usage.totalTokens ?? 0,
+              }
+            : undefined,
+        };
+      } catch (err: unknown) {
+        lastError = err;
+        // Continua para o próximo modelo ou chave fallback em caso de 503 (High Demand) / 429
+      }
     }
   }
 

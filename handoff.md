@@ -2,9 +2,9 @@
 
 ## Status Atual
 
-- **Última Fase Concluída:** Fase 5 — Voz do Mundo & G.S (Modal Dourado + Áudios Oficiais/API Sem TTS) e Telas de Status e Habilidades
-- **Próxima Fase:** Fase 6 — Backend `/chat`, Síntese de Voz G.S, Cartões de Prévia e Pop-up de Pendências
-- **Data da Atualização:** 2026-10-17
+- **Última Fase Concluída:** Fase 7 — Modo Coordenador da G.S, Validação Anti-Duplicatas, Snapshot de Memória, Densificação de Atividades e Áudios Oficiais de Projeto
+- **Próxima Fase:** Fase 8 — Onboarding: Apresentação da G.S com Áudios Oficiais, Typewriter e Revelação Inicial via API
+- **Data da Atualização:** 2026-10-19
 
 ## Histórico de Fases Concluídas
 
@@ -160,27 +160,96 @@
     - `@slime-sage/shared`: 8/8 testes (1 arquivo)
     - `@slime-sage/api`: 3/3 testes (1 arquivo)
 
-- **Pontos de Atenção para a Fase 6 e Subsequentes (Diretrizes Grill-Me Consolidadas e Fechadas):**
-  - **1. Escopo Incremental de Tools na Fase 6:**
-    - A Fase 6 expõe apenas ferramentas de Projetos, Missões e Perfil/Skills (`get_profile`, `list_skills`, `list_projects`, `get_project`, `search_missions`, `create_project_tree`, `add_missions`, `update_mission`, `delete_mission`), pois já contam com repositórios e stores locais funcionais. As tools de Classes entram na Fase 9 e as de Agenda/Hábitos na Fase 11.
-  - **2. Síntese de Voz G.S (`POST /tts`) & Redundância de Chaves:**
-    - Endpoint `POST /tts` no Hono com formato `{ audioBase64: string, mimeType: string }` utilizando a API REST do Gemini (voz oficial `Kore`).
-    - Redundância inteligente: chave primária (`GEMINI_API_KEY`) com failover automático em caso de cota (429) para a chave reserva (`GEMINI_API_KEY_FALLBACK`).
-    - Cache local no PWA em IndexedDB (`tts_cache_<hash>`) com reprodução instantânea.
-    - Modo offline / falha de rede: Notificação solene informando que a Grande Sábio entrou em *modo de hibernação neural*, mantendo a operação em processamento estritamente local.
-  - **3. Pop-up / Toast Proativo de Pendências:**
-    - Toast estilizado no PWA com badge *"Aviso da G.S"*, resumo das pendências imediatas e botão *"Ouvir Mensagem"*, complementado por opção em Configurações para reprodução automática condicionada à interação prévia.
-  - **4. Curva de Nível e XP:**
-    - Motor de jogo atualizado e testado com a curva íngreme `round(300 * n^1.5)` (subida 3x mais lenta e desafiadora).
-  - **5. Matriz de Títulos por Atributo (10 Grandes Patamares & Sub-Graus de 1.000 pts até 50.000+):**
-    - Implementada em `packages/game/src/attributes.ts`: Cada Grande Patamar abrange 5.000 pontos de maestria, subdividido em **5 Sub-Graus Rúnicos de 1.000 pontos (Graus I a V)**. O título se transforma lentamente indicando o rumo para a próxima ascensão (ex: `Aprendiz da Lógica [Grau III] · Rumo a Analista Metódico`), culminando aos 50.000+ no Grau V do Tier X como a **Perfeição Inatingível**:
-      - **INT:** 1. Aprendiz da Lógica -> 2. Analista Metódico -> 3. Arquiteto Cognitivo -> 4. Decifrador de Padrões -> 5. Sábio Investigador -> 6. Arquimago da Cognição -> 7. Singularidade Teórica -> 8. Demiurgo do Pensamento -> 9. A Mente Infinita -> 10. A Onisciência Absoluta
-      - **FOR:** 1. Corpo Desperto -> 2. Guarda de Aço -> 3. Escudo Vivo -> 4. Muralha de Bronze -> 5. Baluarte da Vontade -> 6. Monolito Vivo -> 7. Entidade Inabalável -> 8. Guardião Inquebrantável -> 9. Pilar da Existência -> 10. Muralha Cósmica Inquebrável
-      - **DIS:** 1. Iniciante da Vontade -> 2. Mente Vigilante -> 3. Disciplinado em Aço -> 4. Vontade de Titânio -> 5. Firme como Diamante -> 6. Asceta Marcial -> 7. Transcendência Estoica -> 8. Monolito Perpétuo -> 9. Entidade Sem Flutuação -> 10. A Vontade Eterna
-      - **CRI:** 1. Discípulo do Traço -> 2. Gravador de Conceitos -> 3. Escultor de Ideias -> 4. Manifestador de Formas -> 5. Engenheiro da Imaginação -> 6. Mestre das Formas -> 7. Arquiteto da Existência -> 8. Criador de Dimensões -> 9. Demiurgo Cósmico -> 10. Primordial da Criação
-      - **SOC:** 1. Ouvinte Atento -> 2. Tecedor de Laços -> 3. Mediador de Conflitos -> 4. Orador Magnético -> 5. Pacificador das Tribos -> 6. Farol Coletivo -> 7. Mentor de Povos -> 8. Conciliador de Mundos -> 9. Voz do Éter -> 10. A Harmonia Primordial
-  - **6. Navegação da Agenda Independente (Fase 11):**
-    - Modelo híbrido: Resumo "Hoje" na Home com botão de acesso "Abrir Agenda Completa" (visão dedicada, Hábitos e Festival da Colheita), mantendo intactas as 5 abas principais na `TabBar`.
+### Fase 6 — Backend `/chat`, Síntese de Voz G.S, Cartões de Prévia e Pop-up de Pendências
+
+- **Mudanças Implementadas:**
+  - **Backend Hono (`POST /chat` e `POST /tts`):**
+    - Implementação de streaming real com `@ai-sdk/google` e fallback resiliente via API nativa Gemini (`gemini-3.8-flash`) com modo gracioso de hibernação neural em caso de indisponibilidade de cota/rede.
+    - Suporte a chave primária (`GEMINI_API_KEY`) e chave reserva de failover (`GEMINI_API_KEY_FALLBACK` / `GEMINI_API_KEY_RESERVE`).
+    - Exposição do schema de tools de leitura (`get_profile`, `list_skills`, `list_projects`, `get_project`, `search_missions`) e escrita (`create_project_tree`, `add_missions`, `update_mission`, `delete_mission`) em `packages/shared`.
+    - Sanitização ativa do histórico de conversa para garantir início de turnos em conformidade estrita com o papel `user`.
+    - Rota `POST /tts` com modelo neural oficial `gemini-3.8-flash-tts` e voz `Kore`, retornando áudio sintetizado em alta qualidade.
+  - **Cliente PWA (`GsChatView`, Cartões de Confirmação & Cache Local):**
+    - Persistência e restauração de conversas locais com stores `chat_thread` e `chat_message` em `chatRepository.ts`.
+    - Execução silenciosa de tools de leitura no IndexedDB e emissão de **Cartões de Prévia Interativos** ([`ProposalCard.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/chat/ProposalCard.tsx)) para tools de escrita com ações: **Aceitar** (grava no banco local e recalcula progresso), **Recusar** (descarta com log) e **Pedir Ajuste** (insere contexto no input do chat).
+    - Botão **"Ouvir G.S"** com serviço dedicado [`gsVoiceService.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/gsVoiceService.ts) integrando cache em IndexedDB com hash MD5/SHA de 8 caracteres (`tts_cache_<hash>`), reproduzindo instantaneamente gravações prévias a custo zero de tokens.
+    - Banner de telemetria de consumo de tokens da API e estatísticas cumulativas (`ai_usage_stats`) no Painel Dev.
+    - Notificação proativa de pendências ([`PendingTasksToast.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/system/PendingTasksToast.tsx)) na tela sem interromper a navegação do usuário.
+    - Redesign estético de botões ([`SystemButton.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/system/SystemButton.tsx)) e badges ([`SystemBadge.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/system/SystemBadge.tsx)) adotando estritamente cantos retos (`rounded-none`), moldura interna gótica, diamantes nos cantos e entalhes centrais em losango cartouche.
+- **Arquivos Criados / Modificados:**
+  - `packages/shared/src/index.ts` — [schemas de tools G.S, ChatUsageSchema, ChatMessageSchema]
+  - `apps/api/src/index.ts`, `apps/api/src/services/geminiService.ts`, `apps/api/src/server.ts`, `apps/api/src/index.test.ts` — [rotas /chat e /tts, failover de credenciais, modelo gemini-3.8-flash, streaming e síntese]
+  - `apps/pwa/src/services/chatRepository.ts`, `apps/pwa/src/services/chatRepository.test.ts` — [repositório IndexedDB para threads e mensagens]
+  - `apps/pwa/src/services/gsVoiceService.ts`, `apps/pwa/src/services/gsVoiceService.test.ts` — [serviço de voz neural G.S com cache IndexedDB]
+  - `apps/pwa/src/components/chat/ProposalCard.tsx`, `apps/pwa/src/components/chat/ProposalCard.test.tsx` — [cartão de prévia interativo Aceitar/Recusar/Ajustar]
+  - `apps/pwa/src/components/system/PendingTasksToast.tsx`, `apps/pwa/src/components/system/PendingTasksToast.test.tsx` — [toast discreto de pendências]
+  - `apps/pwa/src/components/views/GsChatView.tsx` — [chat completo integrado com streaming, proposals, reprodução neural e persistência]
+  - `apps/pwa/src/components/DevPanel.tsx` — [telemetria de tokens consumidos e logs da IA]
+  - `apps/pwa/src/components/system/SystemButton.tsx`, `apps/pwa/src/components/system/SystemBadge.tsx` — [design Dark Fantasy Gilded RPG com cantos retos rounded-none e detalhes góticos]
+  - `apps/pwa/vite.config.ts`, `apps/pwa/src/services/apiClient.ts` — [tratamento defensivo de proxy e status 503 com mensagens do Sistema]
+  - `roadmap.md`, `feedback.md`, `handoff.md` — [governança e fechamento da fase]
+- **Migrations / Banco de Dados:**
+  - Stores `chat_thread` e `chat_message` indexados e operacionais.
+  - Tabela `kv` enriquecida com chave `ai_usage_stats` e prefixo `tts_cache_*`.
+- **Estado dos Testes Automáticos:**
+  - Monorepo: 4/4 pacotes passando | 24/24 suítes | 161/161 testes passando (100% verde)
+    - `@slime-sage/pwa`: 102/102 testes (24 arquivos)
+    - `@slime-sage/game`: 37/37 testes (3 arquivos)
+    - `@slime-sage/shared`: 8/8 testes (1 arquivo)
+    - `@slime-sage/api`: 14/14 testes (2 arquivos)
+
+### Fase 7 — Modo Coordenador da G.S, Validação Anti-Duplicatas, Snapshot de Memória, Densificação e Áudios Oficiais de Projeto
+
+- **Mudanças Implementadas:**
+  - **1. Snapshot Builder Compacto (~500 tokens):**
+    - Criado [`memorySnapshotBuilder.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/memorySnapshotBuilder.ts) e testes em [`memorySnapshotBuilder.test.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/memorySnapshotBuilder.test.ts).
+    - Compila perfil atual (nível, classe atual, atributos FOR/INT/DIS/CRI/SOC), projeto ativo em andamento com % de progresso, próximas 5 missões disponíveis, missões diárias e top 10 habilidades por maestria.
+    - Injetado dinamicamente em [`GsChatView.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/views/GsChatView.tsx) como mensagem de sistema no canal neural a cada turno.
+  - **2. Diretrizes do Modo Coordenador e Densificação de Missões:**
+    - Atualizado `GS_COORDINATOR_RULES` em [`packages/shared/src/index.ts`](file:///workspaces/Skill-Grinding/packages/shared/src/index.ts) e schemas de tool `create_project_tree` em [`apps/api/src/services/geminiService.ts`](file:///workspaces/Skill-Grinding/apps/api/src/services/geminiService.ts).
+    - Regra de entrevista socrática: 1 pergunta por vez (máximo 5) antes de formular proposta.
+    - Densificação obrigatória: temas amplos/técnicos (ex: aprender Rust) geram de 7 a 12 missões granulares em DAG misto (passos paralelos e lineares), evitando planos superficiais.
+    - Preparação secreta de evolução: a G.S arquiva silenciosamente `next_evolution_name` e `next_evolution_description` para `target_skill` e **nunca** revela este nome no texto do chat.
+  - **3. Validador Pré-Cartão e Anti-Duplicatas:**
+    - Criado [`preCardValidator.ts`](file:///workspaces/Skill-Grinding/packages/game/src/preCardValidator.ts) e testes em [`preCardValidator.test.ts`](file:///workspaces/Skill-Grinding/packages/game/src/preCardValidator.test.ts).
+    - Validação de DAG acíclico, 1 a 3 skills por missão, inferência de atributos e classificação precisa `is_new: true/false`.
+    - Preservação de `next_evolution_name` e `next_evolution_description` em [`classifySkillsDiff`](file:///workspaces/Skill-Grinding/packages/game/src/skills.ts) e no [`projectRepository.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/projectRepository.ts).
+  - **4. Suíte de Evals do Coordenador (`packages/game/src/coordinatorEvals.ts`):**
+    - 15 casos de teste sintéticos e script de execução de benchmark com taxa de sucesso de 100% (>= 90% exigido).
+  - **5. Áudios Oficiais da G.S e Voz do Mundo:**
+    - Gerado clipe oficial de voz neural `Kore`: [`apps/pwa/public/audio/voice/project-start.mp3`](file:///workspaces/Skill-Grinding/apps/pwa/public/audio/voice/project-start.mp3) (*"Aviso da Grande Sábio. Parâmetros do projeto aceitos. Protocolo de treino iniciado."*).
+    - Disparo de `project-start.mp3` no aceite de propostas de projetos que possuam `target_skill` em [`GsChatView.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/views/GsChatView.tsx).
+    - Disparo de `PROJECT_COMPLETE` em [`gameService.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/gameService.ts) ao completar a última missão de um projeto.
+    - Execução do modal cerimonial e áudio `/audio/voice/skill-acquired.mp3` em [`worldVoiceService.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/worldVoiceService.ts) **exclusivamente** quando o projeto concluído possui habilidade vinculada (`hasSkill === true`).
+  - **6. Documentação da Ascensão Comum → Extra para a Fase 10:**
+    - Mecânica detalhada no [`plan.md`](file:///workspaces/Skill-Grinding/plan.md) (linhas 750–760) para consumo dos metadados arcanos preparados em segredo pela G.S quando a maestria atingir 100 pontos.
+- **Arquivos Criados / Modificados:**
+  - `packages/shared/src/index.ts` — [schemas de target_skill e regras de densificação]
+  - `packages/game/src/skills.ts`, `packages/game/src/ledger.ts`, `packages/game/src/preCardValidator.ts`, `packages/game/src/coordinatorEvals.ts` — [ledger, validação de integridade pré-cartão, diff de habilidades e evals]
+  - `apps/api/src/services/geminiService.ts` — [inputSchema atualizado com densificação 7-12 e evolução de target_skill]
+  - `apps/pwa/public/audio/voice/project-start.mp3`, `scripts/voice-config.json`, `apps/pwa/src/services/voiceCatalog.ts` — [áudio oficial da G.S de início de projeto]
+  - `apps/pwa/src/services/memorySnapshotBuilder.ts`, `apps/pwa/src/services/projectRepository.ts`, `apps/pwa/src/services/gameService.ts`, `apps/pwa/src/services/worldVoiceService.ts`, `apps/pwa/src/components/views/GsChatView.tsx` — [snapshot de memória, persistência IndexedDB de metadados de evolução, disparos de áudio e eventos de conclusão]
+- **Estado dos Testes Automáticos:**
+  - Monorepo: 4/4 pacotes passando | 28/28 suítes | 191/191 testes passando (100% verde)
+    - `@slime-sage/pwa`: 109/109 testes (25 arquivos)
+    - `@slime-sage/game`: 60/60 testes (5 arquivos)
+    - `@slime-sage/shared`: 11/11 testes (1 arquivo)
+    - `@slime-sage/api`: 11/11 testes (1 arquivo)
+  - Typecheck: 0 erros
+  - Lint: 0 erros
+
+- **Pontos de Atenção para a Próxima Fase (Fase 8 — Onboarding: 5 Perguntas da G.S, Revelação de Raça Tensura e Rank de Ameaça):**
+  - **1. Sequência Cinemática de Onboarding (Tela Cheia):**
+    - Efeito typewriter em texto gótico Dark Fantasy simulando o despertar da consciência da Grande Sábio.
+    - Questionário pré-determinado de 5 perguntas com áudios em MP3 da voz oficial `Kore` (`onboarding-q1.mp3` a `q5.mp3`).
+  - **2. Motor Puro de Determinação de Raça e Rank (`@slime-sage/game`):**
+    - Determina a Raça (*Tensura*: Slime, Kijin, Draconiano, Majin, Homem-Fera) e o Rank de Ameaça (*Tensura*: Classe Menor, Hazard, Calamity) a partir da matriz de respostas das 5 perguntas.
+    - Impacto cosmético/narrativo no perfil sem quebrar o ledger imutável de XP.
+  - **3. Revelação Cerimonial e Transição:**
+    - Proclamação da G.S via API (`POST /tts`) com voz `Kore`, gravação no `profile` (`race`, `rank_threat`, `onboarding_done: true`) e redirecionamento direto para o Chat da G.S com o gatilho da primeira conquista (criação do projeto denso de 7 a 12 missões).
+  - **4. Controle Dev:**
+    - Botão "Resetar Onboarding (Re-despertar)" no `DevPanel.tsx`.
+
 
 
 

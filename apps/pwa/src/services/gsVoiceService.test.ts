@@ -29,7 +29,7 @@ describe("GsVoiceService", () => {
     const hash = computeTextHash(text);
     const mockAudio = "MOCK_CACHED_BASE64";
 
-    await localDb.setKv<CachedSpeech>(`tts_cache_${hash}`, {
+    await localDb.setKv<CachedSpeech>(`tts_v2_cache_${hash}`, {
       audioBase64: mockAudio,
       mimeType: "audio/wav",
       text,
@@ -64,7 +64,7 @@ describe("GsVoiceService", () => {
     expect(success).toBe(true);
     expect(apiSpy).toHaveBeenCalledWith("http://localhost:3000", "super-secret-system-key", text, "Kore");
 
-    const cached = await localDb.getKv<CachedSpeech>(`tts_cache_${hash}`);
+    const cached = await localDb.getKv<CachedSpeech>(`tts_v2_cache_${hash}`);
     expect(cached).toBeDefined();
     expect(cached?.audioBase64).toBe(mockAudio);
   });

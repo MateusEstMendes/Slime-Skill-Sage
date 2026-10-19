@@ -106,4 +106,15 @@ export type GameEvent =
         skillName: string;
         mastery: number;
       };
+    }
+  | {
+      type: "PROJECT_COMPLETE";
+      payload: {
+        projectId: string;
+        projectTitle: string;
+        hasSkill: boolean;
+        skillId?: string;
+        skillName?: string;
+      };
     };
+

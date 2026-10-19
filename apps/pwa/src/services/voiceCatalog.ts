@@ -100,4 +100,15 @@ export const OFFICIAL_VOICE_CLIPS: VoiceClip[] = [
     badge: "ALERTA",
     colorVariant: "purple",
   },
+  {
+    id: "project-start",
+    title: "Projeto Iniciado",
+    subtitle: "[GRANDE SÁBIO // PROTOCOLO DE TREINO]",
+    category: "Core Events",
+    url: "/audio/voice/project-start.mp3",
+    transcript: "Aviso da Grande Sábio. Parâmetros do projeto aceitos. Protocolo de treino iniciado.",
+    badge: "PROJETO",
+    colorVariant: "cyan",
+  },
 ];
+

@@ -48,24 +48,24 @@ Legenda: `[ ]` Pendente | `[/]` Em andamento | `[x]` Concluído e Aprovado pelo 
 
 - [x] 6.1 Desenvolvimento
 - [x] 6.2 Testes Automáticos
-- [ ] 6.3 Testes do Usuário
-- [ ] 6.4 Debug e Atualização de Handoff/Feedback
+- [x] 6.3 Testes do Usuário
+- [x] 6.4 Debug e Atualização de Handoff/Feedback
 
-## Fase 7 — Modo Coordenador da G.S, Validação Anti-Duplicatas e Snapshot de Memória
+## Fase 7 — Modo Coordenador da G.S, Validação Anti-Duplicatas, Snapshot de Memória e Áudios de Projeto
 
-- [ ] 7.1 Desenvolvimento
-- [ ] 7.2 Testes Automáticos
-- [ ] 7.3 Testes do Usuário
-- [ ] 7.4 Debug e Atualização de Handoff/Feedback
+- [x] 7.1 Desenvolvimento
+- [x] 7.2 Testes Automáticos
+- [/] 7.3 Testes do Usuário
+- [x] 7.4 Debug e Atualização de Handoff/Feedback
 
-## Fase 8 — Onboarding: Apresentação da G.S com Áudios Oficiais, Typewriter e Revelação Inicial via API
+## Fase 8 — Onboarding: 5 Perguntas da G.S, Revelação de Raça (Tensura) e Rank de Ameaça
 
 - [ ] 8.1 Desenvolvimento
 - [ ] 8.2 Testes Automáticos
 - [ ] 8.3 Testes do Usuário
 - [ ] 8.4 Debug e Atualização de Handoff/Feedback
 
-## Fase 9 — Motor de Jogo (Parte 2): Classes por Área e Evolução com Desafio Autodeclarado
+## Fase 9 — Motor de Jogo (Parte 2): Classes por  Área e Evolução com Desafio Autodeclarado
 
 - [ ] 9.1 Desenvolvimento
 - [ ] 9.2 Testes Automáticos

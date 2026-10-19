@@ -3,11 +3,16 @@ import {
   type AreaCode,
   type Mission,
   type MissionDep,
+  type MissionReward,
+  type MissionSkillBinding,
   type MissionStatus,
   type Project,
   type ProjectStatus,
+  type Skill,
 } from "@slime-sage/shared";
 import {
+  canonicalizeSkillKey,
+  normalizeSkillName,
   recalculateMissionStatuses,
   validateAcyclicGraph,
 } from "@slime-sage/game";
@@ -18,6 +23,7 @@ export interface CreateProjectInput {
   area_id: AreaCode;
   title: string;
   description?: string;
+  target_skill?: MissionSkillBinding;
 }
 
 export interface CreateMissionTreeItem {
@@ -463,6 +469,85 @@ export class ProjectRepository {
     return progress;
   }
 
+  private async bindSkillsAndRewardsForMissions(
+    defaultAreaId: AreaCode,
+    missionSkillPairs: Array<{
+      missionId: string;
+      xpReward: number;
+      skills?: ReadonlyArray<MissionSkillBinding>;
+    }>,
+  ): Promise<{ createdSkills: Skill[]; createdRewards: MissionReward[] }> {
+    const now = new Date().toISOString();
+    const existingSkills = await this.db.getAll<Skill>("skill");
+    const skillByCanonical = new Map<string, Skill>();
+
+    for (const s of existingSkills) {
+      const key = canonicalizeSkillKey(s.name);
+      if (key && !skillByCanonical.has(key)) {
+        skillByCanonical.set(key, s);
+      }
+    }
+
+    const createdSkills: Skill[] = [];
+    const createdRewards: MissionReward[] = [];
+
+    for (const pair of missionSkillPairs) {
+      if (!pair.skills || pair.skills.length === 0) continue;
+
+      for (let idx = 0; idx < pair.skills.length; idx++) {
+        const binding = pair.skills[idx];
+        const cleanName = normalizeSkillName(binding.name);
+        const key = canonicalizeSkillKey(cleanName);
+        if (!key) continue;
+
+        let targetSkill = skillByCanonical.get(key);
+        if (!targetSkill) {
+          const areaId: AreaCode = binding.area_id || defaultAreaId;
+          targetSkill = {
+            id: `skl_${Date.now()}_${createdSkills.length}_${Math.random().toString(36).slice(2, 6)}`,
+            area_id: areaId,
+            name: cleanName,
+            description: `Habilidade despertada via Decreto da Grande Sábio [${areaId}]`,
+            tier: "comum",
+            mastery: 0,
+            next_evolution_name: binding.next_evolution_name,
+            next_evolution_description: binding.next_evolution_description,
+            created_at: now,
+            updated_at: now,
+          };
+          skillByCanonical.set(key, targetSkill);
+          createdSkills.push(targetSkill);
+        } else if (!targetSkill.next_evolution_name && binding.next_evolution_name) {
+          targetSkill.next_evolution_name = binding.next_evolution_name;
+          targetSkill.next_evolution_description = binding.next_evolution_description;
+          targetSkill.updated_at = now;
+          if (!createdSkills.some((s) => s.id === targetSkill!.id)) {
+            createdSkills.push(targetSkill);
+          }
+        }
+
+        createdRewards.push({
+          id: `rew_${Date.now()}_${createdRewards.length}_${Math.random().toString(36).slice(2, 6)}`,
+          mission_id: pair.missionId,
+          skill_id: targetSkill.id,
+          area_id: targetSkill.area_id,
+          xp_amount: pair.xpReward,
+          mastery_amount: Math.max(5, Math.round(pair.xpReward * 0.25)),
+          created_at: now,
+        });
+      }
+    }
+
+    if (createdSkills.length > 0) {
+      await this.db.putBatch("skill", createdSkills);
+    }
+    if (createdRewards.length > 0) {
+      await this.db.putBatch("mission_reward", createdRewards);
+    }
+
+    return { createdSkills, createdRewards };
+  }
+
   public async createProjectTree(
     projectInput: CreateProjectInput,
     missionsInput: Array<{
@@ -470,8 +555,9 @@ export class ProjectRepository {
       description?: string;
       xp_reward?: number;
       depends_on_titles?: string[];
+      skills?: ReadonlyArray<MissionSkillBinding>;
     }>,
-  ): Promise<{ project: Project; missions: Mission[] }> {
+  ): Promise<{ project: Project; missions: Mission[]; createdSkills: Skill[] }> {
     const project = await this.createProject(projectInput);
 
     const titleToIdMap = new Map<string, string>();
@@ -503,9 +589,40 @@ export class ProjectRepository {
     });
 
     const result = await this.createMissionTree(project.id, treeItems);
+
+    const defaultSkills = projectInput.target_skill ? [projectInput.target_skill] : [];
+    const missionSkillBindings = missionsInput.map((m) => {
+      let skills = m.skills && m.skills.length > 0 ? [...m.skills] : [...defaultSkills];
+      if (projectInput.target_skill) {
+        const targetCanonical = canonicalizeSkillKey(projectInput.target_skill.name);
+        const targetIndex = skills.findIndex((s) => canonicalizeSkillKey(s.name) === targetCanonical);
+        if (targetIndex === -1) {
+          skills = [projectInput.target_skill, ...skills];
+        } else {
+          skills = [...skills];
+          skills[targetIndex] = {
+            ...skills[targetIndex],
+            next_evolution_name: skills[targetIndex].next_evolution_name || projectInput.target_skill.next_evolution_name,
+            next_evolution_description: skills[targetIndex].next_evolution_description || projectInput.target_skill.next_evolution_description,
+          };
+        }
+      }
+      return {
+        missionId: titleToIdMap.get(m.title)!,
+        xpReward: m.xp_reward ?? 35,
+        skills,
+      };
+    });
+
+    const { createdSkills } = await this.bindSkillsAndRewardsForMissions(
+      project.area_id,
+      missionSkillBindings,
+    );
+
     return {
       project,
       missions: result.missions,
+      createdSkills,
     };
   }
 
@@ -516,9 +633,14 @@ export class ProjectRepository {
       description?: string;
       xp_reward?: number;
       depends_on_mission_ids?: string[];
+      skills?: ReadonlyArray<MissionSkillBinding>;
     }>,
   ): Promise<Mission[]> {
+    const project = await this.getProject(projectId);
+    const areaId: AreaCode = project?.area_id || "INT";
+
     const treeItems: CreateMissionTreeItem[] = missionsInput.map((m, idx) => ({
+      id: `mis_${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 6)}`,
       title: m.title,
       description: m.description,
       order_index: idx,
@@ -527,6 +649,16 @@ export class ProjectRepository {
     }));
 
     const result = await this.createMissionTree(projectId, treeItems);
+
+    await this.bindSkillsAndRewardsForMissions(
+      areaId,
+      missionsInput.map((m, idx) => ({
+        missionId: treeItems[idx].id!,
+        xpReward: m.xp_reward ?? 35,
+        skills: m.skills,
+      })),
+    );
+
     return result.missions;
   }
 

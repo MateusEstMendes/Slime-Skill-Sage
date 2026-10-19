@@ -43,10 +43,9 @@ describe("GameService & Transactional Ledger", () => {
     expect(res.profile.current_xp).toBe(50); // 350 - 300
 
     // Dispatched LEVEL_UP event
-    expect(receivedEvents).toHaveLength(1);
-    const lvlEvent = receivedEvents[0];
-    expect(lvlEvent.type).toBe("LEVEL_UP");
-    if (lvlEvent.type === "LEVEL_UP") {
+    const lvlEvent = receivedEvents.find((e) => e.type === "LEVEL_UP");
+    expect(lvlEvent).toBeDefined();
+    if (lvlEvent && lvlEvent.type === "LEVEL_UP") {
       expect(lvlEvent.payload.newLevel).toBe(2);
     }
 
@@ -163,4 +162,40 @@ describe("GameService & Transactional Ledger", () => {
     gameService.useRealClock();
     expect(gameService.isFakeClock()).toBe(false);
   });
+
+  it("dispatches PROJECT_COMPLETE when all project missions are completed", async () => {
+    const receivedEvents: GameEvent[] = [];
+    const unsubscribe = gameService.subscribeToGameEvents((event) => {
+      receivedEvents.push(event);
+    });
+
+    const project = await projectRepository.createProject({
+      area_id: "INT",
+      title: "Dominar Rust",
+    });
+
+    const skill = await gameService.createSkill({
+      name: "Programação Rust",
+      areaId: "INT",
+      description: "Linguagem Rust",
+    });
+
+    const { mission } = await projectRepository.addMission(project.id, {
+      title: "Fundamentos de Rust",
+      xp_reward: 35,
+    });
+
+    await gameService.completeMission(mission.id, { skillId: skill.id });
+
+    const projEvent = receivedEvents.find((e) => e.type === "PROJECT_COMPLETE");
+    expect(projEvent).toBeDefined();
+    if (projEvent && projEvent.type === "PROJECT_COMPLETE") {
+      expect(projEvent.payload.projectId).toBe(project.id);
+      expect(projEvent.payload.hasSkill).toBe(true);
+      expect(projEvent.payload.skillName).toBe("Programação Rust");
+    }
+
+    unsubscribe();
+  });
 });
+

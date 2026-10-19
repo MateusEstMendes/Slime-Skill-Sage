@@ -11,7 +11,8 @@
     "rank-up": "Aviso! Aviso! O usuário cumpriu os requisitos, a evolução de classe foi iniciada!",
     "mission-complete": "Missão concluída. Recompensas e experiência concedidas.",
     "focus-start": "Aceleração de Pensamento iniciada. Concentração aumentada.",
-    "focus-break": "Atenção. Desvio de atenção detectado. Foco interrompido."
+    "focus-break": "Atenção. Desvio de atenção detectado. Foco interrompido.",
+    "project-start": "Aviso da Grande Sábio. Parâmetros do projeto aceitos. Protocolo de treino iniciado."
   },
   "customSkillEvolutions": [
     {

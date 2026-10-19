@@ -129,4 +129,50 @@ describe("WorldVoiceModal & worldVoiceService", () => {
       expect(window.HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(initialPlayCalls + 1);
     });
   });
+
+  it("handles PROJECT_COMPLETE with hasSkill=true by displaying modal with gold theme", async () => {
+    render(<WorldVoiceModal />);
+
+    // @ts-expect-error accessing private method for testing
+    gameService.dispatchEvent({
+      type: "PROJECT_COMPLETE",
+      payload: {
+        projectId: "proj_1",
+        projectTitle: "Domínio de Rust",
+        hasSkill: true,
+        skillName: "Programação Rust",
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog", { name: "Voz do Mundo" })).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/CONSAGRAÇÃO DE HABILIDADE/i)).toBeInTheDocument();
+
+    expect(window.HTMLMediaElement.prototype.play).toHaveBeenCalled();
+  });
+
+  it("ignores PROJECT_COMPLETE when hasSkill=false without displaying modal", async () => {
+    const { container } = render(<WorldVoiceModal />);
+
+    // @ts-expect-error accessing private method for testing
+    gameService.dispatchEvent({
+      type: "PROJECT_COMPLETE",
+      payload: {
+        projectId: "proj_noskill",
+        projectTitle: "Limpeza Geral",
+        hasSkill: false,
+      },
+    });
+
+    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByRole("dialog", { name: "Voz do Mundo" })).not.toBeInTheDocument();
+  });
+
+  it("plays direct voice clip via playVoiceClip when enabled", async () => {
+    await worldVoiceService.playVoiceClip("/audio/voice/project-start.mp3");
+    expect(window.HTMLMediaElement.prototype.play).toHaveBeenCalled();
+  });
 });
+

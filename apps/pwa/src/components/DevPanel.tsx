@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import {
   type AppLogEntry,
+  type HunterContext,
   type LogLevel,
   type LogScope,
   type TableName,
@@ -35,6 +36,7 @@ import {
 } from "../services/notificationService";
 import { localDb } from "../services/db";
 import { gameService } from "../services/gameService";
+import { buildMemorySnapshot } from "../services/memorySnapshotBuilder";
 import { type LedgerAuditResult } from "@slime-sage/game";
 import { VoicesView } from "./views/VoicesView";
 import { GildedCorners } from "./system/GildedCorners";
@@ -44,7 +46,7 @@ interface DevPanelProps {
   onClose: () => void;
 }
 
-type TabKey = "logs" | "ledger" | "time" | "db" | "voices" | "notif";
+type TabKey = "logs" | "snapshot" | "ledger" | "time" | "db" | "voices" | "notif";
 
 export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<TabKey>("logs");
@@ -54,6 +56,10 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
   const [levelFilter, setLevelFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedLogIds, setExpandedLogIds] = useState<Set<string>>(new Set());
+
+  // Snapshot state
+  const [snapshotData, setSnapshotData] = useState<HunterContext | null>(null);
+  const [snapshotLoading, setSnapshotLoading] = useState(false);
 
   // Database state
   const [tableCounts, setTableCounts] = useState<Record<TableName, number> | null>(null);
@@ -97,6 +103,18 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
       setAiStats(stats || null);
     } catch {
       // Ignora erro
+    }
+  }, []);
+
+  const loadSnapshot = useCallback(async () => {
+    setSnapshotLoading(true);
+    try {
+      const snap = await buildMemorySnapshot();
+      setSnapshotData(snap);
+    } catch (err) {
+      console.error("Erro ao construir snapshot:", err);
+    } finally {
+      setSnapshotLoading(false);
     }
   }, []);
 
@@ -155,6 +173,8 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
     if (isOpen) {
       if (activeTab === "logs") {
         void loadLogs();
+      } else if (activeTab === "snapshot") {
+        void loadSnapshot();
       } else if (activeTab === "db") {
         void loadTableCounts();
       } else if (activeTab === "ledger") {
@@ -163,7 +183,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
         refreshTimeState();
       }
     }
-  }, [isOpen, activeTab, loadLogs, loadTableCounts, loadLedgerData, refreshTimeState]);
+  }, [isOpen, activeTab, loadLogs, loadSnapshot, loadTableCounts, loadLedgerData, refreshTimeState]);
 
   // Live real-time ticking for Clock display
   useEffect(() => {
@@ -386,6 +406,18 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
           </button>
 
           <button
+            onClick={() => setActiveTab("snapshot")}
+            className={`px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+              activeTab === "snapshot"
+                ? "border-[#fde047] text-[#fde047] bg-[#1c1308]/50"
+                : "border-transparent text-[#a39171] hover:text-[#f3e5cc]"
+            }`}
+          >
+            <Bot className="w-3.5 h-3.5" />
+            <span>Snapshot de Memória</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab("ledger")}
             className={`px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === "ledger"
@@ -448,6 +480,120 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+          {/* TAB: SNAPSHOT DE MEMÓRIA */}
+          {activeTab === "snapshot" && (
+            <div className="space-y-5 max-w-3xl mx-auto font-mono">
+              <div className="relative bg-[#060e20]/95 border border-[#c89b55]/60 rounded-none p-5 space-y-4 shadow-[0_0_25px_rgba(223,168,108,0.12)] overflow-hidden">
+                <GildedCorners size="sm" />
+                <div className="relative z-10 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-[#140f08] border border-[#dfa86c]/60 text-[#fde047] shadow-[0_0_12px_rgba(223,168,108,0.25)]">
+                      <Bot className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold font-fantasy text-[#f8ecd5] tracking-wider uppercase">
+                        Snapshot de Memória do Caçador (Modo Coordenador)
+                      </h3>
+                      <p className="text-xs text-[#c5b08f]">
+                        Contexto compacto (~500 tokens) enviado à Grande Sábio em cada mensagem.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => void loadSnapshot()}
+                    disabled={snapshotLoading}
+                    className="p-2 rounded-none bg-slate-900 border border-[#dfa86c]/40 hover:bg-slate-800 text-[#fde047]"
+                    title="Recalcular Snapshot"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${snapshotLoading ? "animate-spin" : ""}`} />
+                  </button>
+                </div>
+
+                {snapshotData ? (
+                  <div className="relative z-10 space-y-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                      <div className="bg-[#040814] p-2.5 border border-[#dfa86c]/30">
+                        <span className="text-[#c5b08f] block text-[10px]">TOKENS ESTIMADOS</span>
+                        <span className="text-base font-bold text-[#fde047]">
+                          ~{snapshotData.estimated_tokens ?? 0} / 500
+                        </span>
+                      </div>
+                      <div className="bg-[#040814] p-2.5 border border-[#dfa86c]/30">
+                        <span className="text-[#c5b08f] block text-[10px]">NÍVEL / XP</span>
+                        <span className="text-base font-bold text-[#00f3ff]">
+                          Nv. {snapshotData.profile.level} ({snapshotData.profile.current_xp} XP)
+                        </span>
+                      </div>
+                      <div className="bg-[#040814] p-2.5 border border-[#dfa86c]/30">
+                        <span className="text-[#c5b08f] block text-[10px]">TOP HABILIDADES</span>
+                        <span className="text-base font-bold text-emerald-400">
+                          {snapshotData.skills.length} / 10
+                        </span>
+                      </div>
+                      <div className="bg-[#040814] p-2.5 border border-[#dfa86c]/30">
+                        <span className="text-[#c5b08f] block text-[10px]">MISSÕES DISPONÍVEIS</span>
+                        <span className="text-base font-bold text-amber-300">
+                          {snapshotData.pending_missions_count}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Top 10 Hybrid Skills */}
+                    <div className="space-y-1.5">
+                      <span className="text-[11px] font-fantasy uppercase tracking-wider text-[#dfa86c] block">
+                        Seleção Híbrida de Habilidades (Top 5 Maestria + Top 5 Prática Recente):
+                      </span>
+                      {snapshotData.skills.length === 0 ? (
+                        <div className="text-xs text-slate-400 bg-[#040814] p-3 border border-slate-800">
+                          Nenhuma habilidade registrada no banco local.
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {snapshotData.skills.map((s) => (
+                            <div
+                              key={s.id}
+                              className="p-2 bg-[#040814] border border-[#dfa86c]/30 flex items-center justify-between text-xs"
+                            >
+                              <div className="min-w-0 pr-2">
+                                <span className="text-[#f8ecd5] font-bold block truncate">{s.name}</span>
+                                <span className="text-[10px] text-[#c5b08f]">
+                                  [{s.area_id}] · {s.tier.toUpperCase()} · {s.mastery}/300
+                                </span>
+                              </div>
+                              <span
+                                className={`px-1.5 py-0.5 text-[9px] font-bold uppercase shrink-0 border ${
+                                  s.selection_reason === "top_mastery"
+                                    ? "border-[#fde047]/50 text-[#fde047] bg-[#fde047]/10"
+                                    : "border-[#00f3ff]/50 text-[#00f3ff] bg-[#00f3ff]/10"
+                                }`}
+                              >
+                                {s.selection_reason === "top_mastery" ? "TOP MAESTRIA" : "RECENTE"}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Prompt Textual Injetado */}
+                    <div className="space-y-1.5">
+                      <span className="text-[11px] font-fantasy uppercase tracking-wider text-[#dfa86c] block">
+                        Prompt Formatado Injetado no Canal Neural:
+                      </span>
+                      <pre className="p-3 bg-black/80 border border-[#dfa86c]/30 text-[11px] text-[#f8ecd5] whitespace-pre-wrap overflow-x-auto leading-relaxed">
+                        {snapshotData.formatted_prompt}
+                      </pre>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-[#c5b08f] py-4 text-center">
+                    Carregando telemetria do Snapshot...
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* TAB: LEDGER */}
           {activeTab === "ledger" && (
             <div className="space-y-5 max-w-3xl mx-auto font-mono">

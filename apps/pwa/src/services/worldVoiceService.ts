@@ -32,7 +32,7 @@ export const OFFICIAL_AUDIO_MAP: Record<string, string> = {
   LEVEL_UP: "/audio/voice/level-up.mp3",
   SKILL_ACQUIRED: "/audio/voice/skill-acquired.mp3",
   SKILL_EVOLVED_EXTRA: "/audio/voice/skill-evolved-extra.mp3",
-  PROJECT_COMPLETE: "/audio/voice/project-complete.mp3",
+  PROJECT_COMPLETE: "/audio/voice/skill-acquired.mp3",
 };
 
 class WorldVoiceService {
@@ -119,6 +119,29 @@ class WorldVoiceService {
     }
   }
 
+  public async playVoiceClip(audioSrc: string): Promise<void> {
+    const isEnabled = await this.isTtsEnabled();
+    if (!isEnabled) return;
+    if (typeof Audio === "undefined") return;
+
+    try {
+      if (this.currentAudio) {
+        this.currentAudio.pause();
+        this.currentAudio = null;
+      }
+      const audio = new Audio(audioSrc);
+      this.currentAudio = audio;
+      audio.onended = () => {
+        if (this.currentAudio === audio) {
+          this.currentAudio = null;
+        }
+      };
+      await audio.play().catch(() => {});
+    } catch {
+      // Ignore
+    }
+  }
+
   public async replayCurrentSpeech(): Promise<void> {
     if (!this.currentItem) return;
     const isEnabled = await this.isTtsEnabled();
@@ -143,7 +166,7 @@ class WorldVoiceService {
         soundService.playLevelUp();
       } else if (item.type === "SKILL_EVOLVED_EXTRA") {
         soundService.playSkillEvolved();
-      } else if (item.type === "SKILL_ACQUIRED") {
+      } else if (item.type === "SKILL_ACQUIRED" || item.type === "PROJECT_COMPLETE") {
         soundService.playSkillAcquired();
       } else {
         soundService.playSystemNotification();
@@ -246,8 +269,30 @@ class WorldVoiceService {
           skillTier: "comum",
         },
       });
+    } else if (event.type === "PROJECT_COMPLETE") {
+      const { projectTitle, hasSkill, skillName, skillId } = event.payload;
+      // Áudio solene de habilidade adquirida APENAS se o projeto tiver uma habilidade definida
+      if (hasSkill) {
+        const spokenText = skillName
+          ? `Aviso da Grande Sábio. Projeto '${projectTitle}' concluído com sucesso. Todos os requisitos da habilidade '${skillName}' foram gravados na Árvore do Caçador.`
+          : `Aviso da Grande Sábio. Projeto '${projectTitle}' concluído com sucesso. Habilidade gravada na Árvore do Caçador.`;
+        this.enqueue({
+          id,
+          type: "PROJECT_COMPLETE",
+          title: `PROJETO CONCLUÍDO: ${projectTitle.toUpperCase()}`,
+          subtitle: "[GRANDE SÁBIO // CONSAGRAÇÃO DE HABILIDADE]",
+          description: `Aviso da Grande Sábio. Todos os objetivos da árvore de missões foram concluídos com sucesso. As condições de treino foram atendidas e a habilidade '${skillName || "Principal"}' foi gravada com glória na Árvore do Caçador.`,
+          spokenText,
+          colorVariant: "gold",
+          details: {
+            skillId,
+            skillName,
+          },
+        });
+      }
     }
   }
 }
 
 export const worldVoiceService = new WorldVoiceService();
+

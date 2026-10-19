@@ -2,21 +2,24 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   type ChatMessage,
   type HunterContext,
-  type Profile,
   type Skill,
-  type Project,
-  type Mission,
   type Proposal,
 } from "@slime-sage/shared";
+import {
+  classifySkillsDiff,
+  validateProposalIntegrity,
+} from "@slime-sage/game";
 import { chatRepository, MAIN_THREAD_ID } from "../../services/chatRepository";
 import { localDb } from "../../services/db";
 import { projectRepository } from "../../services/projectRepository";
+import { buildMemorySnapshot } from "../../services/memorySnapshotBuilder";
 import { sendChatMessage } from "../../services/apiClient";
 import { getStoredApiUrl, getStoredToken } from "../../services/authStorage";
 import { gsVoiceService } from "../../services/gsVoiceService";
 import { logger } from "../../services/logger";
 import { hapticFeedback } from "../../services/haptics";
 import { soundService } from "../../services/soundService";
+import { worldVoiceService } from "../../services/worldVoiceService";
 import { ProposalCard } from "../chat/ProposalCard";
 import { GildedCorners } from "../system/GildedCorners";
 import { SystemButton } from "../system/SystemButton";
@@ -34,6 +37,7 @@ export const GsChatView: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [recalculatingNotice, setRecalculatingNotice] = useState<string | null>(null);
   const [currentlySpeakingId, setCurrentlySpeakingId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -51,7 +55,7 @@ export const GsChatView: React.FC = () => {
             thread_id: MAIN_THREAD_ID,
             role: "assistant",
             content:
-              "Resposta: O canal neural com a Grande Sábio está estabelecido. Posso analisar sua evolução, propor árvores de projetos estruturados ou decompor metas em missões acíclicas. Qual é o seu direcionamento, Caçador?",
+              "Resposta: O canal neural com a Grande Sábio está estabelecido. No Modo Coordenador, conduzirei uma breve análise estratégica antes de arquitetar árvores de projetos e habilidades. Qual é o seu direcionamento, Caçador?",
             created_at: new Date().toISOString(),
           };
           await chatRepository.saveMessage(welcomeMsg);
@@ -80,55 +84,10 @@ export const GsChatView: React.FC = () => {
     if (typeof messagesEndRef.current?.scrollIntoView === "function") {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, recalculatingNotice]);
 
   const assembleHunterContext = async (): Promise<HunterContext> => {
-    const profile = (await localDb.get<Profile>("profile", "main_profile")) || {
-      id: "main_profile",
-      name: "Caçador",
-      title: "Aspirante a Desperto",
-      level: 1,
-      current_xp: 0,
-      total_xp: 0,
-      streak_count: 0,
-      last_active_date: null,
-      onboarding_done: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    const skills = await localDb.getAll<Skill>("skill");
-    const projects = await localDb.getAll<Project>("project");
-    const missions = await localDb.getAll<Mission>("mission");
-
-    const availableMissions = missions.filter((m) => m.status === "disponivel" && !m.deleted_at);
-
-    return {
-      profile: {
-        name: profile.name,
-        title: profile.title,
-        level: profile.level,
-        current_xp: profile.current_xp,
-        streak_count: profile.streak_count,
-      },
-      skills: skills.map((s) => ({
-        id: s.id,
-        name: s.name,
-        area_id: s.area_id,
-        tier: s.tier,
-        mastery: s.mastery,
-      })),
-      projects: projects
-        .filter((p) => !p.deleted_at)
-        .map((p) => ({
-          id: p.id,
-          title: p.title,
-          area_id: p.area_id,
-          status: p.status,
-          progress: p.progress,
-        })),
-      pending_missions_count: availableMissions.length,
-    };
+    return await buildMemorySnapshot();
   };
 
   const handleSendMessage = async (textToSend?: string) => {
@@ -150,58 +109,139 @@ export const GsChatView: React.FC = () => {
     hapticFeedback.tap();
 
     setIsLoading(true);
+    setRecalculatingNotice(null);
 
     try {
       const apiUrl = getStoredApiUrl() || "";
       const token = getStoredToken() || "";
       const hunterContext = await assembleHunterContext();
+      const allExistingSkills = await localDb.getAll<Skill>("skill");
 
       void logger.info("ai", `[Canal Neural // Transmissão] Enviando diretriz à Grande Sábio`, {
         threadId: MAIN_THREAD_ID,
         userMessage: content,
         activeProjects: hunterContext.projects.length,
         activeSkills: hunterContext.skills.length,
+        estimatedSnapshotTokens: hunterContext.estimated_tokens,
       });
 
-      const chatReqMessages = updatedMessages.map((m) => ({
+      let currentReqMessages = updatedMessages.map((m) => ({
         role: m.role,
         content: m.content,
       }));
 
-      const res = await sendChatMessage(apiUrl, token, {
-        thread_id: MAIN_THREAD_ID,
-        messages: chatReqMessages,
-        hunter_context: hunterContext,
-      });
+      let finalReplyContent = "";
+      let finalProposal: Proposal | undefined = undefined;
+      let finalSpokenText: string | undefined = undefined;
+      let totalPromptTokens = 0;
+      let totalCompletionTokens = 0;
+      let totalCombinedTokens = 0;
+      let requestsMade = 0;
 
-      if (!res.success || !res.data) {
-        const errorContent =
-          res.error ||
-          "Aviso: Não foi possível alcançar o canal neural. A Grande Sábio opera sob processamento puramente local.";
-        void logger.warn("ai", `[Canal Neural // Falha] ${errorContent}`);
-        const assistantMsg: ChatMessage = {
-          id: `asst-${Date.now()}`,
+      const MAX_RETRIES = 2;
+
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        const res = await sendChatMessage(apiUrl, token, {
           thread_id: MAIN_THREAD_ID,
-          role: "assistant",
-          content: errorContent,
-          created_at: new Date().toISOString(),
-        };
-        await chatRepository.saveMessage(assistantMsg);
-        setMessages((prev) => [...prev, assistantMsg]);
-        return;
+          messages: currentReqMessages,
+          hunter_context: hunterContext,
+        });
+
+        if (!res.success || !res.data) {
+          const errorContent =
+            res.error ||
+            "Aviso: Não foi possível alcançar o canal neural. A Grande Sábio opera sob processamento puramente local.";
+          void logger.warn("ai", `[Canal Neural // Falha] ${errorContent}`);
+          const assistantMsg: ChatMessage = {
+            id: `asst-${Date.now()}`,
+            thread_id: MAIN_THREAD_ID,
+            role: "assistant",
+            content: errorContent,
+            created_at: new Date().toISOString(),
+          };
+          await chatRepository.saveMessage(assistantMsg);
+          setMessages((prev) => [...prev, assistantMsg]);
+          return;
+        }
+
+        const { content: replyContent, proposal, spoken_text, usage } = res.data;
+        requestsMade += 1;
+
+        if (usage) {
+          totalPromptTokens += usage.prompt_tokens || 0;
+          totalCompletionTokens += usage.completion_tokens || 0;
+          totalCombinedTokens += usage.total_tokens || 0;
+        }
+
+        // Validador Pré-Cartão para create_project_tree
+        if (proposal && proposal.type === "create_project_tree") {
+          const validation = validateProposalIntegrity(proposal, allExistingSkills);
+          if (!validation.isValid) {
+            void logger.warn(
+              "ai",
+              `[Validador Pré-Cartão // Anomalia] Tentativa ${attempt + 1}/${MAX_RETRIES + 1} rejeitada`,
+              { errors: validation.errors },
+            );
+
+            if (attempt < MAX_RETRIES) {
+              setRecalculatingNotice(
+                "✦ [SISTEMA] Anomalia estrutural detectada na árvore de missões. Grande Sábio recalculando parâmetros...",
+              );
+              currentReqMessages = [
+                ...currentReqMessages,
+                {
+                  role: "assistant",
+                  content: replyContent || "Proposta preliminar gerada.",
+                },
+                {
+                  role: "user",
+                  content: `[CORREÇÃO AUTOMÁTICA DO VALIDADOR DO SISTEMA]: Sua proposta de árvore de projeto falhou na validação estrutural pelos seguintes motivos: ${validation.errors.join(
+                    " | ",
+                  )}. Reenvie a proposta corrigindo todas as dependências (DAG sem ciclos) e garantindo de 1 a 3 habilidades válidas por missão.`,
+                },
+              ];
+              continue;
+            }
+          } else if (validation.enrichedProposal) {
+            finalProposal = validation.enrichedProposal;
+            finalReplyContent = replyContent;
+            finalSpokenText = spoken_text;
+            break;
+          }
+        } else if (proposal && proposal.type === "add_missions") {
+          finalProposal = {
+            ...proposal,
+            missions: proposal.missions.map((m) => ({
+              ...m,
+              skills: classifySkillsDiff(allExistingSkills, m.skills || [], "INT"),
+            })),
+          };
+          finalReplyContent = replyContent;
+          finalSpokenText = spoken_text;
+          break;
+        } else {
+          finalProposal = proposal;
+          finalReplyContent = replyContent;
+          finalSpokenText = spoken_text;
+          break;
+        }
       }
 
-      const { content: replyContent, proposal, spoken_text, usage } = res.data;
+      setRecalculatingNotice(null);
 
       void logger.info("ai", `[Canal Neural // Resposta Recebida] Análise concluída pela Grande Sábio`, {
-        tokens: usage,
-        hasProposal: !!proposal,
-        proposalType: proposal?.type,
+        tokens: {
+          prompt_tokens: totalPromptTokens,
+          completion_tokens: totalCompletionTokens,
+          total_tokens: totalCombinedTokens,
+        },
+        hasProposal: !!finalProposal,
+        proposalType: finalProposal?.type,
         model: "gemini-3.8-flash",
       });
 
       // Acumula estatísticas de consumo de tokens no IndexedDB
-      if (usage) {
+      if (totalCombinedTokens > 0 || requestsMade > 0) {
         const prevStats = (await localDb.getKv<{
           total_prompt_tokens: number;
           total_completion_tokens: number;
@@ -215,10 +255,10 @@ export const GsChatView: React.FC = () => {
         };
 
         await localDb.setKv("ai_usage_stats", {
-          total_prompt_tokens: prevStats.total_prompt_tokens + (usage.prompt_tokens || 0),
-          total_completion_tokens: prevStats.total_completion_tokens + (usage.completion_tokens || 0),
-          total_tokens: prevStats.total_tokens + (usage.total_tokens || 0),
-          requests_count: prevStats.requests_count + 1,
+          total_prompt_tokens: prevStats.total_prompt_tokens + totalPromptTokens,
+          total_completion_tokens: prevStats.total_completion_tokens + totalCompletionTokens,
+          total_tokens: prevStats.total_tokens + totalCombinedTokens,
+          requests_count: prevStats.requests_count + requestsMade,
           last_used_at: new Date().toISOString(),
         });
       }
@@ -227,9 +267,9 @@ export const GsChatView: React.FC = () => {
         id: `asst-${Date.now()}`,
         thread_id: MAIN_THREAD_ID,
         role: "assistant",
-        content: replyContent,
-        proposal,
-        status: proposal ? "pendente" : undefined,
+        content: finalReplyContent,
+        proposal: finalProposal,
+        status: finalProposal ? "pendente" : undefined,
         created_at: new Date().toISOString(),
       };
 
@@ -239,9 +279,9 @@ export const GsChatView: React.FC = () => {
 
       // Auto-speak se habilitado nas configurações
       const autoPlay = await localDb.getKv<boolean>("settings_auto_play_voice");
-      if (autoPlay && spoken_text) {
+      if (autoPlay && finalSpokenText) {
         setCurrentlySpeakingId(assistantMsg.id);
-        void gsVoiceService.speakWithGs(spoken_text);
+        void gsVoiceService.speakWithGs(finalSpokenText);
       }
     } catch (err: unknown) {
       console.error("[GsChatView] Erro ao enviar mensagem:", err);
@@ -256,6 +296,7 @@ export const GsChatView: React.FC = () => {
       await chatRepository.saveMessage(fallbackMsg);
       setMessages((prev) => [...prev, fallbackMsg]);
     } finally {
+      setRecalculatingNotice(null);
       setIsLoading(false);
     }
   };
@@ -263,19 +304,29 @@ export const GsChatView: React.FC = () => {
   const handleAcceptProposal = async (msgId: string, proposal: Proposal) => {
     try {
       if (proposal.type === "create_project_tree") {
-        await projectRepository.createProjectTree(
+        const { createdSkills } = await projectRepository.createProjectTree(
           {
             area_id: proposal.project.area_id,
             title: proposal.project.title,
             description: proposal.project.description || "",
+            target_skill: proposal.project.target_skill,
           },
           proposal.missions.map((m) => ({
             title: m.title,
             description: m.description,
             xp_reward: m.xp_reward,
             depends_on_titles: m.depends_on_titles,
+            skills: m.skills,
           })),
         );
+
+        if (createdSkills.length > 0) {
+          void logger.info(
+            "game",
+            `[Decreto G.S] ${createdSkills.length} nova(s) habilidade(s) despertada(s) ao aprovar projeto`,
+            { skills: createdSkills.map((s) => s.name) },
+          );
+        }
       } else if (proposal.type === "add_missions") {
         await projectRepository.addMissions(
           proposal.project_id,
@@ -284,6 +335,7 @@ export const GsChatView: React.FC = () => {
             description: m.description,
             xp_reward: m.xp_reward,
             depends_on_mission_ids: m.depends_on_mission_ids,
+            skills: m.skills,
           })),
         );
       } else if (proposal.type === "update_mission") {
@@ -298,7 +350,11 @@ export const GsChatView: React.FC = () => {
         prev.map((m) => (m.id === msgId ? { ...m, status: "aprovada" } : m)),
       );
 
-      soundService.playMissionComplete();
+      if (proposal.type === "create_project_tree" && proposal.project.target_skill?.name) {
+        void worldVoiceService.playVoiceClip("/audio/voice/project-start.mp3");
+      } else {
+        soundService.playMissionComplete();
+      }
       hapticFeedback.success();
     } catch (err) {
       console.error("[GsChatView] Erro ao aplicar decreto:", err);
@@ -443,7 +499,15 @@ export const GsChatView: React.FC = () => {
           );
         })}
 
-        {isLoading && (
+        {recalculatingNotice && (
+          <div className="relative p-3 bg-[#090d1f] border border-[#fde047]/60 text-xs font-mono text-[#fde047] flex items-center gap-2.5 shadow-[0_0_20px_rgba(253,224,71,0.18)] animate-pulse">
+            <GildedCorners size="xs" color="#fde047" diamondColor="#dfa86c" withInnerFrame={false} />
+            <Loader2 className="w-4 h-4 animate-spin text-[#fde047] shrink-0" />
+            <span>{recalculatingNotice}</span>
+          </div>
+        )}
+
+        {isLoading && !recalculatingNotice && (
           <div className="flex items-center gap-3 animate-pulse">
             <div className="w-8 h-8 rounded-none border border-[#dfa86c] bg-[#040814] flex items-center justify-center shrink-0">
               <Bot className="w-4 h-4 text-[#fde047]" />
