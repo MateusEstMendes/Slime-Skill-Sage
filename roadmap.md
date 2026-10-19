@@ -72,7 +72,7 @@ Legenda: `[ ]` Pendente | `[/]` Em andamento | `[x]` Concluído e Aprovado pelo 
 - [ ] 9.3 Testes do Usuário
 - [ ] 9.4 Debug e Atualização de Handoff/Feedback
 
-## Fase 10 — Evolução de Habilidade (Extra → Única), Roleta Esotérica e Festival da Colheita
+## Fase 10 — Evolução de Habilidades (7 Níveis Canônicos), Roleta Animada (SVG + Framer Motion) e Festival da Colheita com Altar de Fusão/Sacrifício
 
 - [ ] 10.1 Desenvolvimento
 - [ ] 10.2 Testes Automáticos

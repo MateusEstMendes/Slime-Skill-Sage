@@ -104,7 +104,7 @@ Legenda: `[ ]` Pendente | `[/]` Em andamento | `[x]` Concluído e Aprovado pelo 
 - [ ] 9.3 Testes do Usuário
 - [ ] 9.4 Debug e Atualização de Handoff/Feedback
 
-## Fase 10 — Evolução de Habilidade (Extra → Única) e Roleta Animada (SVG + Framer Motion + Cooldown 24h)
+## Fase 10 — Evolução de Habilidades (7 Níveis Canônicos), Roleta Animada (SVG + Framer Motion) e Festival da Colheita com Altar de Fusão/Sacrifício
 
 - [ ] 10.1 Desenvolvimento
 - [ ] 10.2 Testes Automáticos
@@ -223,9 +223,9 @@ Você é o Engenheiro Principal responsável por construir o aplicativo **Slime 
    - **Voz da G.S (Sem TTS do navegador):** Áudios estáticos em MP3 + síntese neural via API Gemini 2.0 Flash Audio (voz `Kore`) para falas dinâmicas com cache local. Conclusão de missão isolada não toca fala (apenas som sintético); conclusão de projetos completos toca áudio solene. Subida de nível e eventos dinâmicos ocorrem online; tarefas e foco operam 100% offline.
    - **Sistema de Agenda Integrado:** Tarefas com horário e due date; tarefas recorrentes (diárias ou dias específicos até data limite); tarefas com constância evoluem para Hábitos / Habilidades Passivas. Snapshot "Hoje" na Home + Visão dedicada de Agenda. Virada do dia lógico às **04:00 da manhã**.
    - **Progressão & Títulos:** Curva de nível íngreme/desafiadora; Títulos por Atributo (*Iniciante em Inteligência*, *Adepto em Força*, etc.) no lugar de letras F a S (patamares em aberto).
-   - **Festival da Colheita:** Ativado manualmente quando 100% das metas da semana/mês forem batidas na Agenda, concedendo 2x XP e celebração com a G.S.
+   - **Festival da Colheita:** Ativado manualmente quando 100% das metas da semana/mês forem batidas na Agenda, concedendo 2x XP, celebração cerimonial com a G.S e abertura do **Altar de Sacrifício e Fusão de Habilidades**. A detecção de sinergias é 100% determinística (sem IA) por Matriz de Domínios e Tags, com fios de mana em SVG. O Desafio de Provação é gerado pela G.S em 2 disparos atômicos (economia de 70% de tokens), respondido no celular com **Pílulas de Escolha Rápida (1 toque)** e suporte a **digitação por voz (Speech-to-Text)**, exigindo cumprimento de âncoras reais de telemetria do PWA (Modo Foco e entregas).
    - Questionário de Onboarding com **5 perguntas fixas com áudio oficial da G.S**, digitação mágica typewriter, seguido da revelação inicial via API.
-   - Evolução de habilidades na v1 vai de **Comum (0) → Extra (100 maestria) → Única (300 maestria + 1 projeto concluído + Roleta com 30% base, +15% por falha, teto 95%, cooldown 24h)**.
+   - **Escada Canônica de Habilidades (7 Níveis):** `Intrínseca` (25 pts no despertar) → `Comum` (0-100 pts) → `Especial` (100-300 pts) → `Extra` (300-600 pts) → `Única` (600-1200 pts) → `Suprema` (1200-2500 pts) → `Primordial` (2500+ pts). Habilidades do atributo principal da Raça recebem **+2 pontos fixos de maestria extra** por missão. De `Extra` para cima, a evolução ocorre via **Roleta Esotérica** (Padrão Hardcore: 20% base, +10% de piedade por falha, teto 80%, cooldown 48h, sem perda de maestria).
    - Modo Foco: quebra se o usuário sair da aba/PWA por **mais de 30 segundos** (via Page Visibility API).
 
 ## 3. PROTOCOLO RÍGIDO DE EXECUÇÃO POR FASES (4 ETAPAS + 3 ARQUIVOS)
@@ -734,59 +734,89 @@ Após validação, atualize os arquivos de controle.
 
 ---
 
-### Fase 10 — Evolução de Habilidade (Extra → Única), Roleta Esotérica e Festival da Colheita
+### Fase 10 — Evolução de Habilidades (7 Níveis Canônicos), Roleta Animada (SVG + Framer Motion) e Festival da Colheita com Altar de Fusão/Sacrifício
 
 #### Escopo nas 4 Partes (Fase 10)
 
 - **1. Desenvolvimento:**
-  - Em `packages/game/roulette.ts`:
-    - Elegibilidade Extra → Única: nível `extra`, **>= 300 de maestria** e **pelo menos 1 projeto concluído** que concedeu pontos à habilidade;
-    - Cálculo de chance da roleta: base **30%**, **+15% por falha anterior**, **teto de 95%**;
-    - Cooldown de **24 horas** após falha (`Clock` injetável);
-    - Histórico registrado em `evolution_attempt`.
-  - Tela/Modal da Roleta no PWA (inspirado nos círculos mágicos concêntricos de `docs/design.png`):
-    - Roda gráfica circular de círculo mágico esotérico em SVG dourado (`#dfa86c` / `#fde047`) animada com Framer Motion com setores proporcionais à chance atual;
-    - Efeito de desaceleração suave, som via Web Audio API e vibração via `navigator.vibrate`;
-    - Falha: cooldown de 24h e chance ampliada anunciada pela Voz do Mundo;
-    - Sucesso: nome épico via `name_unique_skill`, promoção para `unica` e grande celebração da G.S via áudio neural da API.
-  - **Festival da Colheita (Ritual Épico de Celebração):**
-    - Desbloqueado para ativação manual pelo caçador quando **100% das metas da semana ou mês forem concluídas na Agenda**;
+  - **Escada Canônica de Habilidades (7 Níveis):**
+    - `packages/shared`: Atualização do `SkillTierSchema`: `["intrinseca", "comum", "especial", "extra", "unica", "suprema", "primordial"]`;
+    - `packages/game/src/skills.ts` e `config.ts`:
+      - **Tetos de Maestria Exponenciais Progressivos:**
+        - `intrinseca`: Inicia com 25 pts no Despertar e ascende a `especial` aos 100 pts de maestria;
+        - `comum`: 0 a 100 pts (ascende automaticamente para `especial` aos 100 pts);
+        - `especial`: 100 a 300 pts (ascende para `extra` aos 300 pts com a evolução oculta preparada pela G.S);
+        - `extra`: 300 a 600 pts (ao atingir 600 pts + 1 projeto concluído, libera a Roleta Esotérica para ascender a `unica`);
+        - `unica`: 600 a 1.200 pts (ao atingir 1.200 pts + 1 projeto concluído, libera a Roleta Esotérica para ascender a `suprema`);
+        - `suprema`: 1.200 a 2.500 pts (ao atingir 2.500 pts + 1 projeto concluído, libera a Roleta Esotérica para ascender a `primordial`);
+        - `primordial`: 2.500+ pts (Ápice Cósmico Absoluto / Grau Divino);
+      - **Bônus de Afinidade Racial:** Missões concluídas na área correspondente ao atributo primário da Raça do Escolhido (ex: `INT` para Slime, `FOR` para Kijin, `DIS` para Draconiano, `CRI` para Majin, `SOC` para Homem-Fera) concedem **+2 pontos fixos de maestria extra** garantidos.
+  - **Roleta Esotérica (Padrão Hardcore):**
+    - Em `packages/game/src/roulette.ts`:
+      - Elegibilidade: atingir o teto de maestria do tier + pelo menos 1 projeto concluído associado;
+      - Chance Base: **20%**;
+      - Piedade (*Pity*): **+10% cumulativo por falha** (20% → 30% → 40% → 50% → 60% → 70% → 80% teto máximo);
+      - Cooldown de repouso da alma: **48 horas** em caso de falha (`Clock` injetável);
+      - Salvaguarda: **zero perda de maestria** em caso de falha;
+      - Sucesso: Proposta de Nome Épico e Título pela G.S com consentimento e personalização do Escolhido antes de consagrar.
+    - No PWA: Modal da Roleta em SVG ouro/obsidiana com anéis rúnicos concêntricos giratórios de `docs/design.png`, física de desaceleração suave (Framer Motion), som via Web Audio API e vibração tátil.
+  - **Festival da Colheita e Altar de Fusão/Sacrifício:**
+    - Desbloqueado manualmente quando **100% das metas da semana ou mês forem batidas na Agenda**, concedendo **2x XP** e abrindo o Altar de Transmutação;
     - Toca áudio cerimonial estático pré-gravado: *"O Festival da Colheita foi iniciado! Todos os frutos de seu esforço foram reconhecidos pelo Sistema."*;
-    - Multiplicador de **XP dobrado (2x)** para atividades do período e desbloqueio de rituais de ascensão de atributos com falas dedicadas da G.S via API.
-  - **Ascensão Comum → Extra via Maestria (100 pts) e Evolução Oculta Preparada:**
-    - Ao atingir 100 de maestria acumulada através das missões do projeto, a habilidade comum rompe seus limites;
-    - O sistema recupera a evolução preparada silenciosa gravada pela G.S (`next_evolution_name` e `next_evolution_description`);
-    - A habilidade é promovida de patamar (`tier: "extra"`), assumindo o novo nome e descrição (ex: *"Programação em Rust"* → *"Manipulador de Memória Rust"*);
-    - Disparo de pop-up cerimonial na interface: *"O usuário ultrapassou os limites com sua maestria em [Habilidade Original], transcendendo para [Habilidade Evoluída]."* com áudio oficial da Grande Sábio.
-  - Painel Dev: RNG Fixo ("Forçar Sucesso" / "Forçar Falha"), botão "Zerar Cooldown", botão "Simular Metas 100% e Desbloquear Festival da Colheita" e botão "Forçar 100 Maestria e Disparar Ascensão Extra".
+    - **Detecção de Sinergias Sem IA (100% Determinística):**
+      - `packages/game/src/skillDomains.ts`: Matriz de compatibilidade estática por domínios e tags (`domain` e `tags`);
+      - Na UI: Habilidades compatíveis conectam-se por fios de mana luminosos em SVG; habilidades incompatíveis ficam translúcidas;
+    - **Desafio de Fusão da G.S (Inquisição em Lote + Mobile Ergonômico):**
+      - 2 chamadas atômicas estruturadas (economia de 70% de tokens);
+      - Chamada 1: G.S recebe o resumo das 2 habilidades e devolve de 2 a 3 perguntas acompanhadas de **Pílulas de Escolha Rápida (Chips de 1 toque)**;
+      - No celular: Escolhido responde em segundos apenas tocando nas pílulas, com suporte a **personalização com digitação por voz (Speech-to-Text)** e texto livre;
+      - Chamada 2: G.S consolida o nome da nova habilidade superior, a lore e o Desafio Autodeclarado com âncoras reais de telemetria do PWA (tempo no cronômetro do Modo Foco e entregas);
+      - Fallback 100% offline determinístico via templates do `phrase_bank` caso o usuário esteja sem internet.
+  - **Identidade Visual dos 7 Níveis nos Cartões de Habilidade:**
+    - `intrinseca`: Ciano Astral / Turquesa Primordial;
+    - `comum`: Âmbar / Bronze Antigo (`#dfa86c`);
+    - `especial`: Prata Lunar / Platina Arcana (`#e2e8f0` / `#94a3b8`);
+    - `extra`: Ouro Solar Radiante (`#fde047` / `#eab308`);
+    - `unica`: Púrpura Abissal / Ametista Cósmica (`#c084fc` / `#a855f7`);
+    - `suprema`: Ouro Rubro Celestial / Carmesim Divino (`#f43f5e` + `#ffd700`);
+    - `primordial`: Branco Divino Prismático & Obsidiana com pulso contínuo de mana;
+    - Efeitos puramente cosméticos e de lore (sem desvirtuar o cálculo do ledger imutável de XP).
+  - Painel Dev: Controles de RNG ("Forçar Sucesso" / "Forçar Falha"), "Zerar Cooldown de 48h", "Simular Metas 100% e Desbloquear Festival da Colheita", "Testador de Sinergia e Altar da Colheita" e seletores de teste de fusão.
 - **2. Testes Automáticos:**
-  - Vitest + `fast-check`: monotonicidade da chance (30→45→...→95%), cooldown exato e exigência de projeto concluído.
-  - Testing Library: estados da roleta (`inelegivel`, `pronta`, `girando`, `em_cooldown`, `sucesso`) e fluxo de ativação do Festival da Colheita com bônus 2x.
-  - Playwright (`e2e/phase10-roulette.spec.ts`): teste de falha, sucesso após 24h e ativação do Festival da Colheita.
+  - Vitest + `fast-check`: monotonicidade da chance da roleta (20→30→...→80%), cooldown exato de 48h e preservação de maestria.
+  - Testes unitários do motor de sinergias determinístico (`skillDomains.test.ts`) garantindo pares válidos e bloqueio de dissonantes.
+  - Testes de componentes do PWA: Roleta SVG, Altar de Fusão com fios de mana, formulário de pílulas rápidas com suporte a Speech-to-Text e banner 2x do Festival da Colheita.
+  - Playwright (`e2e/phase10-roulette-and-harvest.spec.ts`): fluxo completo de elegibilidade, giro de roleta, ativação do Festival da Colheita e fusão com desafio.
 - **3. Testes do Usuário:**
-  - Tornar uma habilidade elegível, girar a roleta, testar falha/sucesso forçados e ativar o Festival da Colheita no navegador.
+  - Tornar uma habilidade elegível, girar a roleta no navegador/celular, testar falha com cooldown de 48h e sucesso com nomeação.
+  - Bater metas, abrir o Festival da Colheita, selecionar duas habilidades com sinergia, responder o questionário por pílulas/voz e selar o desafio de fusão.
 - **4. Debug e Fechamento:**
-  - Ajustar curva de animação e haptics e atualizar arquivos de controle.
+  - Ajustes de responsividade mobile, haptics e fechamento nos arquivos de controle (`handoff.md`, `feedback.md`, `roadmap.md`).
 
 #### Prompt da Fase 10
 
 ```markdown
-Leia `handoff.md`, `roadmap.md` e `feedback.md`. Vamos iniciar a **Fase 10 — Evolução de Habilidade (Extra → Única), Roleta Esotérica e Festival da Colheita**.
+Leia `handoff.md`, `roadmap.md` e `feedback.md`. Vamos iniciar a **Fase 10 — Evolução de Habilidades (7 Níveis Canônicos), Roleta Esotérica (Padrão Hardcore) e Festival da Colheita com Altar de Fusão/Sacrifício**.
 
 ### Passo 1 — Desenvolvimento (Etapa 10.1)
 
 Marque `[/] 10.1 Desenvolvimento` em `roadmap.md` e implemente:
 
-1. Regras puras da roleta em `packages/game/roulette.ts` (300 maestria + projeto concluído, 30% + 15% até 95%, cooldown 24h).
-2. Modal da Roleta de Evolução no PWA em SVG dourado com anéis de círculo mágico esotérico (`docs/design.png`) + Framer Motion.
-3. Mecânica do **Festival da Colheita**: ativação manual com 100% das metas batidas na Agenda, áudio estático de abertura, 2x XP e celebração com a G.S.
-4. Controles de RNG, cooldown e atalho do Festival da Colheita no Painel Dev.
+1. Atualização dos 7 Níveis de Habilidade (`intrinseca`, `comum`, `especial`, `extra`, `unica`, `suprema`, `primordial`) com tetos exponenciais de maestria e bônus racial fixo (+2 pts).
+2. Motor e modal da Roleta Esotérica Hardcore (20% base, +10% pity até 80%, cooldown 48h, sem perda de maestria) com círculos mágicos concêntricos em SVG de `docs/design.png`.
+3. Mecânica do Festival da Colheita com 2x XP e Altar de Fusão/Sacrifício de habilidades:
+   - Detecção determinística de sinergias por domínios e tags com fios de mana em SVG (100% sem IA);
+   - Inquisição da G.S em lote com Pílulas de Escolha Rápida (1 toque) e suporte a digitação por voz (Speech-to-Text);
+   - Consolidação de Desafio Autodeclarado ancorado no Modo Foco;
+   - Fallback offline determinístico via `phrase_bank`.
+4. Identidade visual e auras rúnicas para os 7 tiers nos cartões de habilidade.
+5. Ferramentas de teste de RNG, cooldown e Altar no Painel Dev.
 
 ### Passo 2 — Testes Automáticos (Etapa 10.2)
 
-1. Testes Vitest + `fast-check` para regras da roleta, cooldown e multiplicador do Festival da Colheita.
-2. Testes de componentes para a roleta e banner do Festival.
-3. Teste E2E Playwright `e2e/phase10-roulette.spec.ts`.
+1. Testes Vitest + `fast-check` para regras da roleta (pity, cooldown, sem perda de maestria) e motor de sinergia de domínios.
+2. Testes de componentes no PWA para Roleta, Altar de Fusão com fios de mana e pílulas de resposta rápida.
+3. Teste E2E Playwright `e2e/phase10-roulette-and-harvest.spec.ts`.
 4. Execute `pnpm lint`, `pnpm typecheck` e `pnpm test`.
 
 ### Passo 3 — Pausa Obrigatória para Testes do Usuário (Etapa 10.3)
