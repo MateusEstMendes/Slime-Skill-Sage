@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { type AreaCode, type Project, type ProjectStatus } from "@slime-sage/shared";
 import { projectRepository } from "../../services/projectRepository";
+import { gameService } from "../../services/gameService";
 import { logger } from "../../services/logger";
 import { SystemPanel } from "../system/SystemPanel";
 import { SystemBadge } from "../system/SystemBadge";
@@ -12,11 +13,13 @@ import { Plus, FolderGit2, Edit3, Trash2, ArrowRight } from "lucide-react";
 export interface ProjectsViewProps {
   initialProjectId?: string | null;
   onSelectProject?: (projectId: string | null) => void;
+  isActive?: boolean;
 }
 
 export const ProjectsView: React.FC<ProjectsViewProps> = ({
   initialProjectId,
   onSelectProject,
+  isActive,
 }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,7 +62,25 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
 
   useEffect(() => {
     void loadProjects();
+
+    const unsubRepo = projectRepository.subscribe(() => {
+      void loadProjects();
+    });
+    const unsubGame = gameService.subscribeToGameEvents(() => {
+      void loadProjects();
+    });
+
+    return () => {
+      unsubRepo();
+      unsubGame();
+    };
   }, [loadProjects]);
+
+  useEffect(() => {
+    if (isActive) {
+      void loadProjects();
+    }
+  }, [isActive, loadProjects]);
 
   useEffect(() => {
     if (initialProjectId) {

@@ -60,7 +60,7 @@ describe("TabBar and Screen Navigation", () => {
         fireEvent.click(screen.getByTestId("tab-status"));
       });
       expect(
-        await screen.findByText("PAINEL DE ATRIBUTOS // SOLO LEVELING"),
+        await screen.findByText("PAINEL DE ATRIBUTOS // REGISTRO DO ESCOLHIDO"),
       ).toBeInTheDocument();
 
       // Switch to G.S

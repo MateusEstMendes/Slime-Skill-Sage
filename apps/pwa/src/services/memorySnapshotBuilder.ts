@@ -170,7 +170,7 @@ export async function buildMemorySnapshot(): Promise<HunterContext> {
 
   const lines: string[] = [
     "--- SNAPSHOT DE MEMÓRIA DO CAÇADOR (~500 TOKENS) ---",
-    `Caçador: ${profile.name} | Título: ${profile.title} | Nível: ${profile.level} (${profile.current_xp} XP) | Streak: ${profile.streak_count}d`,
+    `Caçador: ${profile.name} | Raça: ${profile.race ?? "Slime"} | Rank de Ameaça: ${profile.rank_threat ?? "Classe Menor"} | Título: ${profile.title} | Nível: ${profile.level} (${profile.current_xp} XP) | Streak: ${profile.streak_count}d`,
     `Projeto Ativo Principal: ${
       primaryActiveProject
         ? `"${primaryActiveProject.title}" [${primaryActiveProject.area_id} · ${primaryActiveProject.progress}%]`
@@ -218,6 +218,8 @@ export async function buildMemorySnapshot(): Promise<HunterContext> {
     profile: {
       name: profile.name,
       title: profile.title,
+      race: profile.race,
+      rank_threat: profile.rank_threat,
       level: profile.level,
       current_xp: profile.current_xp,
       streak_count: profile.streak_count ?? 0,

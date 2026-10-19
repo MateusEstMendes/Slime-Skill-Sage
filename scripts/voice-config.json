@@ -12,7 +12,13 @@
     "mission-complete": "Missão concluída. Recompensas e experiência concedidas.",
     "focus-start": "Aceleração de Pensamento iniciada. Concentração aumentada.",
     "focus-break": "Atenção. Desvio de atenção detectado. Foco interrompido.",
-    "project-start": "Aviso da Grande Sábio. Parâmetros do projeto aceitos. Protocolo de treino iniciado."
+    "project-start": "Aviso da Grande Sábio. Parâmetros do projeto aceitos. Protocolo de treino iniciado.",
+    "onboarding-intro": "Aviso do Sistema. Inicializando protocolo de avaliação d'alma. A Grande Sábio analisará a sua essência através de cinco diretrizes.",
+    "onboarding-q1": "Primeira diretriz. Diante de um obstáculo imprevisto que desfaz seus planos originais, qual é o seu instinto primordial?",
+    "onboarding-q2": "Segunda diretriz. Quando um desafio exige esforço prolongado além dos seus limites atuais, como a sua determinação se manifesta?",
+    "onboarding-q3": "Terceira diretriz. Ao buscar o domínio sobre um novo conhecimento ou arte complexa, qual caminho você escolhe trilhar?",
+    "onboarding-q4": "Quarta diretriz. Na construção do seu legado e na relação com aliados ao seu redor, qual princípio governa suas ações?",
+    "onboarding-q5": "Quinta e última diretriz. Qual é o seu nível real de constância e disciplina na rotina diária até este momento?"
   },
   "customSkillEvolutions": [
     {

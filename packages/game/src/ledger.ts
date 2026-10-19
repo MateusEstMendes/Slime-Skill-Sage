@@ -116,5 +116,17 @@ export type GameEvent =
         skillId?: string;
         skillName?: string;
       };
+    }
+  | {
+      type: "ONBOARDING_COMPLETED";
+      payload: {
+        name: string;
+        race: string;
+        rankThreat: string;
+      };
+    }
+  | {
+      type: "ONBOARDING_RESET";
+      payload: Record<string, never>;
     };
 

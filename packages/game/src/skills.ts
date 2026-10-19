@@ -99,6 +99,21 @@ export interface MasteryUpdateResult {
 }
 
 /**
+ * Applies diminishing returns to mastery gain after the halfway point (150 pts out of 300).
+ * - Full 100% gain when currentMastery <= 150.
+ * - Gentle proficiency decay above 150 pts with guaranteed minimum floor (1 pt).
+ */
+export function calculateMasteryGainWithDecay(currentMastery: number, rawDelta: number): number {
+  if (rawDelta <= 0) return 0;
+  if (currentMastery <= 150) {
+    return rawDelta;
+  }
+  const excess = Math.min(150, currentMastery - 150);
+  const decayFactor = Math.max(0.5, 1 / (1 + 0.5 * (excess / 150)));
+  return Math.max(1, Math.round(rawDelta * decayFactor));
+}
+
+/**
  * Calculates updated skill mastery and tier progression.
  * - Caps mastery between 0 and 300.
  * - Automatically evolves "comum" to "extra" when mastery >= 100.
@@ -109,12 +124,18 @@ export interface MasteryUpdateResult {
 export function calculateSkillProgression(
   currentTier: SkillTier,
   currentMastery: number,
-  deltaMastery: number
+  deltaMastery: number,
+  options?: { applyLearningCurve?: boolean }
 ): MasteryUpdateResult {
   const previousMastery = currentMastery;
   const previousTier = currentTier;
 
-  const rawMastery = currentMastery + deltaMastery;
+  const effectiveDelta =
+    options?.applyLearningCurve && deltaMastery > 0
+      ? calculateMasteryGainWithDecay(currentMastery, deltaMastery)
+      : deltaMastery;
+
+  const rawMastery = currentMastery + effectiveDelta;
   const newMastery = Math.min(MAX_SKILL_MASTERY, Math.max(0, rawMastery));
   const actualDelta = newMastery - previousMastery;
 

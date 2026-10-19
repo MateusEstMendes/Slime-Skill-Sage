@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { GsChatView } from "./GsChatView";
+import { ProjectsView } from "../projects/ProjectsView";
 import { localDb } from "../../services/db";
 import { worldVoiceService } from "../../services/worldVoiceService";
+import { gsVoiceService } from "../../services/gsVoiceService";
 import * as apiClient from "../../services/apiClient";
 import type { ChatResponse } from "@slime-sage/shared";
 
@@ -16,6 +18,7 @@ describe("GsChatView", () => {
     await localDb.clearTable("skill");
     await localDb.clearTable("mission_reward");
     vi.restoreAllMocks();
+    vi.spyOn(gsVoiceService, "prepareSpeech").mockResolvedValue(null);
   });
 
   it("renders header and initial welcome message", async () => {
@@ -231,4 +234,155 @@ describe("GsChatView", () => {
       expect(screen.getByText("Treino Recalculado")).toBeInTheDocument();
     });
   });
+
+  it(" allows regenerating the latest G.S response and editing a previous user message", async () => {
+    const sendSpy = vi
+      .spyOn(apiClient, "sendChatMessage")
+      .mockResolvedValueOnce({
+        success: true,
+        data: { role: "assistant", content: "Primeira resposta da Grande Sábio." },
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        data: { role: "assistant", content: "Segunda resposta regenerada pela Grande Sábio." },
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        data: { role: "assistant", content: "Resposta após editar a pergunta do Caçador." },
+      });
+
+    render(<GsChatView />);
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/Consulte a Grande Sábio/)).toBeInTheDocument();
+    });
+
+    const input = screen.getByPlaceholderText(/Consulte a Grande Sábio/);
+    fireEvent.change(input, { target: { value: "Pergunta inicial" } });
+    fireEvent.submit(input.closest("form")!);
+
+    await waitFor(() => {
+      expect(screen.getByText("Primeira resposta da Grande Sábio.")).toBeInTheDocument();
+    });
+
+    // Click "Nova Resposta (Regerar)"
+    const regenBtn = screen.getByRole("button", { name: "Pedir nova resposta para a G.S" });
+    fireEvent.click(regenBtn);
+
+    await waitFor(() => {
+      expect(sendSpy).toHaveBeenCalledTimes(2);
+      expect(
+        screen.getByText("Segunda resposta regenerada pela Grande Sábio."),
+      ).toBeInTheDocument();
+      expect(screen.queryByText("Primeira resposta da Grande Sábio.")).not.toBeInTheDocument();
+    });
+
+    // Click "Editar" on the user message
+    const editBtn = screen.getByRole("button", { name: "Editar mensagem" });
+    fireEvent.click(editBtn);
+
+    const editTextarea = screen.getByRole("textbox", { name: "Editar conteúdo da mensagem" });
+    fireEvent.change(editTextarea, { target: { value: "Pergunta editada pelo usuário" } });
+
+    const saveEditBtn = screen.getByRole("button", { name: /Salvar e Regerar/i });
+    fireEvent.click(saveEditBtn);
+
+    await waitFor(() => {
+      expect(sendSpy).toHaveBeenCalledTimes(3);
+      expect(screen.getByText("Pergunta editada pelo usuário")).toBeInTheDocument();
+      expect(
+        screen.getByText("Resposta após editar a pergunta do Caçador."),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("allows aborting an in-flight chat request via the Parar button", async () => {
+    vi.spyOn(apiClient, "sendChatMessage").mockImplementationOnce(
+      (_apiUrl, _token, _payload, options) =>
+        new Promise((resolve) => {
+          options?.signal?.addEventListener("abort", () => {
+            resolve({ success: false, aborted: true, error: "Requisição cancelada pelo usuário." });
+          });
+        }),
+    );
+
+    render(<GsChatView />);
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/Consulte a Grande Sábio/)).toBeInTheDocument();
+    });
+
+    const input = screen.getByPlaceholderText(/Consulte a Grande Sábio/);
+    fireEvent.change(input, { target: { value: "Consulta demorada" } });
+    fireEvent.submit(input.closest("form")!);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Parar requisição" })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Parar requisição" }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: "Parar requisição" })).not.toBeInTheDocument();
+    });
+  });
+
+  it("automatically updates mounted ProjectsView when a decree is accepted in GsChatView", async () => {
+    const mockChatResponse: ChatResponse = {
+      role: "assistant",
+      content: "Análise: Árvore de projeto criada.",
+      proposal: {
+        type: "create_project_tree",
+        project: {
+          title: "Projeto Sincronizado em Tempo Real",
+          description: "Atualização reativa de abas",
+          area_id: "INT",
+        },
+        missions: [
+          {
+            title: "Missão Sincronizada 1",
+            description: "Passo 1",
+            xp_reward: 35,
+            depends_on_titles: [],
+            skills: [{ name: "Arquitetura Reativa", area_id: "INT", is_new: true }],
+          },
+        ],
+        explanation: "Sincronização imediata.",
+      },
+    };
+
+    vi.spyOn(apiClient, "sendChatMessage").mockResolvedValueOnce({
+      success: true,
+      data: mockChatResponse,
+    });
+
+    render(
+      <div>
+        <ProjectsView />
+        <GsChatView />
+      </div>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/Consulte a Grande Sábio/)).toBeInTheDocument();
+    });
+
+    const input = screen.getByPlaceholderText(/Consulte a Grande Sábio/);
+    fireEvent.change(input, { target: { value: "Crie projeto sincronizado" } });
+    fireEvent.submit(input.closest("form")!);
+
+    await waitFor(() => {
+      expect(screen.getByText("Aceitar Decreto")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText("Aceitar Decreto"));
+
+    await waitFor(() => {
+      expect(screen.getByText("✦ DECRETO APROVADO E EXECUTADO NO SISTEMA ✦")).toBeInTheDocument();
+      // O ProjectsView montado simultaneamente deve exibir o novo projeto imediatamente (1 no ProposalCard + 1 no ProjectsView)
+      expect(screen.getAllByText("Projeto Sincronizado em Tempo Real").length).toBeGreaterThanOrEqual(2);
+    });
+  });
 });
+
+

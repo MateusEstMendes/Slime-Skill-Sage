@@ -51,6 +51,20 @@ export interface ProjectWithTree {
 
 export class ProjectRepository {
   private db = localDb;
+  private listeners: Set<() => void> = new Set();
+
+  public subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  public notifyChange(): void {
+    for (const listener of this.listeners) {
+      listener();
+    }
+  }
 
   // --- AREAS ---
 
@@ -80,6 +94,7 @@ export class ProjectRepository {
     };
 
     await this.db.put("project", project);
+    this.notifyChange();
     return project;
   }
 
@@ -123,6 +138,7 @@ export class ProjectRepository {
     };
 
     await this.db.put("project", updated);
+    this.notifyChange();
     return updated;
   }
 
@@ -144,6 +160,7 @@ export class ProjectRepository {
     if (missions.length > 0) {
       await this.db.putBatch("mission", missions);
     }
+    this.notifyChange();
   }
 
   // --- MISSIONS & TREE ---
@@ -466,6 +483,7 @@ export class ProjectRepository {
     project.updated_at = new Date().toISOString();
 
     await this.db.put("project", project);
+    this.notifyChange();
     return progress;
   }
 
@@ -545,6 +563,7 @@ export class ProjectRepository {
       await this.db.putBatch("mission_reward", createdRewards);
     }
 
+    this.notifyChange();
     return { createdSkills, createdRewards };
   }
 

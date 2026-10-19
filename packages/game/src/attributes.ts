@@ -126,18 +126,62 @@ export const ATTRIBUTE_TITLES: Record<AreaCode, readonly string[]> = {
   ],
 };
 
-export const OVERALL_HUNTER_TITLES: readonly string[] = [
+export const OVERALL_CHOSEN_TITLES: readonly string[] = [
   "Iniciado do Sistema",
-  "Caçador Praticante",
+  "Escolhido Praticante",
   "Guerreiro Consagrado",
   "Vanguarda de Elite",
-  "Mestre Caçador",
+  "Mestre Escolhido",
   "Lorde da Fenda",
   "Transcendental",
   "Soberano Cósmico",
   "Monarca Primordial",
   "O Absoluto",
 ];
+
+// Preserva compatibilidade com código legado
+export const OVERALL_HUNTER_TITLES = OVERALL_CHOSEN_TITLES;
+
+/**
+ * Retorna os pontos necessários para avançar um Grau específico (1 a 50)
+ * sob uma curva de aprendizado exponencial moderada (expoente 1.25).
+ */
+export function pointsRequiredForGrade(gradeIndex: number): number {
+  if (gradeIndex <= 0) return 0;
+  return Math.round(1000 * Math.pow(gradeIndex, 1.25));
+}
+
+/**
+ * Retorna os pontos cumulativos necessários para atingir determinado Grau.
+ */
+export function getCumulativePointsForGrade(gradeIndex: number): number {
+  if (gradeIndex <= 0) return 0;
+  let total = 0;
+  for (let g = 1; g <= gradeIndex; g++) {
+    total += pointsRequiredForGrade(g);
+  }
+  return Math.min(MAX_MASTERY_CEILING, total);
+}
+
+/**
+ * Calcula o teto ativo do horizonte dinâmico do radar de atributos.
+ * Conforme o Escolhido atinge o teto do Grau ativo, o gráfico expande até 1.0 (100%),
+ * e ao ascender para o próximo Grau, o teto avança e o gráfico recua proporcionalmente.
+ */
+export function calculateDynamicAttributeCeiling(highestStatValue: number): number {
+  const safeVal = Math.max(0, highestStatValue);
+  if (safeVal >= MAX_MASTERY_CEILING) return MAX_MASTERY_CEILING;
+
+  let cumulative = 0;
+  for (let g = 1; g <= 50; g++) {
+    cumulative += pointsRequiredForGrade(g);
+    if (cumulative >= MAX_MASTERY_CEILING) return MAX_MASTERY_CEILING;
+    if (safeVal < cumulative) {
+      return cumulative;
+    }
+  }
+  return MAX_MASTERY_CEILING;
+}
 
 export interface AttributeRankInfo {
   tier: number;
@@ -187,7 +231,7 @@ export function getAttributeRank(value: number, areaId?: AreaCode): AttributeRan
   const titleList =
     areaId && areaId in ATTRIBUTE_TITLES
       ? ATTRIBUTE_TITLES[areaId]
-      : OVERALL_HUNTER_TITLES;
+      : OVERALL_CHOSEN_TITLES;
   const title = titleList[tierIndex];
   const nextTitle =
     tierIndex < 9 ? titleList[tierIndex + 1] : "Perfeição Inatingível";

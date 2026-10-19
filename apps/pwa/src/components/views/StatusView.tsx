@@ -8,6 +8,7 @@ import {
   type AttributesMap,
   createEmptyAttributes,
   calculateLevelFromTotalXp,
+  calculateDynamicAttributeCeiling,
   type LedgerAuditResult,
 } from "@slime-sage/game";
 import { gameService } from "../../services/gameService";
@@ -76,6 +77,8 @@ export const StatusView: React.FC<StatusViewProps> = ({ isActive }) => {
   const levelProgress = calculateLevelFromTotalXp(profile?.total_xp ?? 0);
   const totalAttributeScore = Object.values(attributes).reduce((acc, val) => acc + val, 0);
   const overallRank = getAttributeRank(totalAttributeScore);
+  const maxStatValue = Math.max(0, ...Object.values(attributes).map((v) => Number(v) || 0));
+  const dynamicCeiling = calculateDynamicAttributeCeiling(maxStatValue);
 
   return (
     <div className="space-y-6">
@@ -83,10 +86,10 @@ export const StatusView: React.FC<StatusViewProps> = ({ isActive }) => {
         <div>
           <h2 className="text-xl md:text-2xl font-bold font-fantasy text-[#f8ecd5] tracking-wider uppercase flex items-center gap-2">
             <Activity className="w-6 h-6 text-[#dfa86c]" />
-            <span>PAINEL DE ATRIBUTOS // SOLO LEVELING</span>
+            <span>PAINEL DE ATRIBUTOS // REGISTRO DO ESCOLHIDO</span>
           </h2>
           <p className="text-xs md:text-sm text-[#c5b08f] font-mono mt-0.5">
-            Sincronização em tempo real com o Motor Puro e Ledger Imutável.
+            Sincronização em tempo real com o Motor Puro e Ledger Imutável. Horizonte Ativo: {dynamicCeiling.toLocaleString()} pts.
           </p>
         </div>
 
@@ -101,10 +104,10 @@ export const StatusView: React.FC<StatusViewProps> = ({ isActive }) => {
         </SystemButton>
       </div>
 
-      {/* Hunter Profile Header */}
+      {/* Chosen Profile Header */}
       <SystemPanel
-        title={`Caçador: ${profile?.name ?? "Rimuru Tempest"}`}
-        subtitle={`${overallRank.label} · Título: ${profile?.title ?? "Aspirante a Desperto"}`}
+        title={`Escolhido: ${profile?.name ?? "Rimuru Tempest"}`}
+        subtitle={`Raça: ${profile?.race ?? "Slime"} · Ameaça: ${profile?.rank_threat ?? "Classe Menor"} · ${overallRank.label} · Título: ${profile?.title ?? "Aspirante a Desperto"}`}
         glow
       >
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-2 text-center font-mono">
@@ -125,7 +128,7 @@ export const StatusView: React.FC<StatusViewProps> = ({ isActive }) => {
           </div>
           <div className="relative p-3 bg-[#040814]/85 border border-[#c89b55]/45 overflow-hidden shadow-[inset_0_0_10px_rgba(223,168,108,0.04)]">
             <GildedCorners size="xs" withInnerFrame={false} />
-            <div className="relative z-10 text-[10px] font-fantasy tracking-widest text-[#c5b08f] uppercase">Rank Hunter</div>
+            <div className="relative z-10 text-[10px] font-fantasy tracking-widest text-[#c5b08f] uppercase">Rank do Escolhido</div>
             <div className="relative z-10 text-xs font-bold font-fantasy text-emerald-400 mt-1 truncate" title={overallRank.label}>
               Tier {overallRank.tierRoman} [{overallRank.subGradeRoman}] · {overallRank.title}
             </div>

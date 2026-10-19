@@ -277,6 +277,20 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleResetOnboarding = async () => {
+    setDbLoading(true);
+    setDbActionMessage("");
+    try {
+      await gameService.resetOnboarding();
+      setDbActionMessage("Onboarding resetado! Iniciando sequência de Re-despertar...");
+      onClose();
+    } catch {
+      setDbActionMessage("Erro ao resetar o onboarding.");
+    } finally {
+      setDbLoading(false);
+    }
+  };
+
   const handleReconcileLedger = async () => {
     setLedgerLoading(true);
     setLedgerMessage("");
@@ -367,7 +381,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
         <GildedCorners size="lg" withCenterNotches />
 
         {/* Header */}
-        <div className="relative z-10 bg-[#081329] border-b border-[#966422]/45 px-5 py-3.5 flex items-center justify-between">
+        <div className="relative z-10 shrink-0 bg-[#081329] border-b border-[#966422]/45 px-5 py-3.5 flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
             <div className="p-1.5 bg-[#140f08] border border-[#dfa86c]/60 text-[#fde047]">
               <Terminal className="w-4 h-4" />
@@ -382,20 +396,33 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            aria-label="Fechar Painel Dev"
-            className="p-1.5 text-[#c5b08f] hover:text-[#fde047] hover:bg-[#101f42] transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleResetOnboarding}
+              disabled={dbLoading}
+              aria-label="Resetar Onboarding (Re-despertar)"
+              className="px-2.5 py-1.5 bg-[#1c1308] border border-[#fde047]/60 hover:bg-[#2a1d0c] text-[#fde047] text-[11px] font-mono flex items-center gap-1.5 transition-colors"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Resetar Onboarding (Re-despertar)</span>
+              <span className="sm:hidden">Re-despertar</span>
+            </button>
+
+            <button
+              onClick={onClose}
+              aria-label="Fechar Painel Dev"
+              className="p-1.5 text-[#c5b08f] hover:text-[#fde047] hover:bg-[#101f42] transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="relative z-10 flex border-b border-[#966422]/40 bg-[#040814]/80 px-4 overflow-x-auto">
+        <div className="relative z-10 shrink-0 flex flex-nowrap border-b border-[#966422]/40 bg-[#040814]/80 px-4 overflow-x-auto">
           <button
             onClick={() => setActiveTab("logs")}
-            className={`px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+            className={`shrink-0 px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === "logs"
                 ? "border-[#fde047] text-[#fde047] bg-[#1c1308]/50"
                 : "border-transparent text-[#a39171] hover:text-[#f3e5cc]"
@@ -407,7 +434,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
 
           <button
             onClick={() => setActiveTab("snapshot")}
-            className={`px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+            className={`shrink-0 px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === "snapshot"
                 ? "border-[#fde047] text-[#fde047] bg-[#1c1308]/50"
                 : "border-transparent text-[#a39171] hover:text-[#f3e5cc]"
@@ -419,7 +446,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
 
           <button
             onClick={() => setActiveTab("ledger")}
-            className={`px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+            className={`shrink-0 px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === "ledger"
                 ? "border-[#fde047] text-[#fde047] bg-[#1c1308]/50"
                 : "border-transparent text-[#a39171] hover:text-[#f3e5cc]"
@@ -431,7 +458,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
 
           <button
             onClick={() => setActiveTab("time")}
-            className={`px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+            className={`shrink-0 px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === "time"
                 ? "border-[#fde047] text-[#fde047] bg-[#1c1308]/50"
                 : "border-transparent text-[#a39171] hover:text-[#f3e5cc]"
@@ -443,7 +470,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
 
           <button
             onClick={() => setActiveTab("db")}
-            className={`px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+            className={`shrink-0 px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === "db"
                 ? "border-[#fde047] text-[#fde047] bg-[#1c1308]/50"
                 : "border-transparent text-[#a39171] hover:text-[#f3e5cc]"
@@ -455,7 +482,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
 
           <button
             onClick={() => setActiveTab("voices")}
-            className={`px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+            className={`shrink-0 px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === "voices"
                 ? "border-[#fde047] text-[#fde047] bg-[#1c1308]/50"
                 : "border-transparent text-[#a39171] hover:text-[#f3e5cc]"
@@ -467,7 +494,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
 
           <button
             onClick={() => setActiveTab("notif")}
-            className={`px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+            className={`shrink-0 px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === "notif"
                 ? "border-[#fde047] text-[#fde047] bg-[#1c1308]/50"
                 : "border-transparent text-[#a39171] hover:text-[#f3e5cc]"
@@ -479,7 +506,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+        <div className="relative z-10 flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4">
           {/* TAB: SNAPSHOT DE MEMÓRIA */}
           {activeTab === "snapshot" && (
             <div className="space-y-5 max-w-3xl mx-auto font-mono">
@@ -492,7 +519,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                     </div>
                     <div>
                       <h3 className="text-sm font-bold font-fantasy text-[#f8ecd5] tracking-wider uppercase">
-                        Snapshot de Memória do Caçador (Modo Coordenador)
+                        Snapshot de Memória do Escolhido (Modo Coordenador)
                       </h3>
                       <p className="text-xs text-[#c5b08f]">
                         Contexto compacto (~500 tokens) enviado à Grande Sábio em cada mensagem.
@@ -919,7 +946,7 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                 )}
 
                 {/* Action Buttons */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
                   <button
                     onClick={handleSeedDatabase}
                     disabled={dbLoading}
@@ -927,6 +954,16 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                   >
                     <Sparkles className="w-4 h-4" />
                     <span>Semear Dados de Exemplo (Seed)</span>
+                  </button>
+
+                  <button
+                    onClick={handleResetOnboarding}
+                    disabled={dbLoading}
+                    data-testid="reset-onboarding-btn"
+                    className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-none bg-[#1c1308] border border-[#fde047]/60 hover:bg-[#2a1d0c] text-[#fde047] font-medium text-xs font-mono transition-colors shadow-[0_0_15px_rgba(253,224,71,0.18)]"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Resetar Onboarding (Re-despertar)</span>
                   </button>
 
                   <button

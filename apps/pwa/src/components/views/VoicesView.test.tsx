@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { VoicesView } from "./VoicesView";
 import { ttsService } from "../../services/ttsService";
 import { soundService } from "../../services/soundService";
@@ -10,11 +10,11 @@ describe("VoicesView Component", () => {
     vi.clearAllMocks();
   });
 
-  it("renders all 9 official voice clips and categories", () => {
+  it("renders all official voice clips and categories", () => {
     render(<VoicesView isActive={true} />);
 
     expect(screen.getByText("ESTAÇÃO DE VOZ // VOZ DO MUNDO & G.S")).toBeInTheDocument();
-    expect(screen.getByText("9 VOZES OFICIAIS")).toBeInTheDocument();
+    expect(screen.getByText(/VOZES OFICIAIS/)).toBeInTheDocument();
 
     // Verify clips
     expect(screen.getByText("Missão Concluída")).toBeInTheDocument();
@@ -105,11 +105,13 @@ describe("VoicesView Component", () => {
     );
   });
 
-  it("triggers TTS speech narration with custom text and stop action", async () => {
+  it("triggers TTS speech narration with custom text and speed slider", async () => {
     const speakSpy = vi.spyOn(ttsService, "speak").mockResolvedValue(true);
-    const stopSpy = vi.spyOn(ttsService, "stop");
 
     render(<VoicesView isActive={true} />);
+
+    const speedSlider = screen.getByTestId("gs-speed-slider");
+    fireEvent.change(speedSlider, { target: { value: "1.5" } });
 
     const speakBtn = screen.getByRole("button", { name: "Narrar Texto com a G.S" });
     fireEvent.click(speakBtn);

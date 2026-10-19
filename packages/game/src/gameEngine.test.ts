@@ -24,6 +24,11 @@ import {
   calculateLedgerTotals,
   auditLedger,
   createEmptyAttributes,
+  pointsRequiredForGrade,
+  getCumulativePointsForGrade,
+  calculateDynamicAttributeCeiling,
+  calculateMasteryGainWithDecay,
+  OVERALL_CHOSEN_TITLES,
 } from "./index";
 import type { AreaCode, SkillTier, XpEvent } from "@slime-sage/shared";
 
@@ -253,6 +258,26 @@ describe("Game Engine: Skills & Mastery Transitions", () => {
     expect(demoted.hasDegradedFromExtra).toBe(true);
   });
 
+  it("applies diminishing returns after 150 pts halfway mark with learning curve option", () => {
+    // Below 150: 100% full gain
+    expect(calculateMasteryGainWithDecay(0, 20)).toBe(20);
+    expect(calculateMasteryGainWithDecay(100, 20)).toBe(20);
+    expect(calculateMasteryGainWithDecay(150, 20)).toBe(20);
+
+    // Above 150: smooth decay
+    const gainAt225 = calculateMasteryGainWithDecay(225, 20);
+    expect(gainAt225).toBeLessThan(20);
+    expect(gainAt225).toBeGreaterThanOrEqual(10);
+
+    // Guaranteed floor of at least 1 pt
+    expect(calculateMasteryGainWithDecay(299, 1)).toBeGreaterThanOrEqual(1);
+
+    // calculateSkillProgression with applyLearningCurve
+    const withCurve = calculateSkillProgression("extra", 200, 20, { applyLearningCurve: true });
+    expect(withCurve.actualDelta).toBeLessThan(20);
+    expect(withCurve.newMastery).toBe(200 + withCurve.actualDelta);
+  });
+
   it("property: skill mastery is always within [0, 300] (fast-check)", () => {
     fc.assert(
       fc.property(
@@ -369,6 +394,45 @@ describe("Game Engine: Attributes", () => {
     expect(getAttributeRank(50000, "CRI").title).toBe("Primordial da Criação");
     expect(getAttributeRank(0, "SOC").title).toBe("Ouvinte Atento");
     expect(getAttributeRank(50000, "SOC").title).toBe("A Harmonia Primordial");
+
+    // Chosen titles canonical list
+    expect(OVERALL_CHOSEN_TITLES[0]).toBe("Iniciado do Sistema");
+    expect(OVERALL_CHOSEN_TITLES[1]).toBe("Escolhido Praticante");
+    expect(OVERALL_CHOSEN_TITLES[9]).toBe("O Absoluto");
+  });
+
+  it("calculates exponential grade requirements and cumulative thresholds", () => {
+    // Grade 1 requires 1,000 pts
+    expect(pointsRequiredForGrade(1)).toBe(1000);
+    // Grade 2: 1000 * 2^1.25 ≈ 2378
+    expect(pointsRequiredForGrade(2)).toBe(2378);
+    // Grade 3: 1000 * 3^1.25 ≈ 3948
+    expect(pointsRequiredForGrade(3)).toBe(3948);
+
+    // Cumulative points
+    expect(getCumulativePointsForGrade(0)).toBe(0);
+    expect(getCumulativePointsForGrade(1)).toBe(1000);
+    expect(getCumulativePointsForGrade(2)).toBe(1000 + 2378);
+  });
+
+  it("calculates dynamic attribute ceiling expanding and retreating across grades", () => {
+    // Starting out: ceiling is first grade threshold (1,000)
+    expect(calculateDynamicAttributeCeiling(0)).toBe(1000);
+    expect(calculateDynamicAttributeCeiling(50)).toBe(1000);
+    expect(calculateDynamicAttributeCeiling(999)).toBe(1000);
+
+    // Crossing 1,000 pts advances ceiling to Grade 2 threshold (1000 + 2378 = 3378)
+    expect(calculateDynamicAttributeCeiling(1000)).toBe(3378);
+    expect(calculateDynamicAttributeCeiling(2000)).toBe(3378);
+    expect(calculateDynamicAttributeCeiling(3377)).toBe(3378);
+
+    // Crossing Grade 2 threshold advances to Grade 3 threshold
+    const grade2Ceil = getCumulativePointsForGrade(2);
+    expect(calculateDynamicAttributeCeiling(grade2Ceil)).toBe(getCumulativePointsForGrade(3));
+
+    // Beyond max ceiling (50,000) caps at 50,000
+    expect(calculateDynamicAttributeCeiling(50000)).toBe(50000);
+    expect(calculateDynamicAttributeCeiling(99999)).toBe(50000);
   });
 });
 

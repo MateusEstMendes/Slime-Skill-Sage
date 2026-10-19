@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Settings, X, Terminal, Cpu, Shield, Sparkles, Volume2, VolumeX } from "lucide-react";
+import { Settings, X, Terminal, Cpu, Shield, Sparkles, Volume2, VolumeX, Gauge } from "lucide-react";
 import { localDb } from "../services/db";
 import { worldVoiceService } from "../services/worldVoiceService";
+import { gsVoiceService, DEFAULT_GS_PLAYBACK_RATE } from "../services/gsVoiceService";
 import { GildedCorners } from "./system/GildedCorners";
 
 interface SettingsModalProps {
@@ -11,7 +12,7 @@ interface SettingsModalProps {
 }
 
 const REQUIRED_CLICKS = 7;
-const APP_VERSION = "v1.0.0-phase6";
+const APP_VERSION = "v1.0.0-phase8";
 const DEV_MODE_KEY = "dev_mode_unlocked";
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -22,7 +23,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const clickCountRef = React.useRef<number>(0);
   const [isDevUnlocked, setIsDevUnlocked] = useState<boolean>(false);
   const [isNarrationEnabled, setIsNarrationEnabled] = useState<boolean>(true);
-  const [isAutoPlayEnabled, setIsAutoPlayEnabled] = useState<boolean>(false);
+  const [isAutoPlayEnabled, setIsAutoPlayEnabled] = useState<boolean>(true);
+  const [gsPlaybackRate, setGsPlaybackRate] = useState<number>(DEFAULT_GS_PLAYBACK_RATE);
   const [isPendingToastEnabled, setIsPendingToastEnabled] = useState<boolean>(true);
   const [toastMessage, setToastMessage] = useState<string>("");
 
@@ -34,8 +36,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       void worldVoiceService.isTtsEnabled().then((enabled) => {
         setIsNarrationEnabled(enabled);
       });
-      void localDb.getKv<boolean>("settings_auto_play_voice").then((autoPlay) => {
-        setIsAutoPlayEnabled(Boolean(autoPlay));
+      void gsVoiceService.isAutoPlayEnabled().then((autoPlay) => {
+        setIsAutoPlayEnabled(autoPlay);
+      });
+      void gsVoiceService.getPlaybackRate().then((rate) => {
+        setGsPlaybackRate(rate);
       });
       void localDb.getKv<boolean>("settings_disable_pending_toast").then((disabled) => {
         setIsPendingToastEnabled(!disabled);
@@ -58,13 +63,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const handleToggleAutoPlay = async () => {
     const nextState = !isAutoPlayEnabled;
     setIsAutoPlayEnabled(nextState);
-    await localDb.setKv("settings_auto_play_voice", nextState);
+    await gsVoiceService.setAutoPlayEnabled(nextState);
     setToastMessage(
       nextState ? "Auto-reprodução de voz da G.S ativada." : "Auto-reprodução de voz desativada."
     );
     setTimeout(() => {
       setToastMessage("");
     }, 2000);
+  };
+
+  const handleChangeGsSpeed = async (newRate: number) => {
+    setGsPlaybackRate(newRate);
+    await gsVoiceService.setPlaybackRate(newRate);
   };
 
   const handleTogglePendingToast = async () => {
@@ -118,11 +128,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       aria-label="Ajustes do Sistema"
       className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 font-sans"
     >
-      <div className="relative bg-[#060e20]/95 border border-[#c89b55]/75 rounded-none w-full max-w-md flex flex-col shadow-[0_0_45px_rgba(223,168,108,0.22)] overflow-hidden">
+      <div className="relative bg-[#060e20]/95 border border-[#c89b55]/75 rounded-none w-full max-w-md max-h-[90vh] flex flex-col shadow-[0_0_45px_rgba(223,168,108,0.22)] overflow-hidden">
         <GildedCorners size="lg" withCenterNotches />
 
         {/* Header */}
-        <div className="relative z-10 bg-[#081329] border-b border-[#966422]/45 px-5 py-4 flex items-center justify-between">
+        <div className="relative z-10 shrink-0 bg-[#081329] border-b border-[#966422]/45 px-5 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
             <div className="p-1.5 bg-[#140f08] border border-[#dfa86c]/60 text-[#fde047]">
               <Settings className="w-4 h-4" />
@@ -145,7 +155,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="relative z-10 p-5 space-y-4">
+        <div className="relative z-10 flex-1 min-h-0 overflow-y-auto p-5 space-y-4">
           {/* Status info */}
           <div className="relative bg-[#040814]/90 border border-[#966422]/55 p-3.5 space-y-2.5 font-mono text-xs overflow-hidden shadow-[inset_0_0_12px_rgba(223,168,108,0.04)]">
             <GildedCorners size="xs" withInnerFrame={false} />
@@ -201,7 +211,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               aria-checked={isNarrationEnabled}
               aria-label="Alternar narração da Voz do Mundo"
               onClick={handleToggleNarration}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-1 focus:ring-[#dfa86c] ${
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-1 focus:ring-[#dfa86c] ${
                 isNarrationEnabled ? "bg-[#c89b55]" : "bg-[#081329]"
               }`}
             >
@@ -214,38 +224,67 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           {/* G.S Voice Auto-Play Toggle */}
-          <div className="relative bg-[#040814]/90 border border-[#966422]/55 p-3.5 flex items-center justify-between overflow-hidden shadow-[inset_0_0_12px_rgba(223,168,108,0.04)]">
+          <div className="relative bg-[#040814]/90 border border-[#966422]/55 p-3.5 space-y-3 overflow-hidden shadow-[inset_0_0_12px_rgba(223,168,108,0.04)]">
             <GildedCorners size="xs" withInnerFrame={false} />
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-[#140f08] border border-[#dfa86c]/60 text-[#dfa86c]">
-                <Volume2 className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs font-fantasy font-bold uppercase tracking-wider text-[#f8ecd5]">
-                  Auto-reproduzir Voz da G.S
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-[#140f08] border border-[#dfa86c]/60 text-[#dfa86c]">
+                  <Volume2 className="w-4 h-4" />
                 </div>
-                <div className="text-[11px] text-[#c5b08f] font-sans">
-                  Sintetizar via voz Kore ao receber diretrizes
+                <div>
+                  <div className="text-xs font-fantasy font-bold uppercase tracking-wider text-[#f8ecd5]">
+                    Auto-reproduzir Voz da G.S
+                  </div>
+                  <div className="text-[11px] text-[#c5b08f] font-sans">
+                    Falar automaticamente junto com a resposta no Chat
+                  </div>
                 </div>
               </div>
+
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isAutoPlayEnabled}
+                aria-label="Alternar auto-reprodução de voz da G.S"
+                onClick={handleToggleAutoPlay}
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-1 focus:ring-[#dfa86c] ${
+                  isAutoPlayEnabled ? "bg-[#c89b55]" : "bg-[#081329]"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-[#040814] transition-transform ${
+                    isAutoPlayEnabled ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
             </div>
 
-            <button
-              type="button"
-              role="switch"
-              aria-checked={isAutoPlayEnabled}
-              aria-label="Alternar auto-reprodução de voz da G.S"
-              onClick={handleToggleAutoPlay}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-1 focus:ring-[#dfa86c] ${
-                isAutoPlayEnabled ? "bg-[#c89b55]" : "bg-[#081329]"
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-[#040814] transition-transform ${
-                  isAutoPlayEnabled ? "translate-x-6" : "translate-x-1"
-                }`}
+            {/* Cadência / Velocidade da Voz Neural Kore (1.0x a 2.0x) */}
+            <div className="pt-2 border-t border-[#966422]/35 space-y-1.5 font-mono text-xs">
+              <div className="flex items-center justify-between text-[#c5b08f]">
+                <span className="flex items-center gap-1.5 font-fantasy uppercase tracking-wider text-[11px]">
+                  <Gauge className="w-3.5 h-3.5 text-[#fde047]" />
+                  <span>Cadência da Voz G.S (Kore):</span>
+                </span>
+                <span className="text-[#fde047] font-bold">{gsPlaybackRate.toFixed(2)}x</span>
+              </div>
+              <input
+                type="range"
+                min="1.0"
+                max="2.0"
+                step="0.05"
+                aria-label="Velocidade da Voz da G.S"
+                value={gsPlaybackRate}
+                onChange={(e) => void handleChangeGsSpeed(parseFloat(e.target.value))}
+                className="w-full accent-[#fde047] cursor-pointer"
               />
-            </button>
+              <div className="flex justify-between text-[10px] text-[#8c7a5b]">
+                <span>1.0x (Normal)</span>
+                <span>1.25x (Rápida)</span>
+                <span>1.5x</span>
+                <span>2.0x (Máxima)</span>
+              </div>
+            </div>
           </div>
 
           {/* Pending Tasks Toast Toggle */}

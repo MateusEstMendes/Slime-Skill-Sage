@@ -52,6 +52,18 @@ export const ProjectTreeViewer: React.FC<ProjectTreeViewerProps> = ({
 
   useEffect(() => {
     void loadTreeData();
+
+    const unsubRepo = projectRepository.subscribe(() => {
+      void loadTreeData();
+    });
+    const unsubGame = gameService.subscribeToGameEvents(() => {
+      void loadTreeData();
+    });
+
+    return () => {
+      unsubRepo();
+      unsubGame();
+    };
   }, [loadTreeData]);
 
   // Compute map of prerequisites for each mission

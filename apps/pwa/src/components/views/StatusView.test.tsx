@@ -31,9 +31,11 @@ describe("StatusView & AttributesRadarChart", () => {
     render(<StatusView />);
 
     await waitFor(() => {
-      expect(screen.getByText("PAINEL DE ATRIBUTOS // SOLO LEVELING")).toBeInTheDocument();
+      expect(screen.getByText("PAINEL DE ATRIBUTOS // REGISTRO DO ESCOLHIDO")).toBeInTheDocument();
       expect(screen.getByText("Total XP")).toBeInTheDocument();
       expect(screen.getByText("50")).toBeInTheDocument();
+      expect(screen.getByText("Rank do Escolhido")).toBeInTheDocument();
+      expect(screen.getByText(/Horizonte Ativo/i)).toBeInTheDocument();
     });
 
     // Check SVG Radar chart presence

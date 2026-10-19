@@ -118,8 +118,14 @@ if (typeof window !== "undefined") {
   if (window.HTMLMediaElement) {
     const defaultPlay = vi.fn().mockImplementation(function (this: HTMLMediaElement) {
       setTimeout(() => {
-        this.onended?.(new Event("ended"));
-        this.dispatchEvent(new Event("ended"));
+        try {
+          const EventCtor = this.ownerDocument?.defaultView?.Event ?? Event;
+          const ev = new EventCtor("ended");
+          this.onended?.(ev);
+          this.dispatchEvent(ev);
+        } catch {
+          // Ignore if jsdom window was already torn down
+        }
       }, 5);
       return Promise.resolve();
     });

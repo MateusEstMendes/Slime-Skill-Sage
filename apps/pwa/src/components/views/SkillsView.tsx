@@ -7,6 +7,7 @@ import { GildedCorners } from "../system/GildedCorners";
 import { SystemInput, SystemSelect } from "../system/SystemFormControls";
 import { BASE_AREAS, type Skill, type AreaCode, type XpEvent } from "@slime-sage/shared";
 import { gameService } from "../../services/gameService";
+import { projectRepository } from "../../services/projectRepository";
 import { Sparkles, Plus, History, Filter, ArrowUpRight, Award, Zap } from "lucide-react";
 
 export interface SkillsViewProps {
@@ -57,10 +58,16 @@ export const SkillsView: React.FC<SkillsViewProps> = ({ isActive }) => {
 
   useEffect(() => {
     void loadSkills();
-    const unsubscribe = gameService.subscribeToGameEvents(() => {
+    const unsubscribeGame = gameService.subscribeToGameEvents(() => {
       void loadSkills();
     });
-    return unsubscribe;
+    const unsubscribeRepo = projectRepository.subscribe(() => {
+      void loadSkills();
+    });
+    return () => {
+      unsubscribeGame();
+      unsubscribeRepo();
+    };
   }, [loadSkills]);
 
   useEffect(() => {

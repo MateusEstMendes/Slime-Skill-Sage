@@ -6,6 +6,8 @@ import {
   type Area,
   type XpEvent,
   type AreaCode,
+  type TensuraRace,
+  type ThreatRank,
 } from "@slime-sage/shared";
 import {
   type Clock,
@@ -133,6 +135,8 @@ export class GameService {
         id: "profile_main",
         name: "Rimuru Tempest",
         title: "Aspirante a Desperto",
+        race: "Slime",
+        rank_threat: "Classe Menor",
         level: 1,
         current_xp: 0,
         total_xp: 0,
@@ -145,6 +149,68 @@ export class GameService {
       await this.db.put("profile", profile);
     }
     return profile;
+  }
+
+  public async completeOnboarding(params: {
+    name: string;
+    race: TensuraRace;
+    rankThreat: ThreatRank;
+    title?: string;
+  }): Promise<Profile> {
+    const profile = await this.getProfile();
+    const now = new Date(this.clock.now()).toISOString();
+
+    const updated: Profile = {
+      ...profile,
+      name: params.name.trim() || profile.name || "Rimuru Tempest",
+      race: params.race,
+      rank_threat: params.rankThreat,
+      title: params.title || profile.title,
+      onboarding_done: true,
+      updated_at: now,
+    };
+
+    await this.db.put("profile", updated);
+    void logger.info("game", "[Despertar Concluído] Essência consagrada no perfil do Caçador", {
+      name: updated.name,
+      race: updated.race,
+      rankThreat: updated.rank_threat,
+      title: updated.title,
+    });
+
+    this.dispatchEvent({
+      type: "ONBOARDING_COMPLETED",
+      payload: {
+        name: updated.name,
+        race: updated.race ?? "Slime",
+        rankThreat: updated.rank_threat ?? "Classe Menor",
+      },
+    });
+
+    return updated;
+  }
+
+  public async resetOnboarding(): Promise<Profile> {
+    const profile = await this.getProfile();
+    const now = new Date(this.clock.now()).toISOString();
+
+    const updated: Profile = {
+      ...profile,
+      onboarding_done: false,
+      updated_at: now,
+    };
+
+    await this.db.put("profile", updated);
+    void logger.info("game", "[Re-Despertar] Onboarding resetado via Painel Dev", {
+      profileId: updated.id,
+    });
+
+    this.dispatchEvent({
+      type: "ONBOARDING_RESET",
+      payload: {},
+    });
+
+    return updated;
   }
 
   // --- LEDGER & AUDITING ---

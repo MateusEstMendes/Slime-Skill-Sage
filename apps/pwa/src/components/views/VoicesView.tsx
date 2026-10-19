@@ -1,19 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  Volume2,
-  VolumeX,
   Play,
   Square,
   Sparkles,
   ArrowUpCircle,
   Award,
   Zap,
-  Activity,
-  RotateCcw,
-  Sliders,
   Radio,
-  Layers,
-  CheckCircle2,
+  Gauge,
 } from "lucide-react";
 import { SystemPanel } from "../system/SystemPanel";
 import { SystemButton } from "../system/SystemButton";
@@ -23,6 +17,7 @@ import { OFFICIAL_VOICE_CLIPS, type VoiceClip } from "../../services/voiceCatalo
 import { ttsService } from "../../services/ttsService";
 import { soundService } from "../../services/soundService";
 import { worldVoiceService } from "../../services/worldVoiceService";
+import { gsVoiceService, DEFAULT_GS_PLAYBACK_RATE } from "../../services/gsVoiceService";
 import { hapticFeedback } from "../../services/haptics";
 
 export interface VoicesViewProps {
@@ -41,6 +36,7 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
   const [playingClipId, setPlayingClipId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [audioProgress, setAudioProgress] = useState<Record<string, number>>({});
+  const [gsPlaybackRate, setGsPlaybackRate] = useState<number>(DEFAULT_GS_PLAYBACK_RATE);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // TTS State
@@ -53,12 +49,19 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
   const [ttsSupported, setTtsSupported] = useState<boolean>(true);
   const [actionNotice, setActionNotice] = useState<string>("");
 
-  // Load TTS voices
+  // Load TTS voices & saved GS playback rate
   useEffect(() => {
+    let isMounted = true;
+    void gsVoiceService.getPlaybackRate().then((rate) => {
+      if (isMounted) {
+        setGsPlaybackRate(rate);
+      }
+    });
     const supported = ttsService.isSupported();
     setTtsSupported(supported);
     if (supported) {
       void ttsService.getAvailableVoices().then((voices) => {
+        if (!isMounted) return;
         setTtsVoices(voices);
         const defaultPt = ttsService.selectPtBrVoice(voices);
         if (defaultPt) {
@@ -66,7 +69,18 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
         }
       });
     }
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  const handleChangeGsSpeed = async (rate: number) => {
+    setGsPlaybackRate(rate);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = rate;
+    }
+    await gsVoiceService.setPlaybackRate(rate);
+  };
 
   // Cleanup audio on unmount
   useEffect(() => {
@@ -98,6 +112,10 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
 
     try {
       const audio = new Audio(clip.url);
+      audio.playbackRate = gsPlaybackRate;
+      if ("preservesPitch" in audio) {
+        (audio as HTMLAudioElement & { preservesPitch?: boolean }).preservesPitch = true;
+      }
       audioRef.current = audio;
       setPlayingClipId(clip.id);
 
@@ -233,17 +251,61 @@ export const VoicesView: React.FC<VoicesViewProps> = () => {
               </SystemButton>
             )}
             <SystemBadge
-              label="9 VOZES OFICIAIS"
+              label="16 VOZES OFICIAIS"
               className="border-[#dfa86c]/70 text-[#fde047] bg-[#1c1308]/90 font-bold"
             />
           </div>
         }
       >
-        <div className="text-xs text-[#e8d5b5] leading-relaxed font-mono">
-          Este módulo permite testar a biblioteca canônica de voz oficial da{" "}
-          <span className="text-[#fde047] font-bold">Voz do Mundo (voz neural Kore)</span> em formato{" "}
-          <code className="text-[#dfa86c]">.mp3</code>, além do motor de síntese offline (Web Speech API) da{" "}
-          <span className="text-[#fde047] font-bold">Grande Sábio</span> e os anúncios dramáticos em tela cheia.
+        <div className="space-y-3 text-xs text-[#e8d5b5] leading-relaxed font-mono">
+          <div>
+            Este módulo permite testar a biblioteca canônica de voz oficial da{" "}
+            <span className="text-[#fde047] font-bold">Voz do Mundo (voz neural Kore)</span> em formato{" "}
+            <code className="text-[#dfa86c]">.mp3</code>, além da cadência acelerada da{" "}
+            <span className="text-[#fde047] font-bold">Grande Sábio</span> no chat.
+          </div>
+
+          {/* Controle de Cadência Global da Voz Kore (1.0x a 2.0x) */}
+          <div className="p-3 bg-[#040814]/90 border border-[#dfa86c]/50 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-fantasy font-bold uppercase tracking-wider text-[#fde047] flex items-center gap-2">
+                <Gauge className="w-4 h-4 text-[#fde047]" />
+                <span>Cadência Global da Voz G.S (Kore — 1.0x até 2.0x):</span>
+              </span>
+              <span
+                data-testid="gs-speed-display"
+                className="px-2 py-0.5 bg-[#1c1308] border border-[#fde047] text-[#fde047] font-bold"
+              >
+                {gsPlaybackRate.toFixed(2)}x
+              </span>
+            </div>
+            <input
+              type="range"
+              min="1.0"
+              max="2.0"
+              step="0.05"
+              data-testid="gs-speed-slider"
+              value={gsPlaybackRate}
+              onChange={(e) => void handleChangeGsSpeed(parseFloat(e.target.value))}
+              className="w-full accent-[#fde047] cursor-pointer"
+            />
+            <div className="flex items-center justify-between text-[10px] text-[#c5b08f]">
+              {[1.0, 1.2, 1.35, 1.5, 1.75, 2.0].map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => void handleChangeGsSpeed(preset)}
+                  className={`px-2 py-0.5 border transition-colors ${
+                    Math.abs(gsPlaybackRate - preset) < 0.03
+                      ? "bg-[#1c1308] border-[#fde047] text-[#fde047] font-bold"
+                      : "bg-[#060e20] border-[#966422]/40 hover:border-[#dfa86c]"
+                  }`}
+                >
+                  {preset.toFixed(2).replace(/\.00$/, ".0")}x
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </SystemPanel>
 

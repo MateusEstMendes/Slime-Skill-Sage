@@ -55,15 +55,15 @@ Legenda: `[ ]` Pendente | `[/]` Em andamento | `[x]` Concluído e Aprovado pelo 
 
 - [x] 7.1 Desenvolvimento
 - [x] 7.2 Testes Automáticos
-- [/] 7.3 Testes do Usuário
+- [x] 7.3 Testes do Usuário
 - [x] 7.4 Debug e Atualização de Handoff/Feedback
 
 ## Fase 8 — Onboarding: 5 Perguntas da G.S, Revelação de Raça (Tensura) e Rank de Ameaça
 
-- [ ] 8.1 Desenvolvimento
-- [ ] 8.2 Testes Automáticos
-- [ ] 8.3 Testes do Usuário
-- [ ] 8.4 Debug e Atualização de Handoff/Feedback
+- [x] 8.1 Desenvolvimento
+- [x] 8.2 Testes Automáticos
+- [x] 8.3 Testes do Usuário
+- [x] 8.4 Debug e Atualização de Handoff/Feedback
 
 ## Fase 9 — Motor de Jogo (Parte 2): Classes por  Área e Evolução com Desafio Autodeclarado
 

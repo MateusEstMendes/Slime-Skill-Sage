@@ -86,11 +86,13 @@ export async function sendChatMessage(
   apiUrl: string,
   token: string,
   request: ChatRequest,
-): Promise<{ success: boolean; data?: ChatResponse; error?: string }> {
+  options?: { signal?: AbortSignal },
+): Promise<{ success: boolean; data?: ChatResponse; error?: string; aborted?: boolean }> {
   try {
     const res = await authenticatedFetch(apiUrl, token, "/chat", {
       method: "POST",
       body: JSON.stringify(request),
+      signal: options?.signal,
     });
 
     if (res.status === 401) {
@@ -123,6 +125,17 @@ export async function sendChatMessage(
 
     return { success: true, data: parsed.data };
   } catch (err: unknown) {
+    if (
+      (err instanceof DOMException && err.name === "AbortError") ||
+      (err instanceof Error && err.name === "AbortError") ||
+      options?.signal?.aborted
+    ) {
+      return {
+        success: false,
+        aborted: true,
+        error: "Requisição interrompida pelo Caçador.",
+      };
+    }
     const message = err instanceof Error ? err.message : "Erro desconhecido de rede";
     return {
       success: false,
@@ -136,11 +149,19 @@ export async function synthesizeSpeechApi(
   token: string,
   text: string,
   voice: string = "Kore",
-): Promise<{ success: boolean; data?: TtsResponse; error?: string; code?: string }> {
+  options?: { signal?: AbortSignal },
+): Promise<{
+  success: boolean;
+  data?: TtsResponse;
+  error?: string;
+  code?: string;
+  aborted?: boolean;
+}> {
   try {
     const res = await authenticatedFetch(apiUrl, token, "/tts", {
       method: "POST",
       body: JSON.stringify({ text, voice }),
+      signal: options?.signal,
     });
 
     if (res.status === 401) {
@@ -174,6 +195,17 @@ export async function synthesizeSpeechApi(
 
     return { success: true, data: parsed.data };
   } catch (err: unknown) {
+    if (
+      (err instanceof DOMException && err.name === "AbortError") ||
+      (err instanceof Error && err.name === "AbortError") ||
+      options?.signal?.aborted
+    ) {
+      return {
+        success: false,
+        aborted: true,
+        error: "Síntese de áudio cancelada pelo Caçador.",
+      };
+    }
     const message = err instanceof Error ? err.message : "Erro de conexão";
     return {
       success: false,

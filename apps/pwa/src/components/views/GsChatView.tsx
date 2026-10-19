@@ -12,6 +12,7 @@ import {
 import { chatRepository, MAIN_THREAD_ID } from "../../services/chatRepository";
 import { localDb } from "../../services/db";
 import { projectRepository } from "../../services/projectRepository";
+import { gameService } from "../../services/gameService";
 import { buildMemorySnapshot } from "../../services/memorySnapshotBuilder";
 import { sendChatMessage } from "../../services/apiClient";
 import { getStoredApiUrl, getStoredToken } from "../../services/authStorage";
@@ -31,85 +32,140 @@ import {
   Trash2,
   Loader2,
   User,
+  Square,
+  RotateCcw,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 
 export const GsChatView: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSynthesizingAudio, setIsSynthesizingAudio] = useState(false);
   const [recalculatingNotice, setRecalculatingNotice] = useState<string | null>(null);
   const [currentlySpeakingId, setCurrentlySpeakingId] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [autoPlayVoice, setAutoPlayVoice] = useState<boolean>(true);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState<string>("");
+
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const chatAbortControllerRef = useRef<AbortController | null>(null);
+  const audioAbortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
     const loadChat = async () => {
       await chatRepository.getOrCreateMainThread();
-      const loaded = await chatRepository.getMessages(MAIN_THREAD_ID);
+      const [loaded, autoPlay] = await Promise.all([
+        chatRepository.getMessages(MAIN_THREAD_ID),
+        gsVoiceService.isAutoPlayEnabled(),
+      ]);
+
       if (isMounted) {
+        setAutoPlayVoice(autoPlay);
         if (loaded.length === 0) {
           const welcomeMsg: ChatMessage = {
             id: `welcome-${Date.now()}`,
             thread_id: MAIN_THREAD_ID,
             role: "assistant",
             content:
-              "Resposta: O canal neural com a Grande Sábio está estabelecido. No Modo Coordenador, conduzirei uma breve análise estratégica antes de arquitetar árvores de projetos e habilidades. Qual é o seu direcionamento, Caçador?",
+              "Resposta: O canal neural com a Grande Sábio está estabelecido. No Modo Coordenador, conduzirei uma breve análise estratégica antes de arquitetar árvores de projetos e habilidades. Qual é o seu direcionamento, Escolhido?",
             created_at: new Date().toISOString(),
           };
           await chatRepository.saveMessage(welcomeMsg);
-          setMessages([welcomeMsg]);
+          if (isMounted) {
+            setMessages((prev) => (prev.length === 0 ? [welcomeMsg] : [welcomeMsg, ...prev]));
+          }
         } else {
-          setMessages(loaded);
+          setMessages((prev) => (prev.length === 0 ? loaded : prev));
         }
       }
     };
 
     void loadChat();
 
-    const unsubscribe = gsVoiceService.subscribe((speaking) => {
+    const unsubscribeVoice = gsVoiceService.subscribe((speaking) => {
       if (!speaking && isMounted) {
         setCurrentlySpeakingId(null);
       }
     });
 
+    const unsubscribeGame = gameService.subscribeToGameEvents((ev) => {
+      if (ev.type === "ONBOARDING_COMPLETED" && isMounted) {
+        void loadChat();
+      }
+    });
+
     return () => {
       isMounted = false;
-      unsubscribe();
+      chatAbortControllerRef.current?.abort();
+      audioAbortControllerRef.current?.abort();
+      unsubscribeVoice();
+      unsubscribeGame();
     };
   }, []);
 
   useEffect(() => {
-    if (typeof messagesEndRef.current?.scrollIntoView === "function") {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    const container = messagesContainerRef.current;
+    if (container && container.scrollHeight > container.clientHeight) {
+      container.scrollTop = container.scrollHeight;
     }
-  }, [messages, isLoading, recalculatingNotice]);
+  }, [messages, isLoading, isSynthesizingAudio, recalculatingNotice]);
 
   const assembleHunterContext = async (): Promise<HunterContext> => {
     return await buildMemorySnapshot();
   };
 
-  const handleSendMessage = async (textToSend?: string) => {
-    const content = (textToSend || inputValue).trim();
-    if (!content || isLoading) return;
-
-    setInputValue("");
-    const userMsg: ChatMessage = {
-      id: `user-${Date.now()}`,
-      thread_id: MAIN_THREAD_ID,
-      role: "user",
-      content,
-      created_at: new Date().toISOString(),
-    };
-
-    const updatedMessages = [...messages, userMsg];
-    setMessages(updatedMessages);
-    await chatRepository.saveMessage(userMsg);
+  const handleToggleAutoPlayVoice = async () => {
+    const nextVal = !autoPlayVoice;
+    setAutoPlayVoice(nextVal);
+    await gsVoiceService.setAutoPlayEnabled(nextVal);
+    if (!nextVal) {
+      audioAbortControllerRef.current?.abort();
+      gsVoiceService.stopCurrentSpeech();
+      setCurrentlySpeakingId(null);
+    }
     hapticFeedback.tap();
+  };
 
-    setIsLoading(true);
+  const handleCancelRequest = () => {
+    if (chatAbortControllerRef.current) {
+      chatAbortControllerRef.current.abort();
+      chatAbortControllerRef.current = null;
+    }
+    if (audioAbortControllerRef.current) {
+      audioAbortControllerRef.current.abort();
+      audioAbortControllerRef.current = null;
+    }
+    gsVoiceService.cancelPendingSynthesis();
+    setIsSynthesizingAudio(false);
     setRecalculatingNotice(null);
+    setIsLoading(false);
+    hapticFeedback.tap();
+  };
+
+  const handleCancelAudioSynthesis = () => {
+    if (audioAbortControllerRef.current) {
+      audioAbortControllerRef.current.abort();
+      audioAbortControllerRef.current = null;
+    }
+    gsVoiceService.cancelPendingSynthesis();
+    setIsSynthesizingAudio(false);
+    hapticFeedback.tap();
+  };
+
+  const executeGsTurn = async (conversationMessages: ChatMessage[]) => {
+    setIsLoading(true);
+    setIsSynthesizingAudio(false);
+    setRecalculatingNotice(null);
+    gsVoiceService.stopCurrentSpeech();
+
+    const chatAbortController = new AbortController();
+    chatAbortControllerRef.current = chatAbortController;
 
     try {
       const apiUrl = getStoredApiUrl() || "";
@@ -117,22 +173,23 @@ export const GsChatView: React.FC = () => {
       const hunterContext = await assembleHunterContext();
       const allExistingSkills = await localDb.getAll<Skill>("skill");
 
+      const lastUserMsg = [...conversationMessages].reverse().find((m) => m.role === "user");
+
       void logger.info("ai", `[Canal Neural // Transmissão] Enviando diretriz à Grande Sábio`, {
         threadId: MAIN_THREAD_ID,
-        userMessage: content,
+        userMessage: lastUserMsg?.content || "",
         activeProjects: hunterContext.projects.length,
         activeSkills: hunterContext.skills.length,
         estimatedSnapshotTokens: hunterContext.estimated_tokens,
       });
 
-      let currentReqMessages = updatedMessages.map((m) => ({
+      let currentReqMessages = conversationMessages.map((m) => ({
         role: m.role,
         content: m.content,
       }));
 
       let finalReplyContent = "";
       let finalProposal: Proposal | undefined = undefined;
-      let finalSpokenText: string | undefined = undefined;
       let totalPromptTokens = 0;
       let totalCompletionTokens = 0;
       let totalCombinedTokens = 0;
@@ -141,11 +198,21 @@ export const GsChatView: React.FC = () => {
       const MAX_RETRIES = 2;
 
       for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-        const res = await sendChatMessage(apiUrl, token, {
-          thread_id: MAIN_THREAD_ID,
-          messages: currentReqMessages,
-          hunter_context: hunterContext,
-        });
+        const res = await sendChatMessage(
+          apiUrl,
+          token,
+          {
+            thread_id: MAIN_THREAD_ID,
+            messages: currentReqMessages,
+            hunter_context: hunterContext,
+          },
+          { signal: chatAbortController.signal },
+        );
+
+        if (res.aborted || chatAbortController.signal.aborted) {
+          void logger.info("ai", "[Canal Neural] Requisição interrompida pelo usuário.");
+          return;
+        }
 
         if (!res.success || !res.data) {
           const errorContent =
@@ -164,7 +231,7 @@ export const GsChatView: React.FC = () => {
           return;
         }
 
-        const { content: replyContent, proposal, spoken_text, usage } = res.data;
+        const { content: replyContent, proposal, usage } = res.data;
         requestsMade += 1;
 
         if (usage) {
@@ -205,7 +272,6 @@ export const GsChatView: React.FC = () => {
           } else if (validation.enrichedProposal) {
             finalProposal = validation.enrichedProposal;
             finalReplyContent = replyContent;
-            finalSpokenText = spoken_text;
             break;
           }
         } else if (proposal && proposal.type === "add_missions") {
@@ -217,17 +283,19 @@ export const GsChatView: React.FC = () => {
             })),
           };
           finalReplyContent = replyContent;
-          finalSpokenText = spoken_text;
           break;
         } else {
           finalProposal = proposal;
           finalReplyContent = replyContent;
-          finalSpokenText = spoken_text;
           break;
         }
       }
 
       setRecalculatingNotice(null);
+
+      if (chatAbortController.signal.aborted) {
+        return;
+      }
 
       void logger.info("ai", `[Canal Neural // Resposta Recebida] Análise concluída pela Grande Sábio`, {
         tokens: {
@@ -240,7 +308,6 @@ export const GsChatView: React.FC = () => {
         model: "gemini-3.8-flash",
       });
 
-      // Acumula estatísticas de consumo de tokens no IndexedDB
       if (totalCombinedTokens > 0 || requestsMade > 0) {
         const prevStats = (await localDb.getKv<{
           total_prompt_tokens: number;
@@ -273,17 +340,39 @@ export const GsChatView: React.FC = () => {
         created_at: new Date().toISOString(),
       };
 
+      // Sincroniza fala + texto: prepara o áudio antes de exibir o balão quando Auto-Voz está ativa
+      const shouldAutoPlay = await gsVoiceService.isAutoPlayEnabled();
+      setAutoPlayVoice(shouldAutoPlay);
+
+      let preparedSpeech: Awaited<ReturnType<typeof gsVoiceService.prepareSpeech>> = null;
+      if (shouldAutoPlay && finalReplyContent.trim().length > 0) {
+        setIsSynthesizingAudio(true);
+        const audioController = new AbortController();
+        audioAbortControllerRef.current = audioController;
+        preparedSpeech = await gsVoiceService.prepareSpeech(
+          finalReplyContent,
+          audioController.signal,
+        );
+        setIsSynthesizingAudio(false);
+        audioAbortControllerRef.current = null;
+      }
+
+      if (chatAbortController.signal.aborted) {
+        return;
+      }
+
       await chatRepository.saveMessage(assistantMsg);
       setMessages((prev) => [...prev, assistantMsg]);
       hapticFeedback.success();
 
-      // Auto-speak se habilitado nas configurações
-      const autoPlay = await localDb.getKv<boolean>("settings_auto_play_voice");
-      if (autoPlay && finalSpokenText) {
+      if (preparedSpeech) {
         setCurrentlySpeakingId(assistantMsg.id);
-        void gsVoiceService.speakWithGs(finalSpokenText);
+        void gsVoiceService.playPreparedSpeech(preparedSpeech);
       }
     } catch (err: unknown) {
+      if (chatAbortController.signal.aborted) {
+        return;
+      }
       console.error("[GsChatView] Erro ao enviar mensagem:", err);
       void logger.error("ai", "[Canal Neural // Anomalia] Erro de comunicação com o servidor", { err });
       const fallbackMsg: ChatMessage = {
@@ -296,9 +385,93 @@ export const GsChatView: React.FC = () => {
       await chatRepository.saveMessage(fallbackMsg);
       setMessages((prev) => [...prev, fallbackMsg]);
     } finally {
+      chatAbortControllerRef.current = null;
+      audioAbortControllerRef.current = null;
+      setIsSynthesizingAudio(false);
       setRecalculatingNotice(null);
       setIsLoading(false);
     }
+  };
+
+  const handleSendMessage = async (textToSend?: string) => {
+    const content = (textToSend || inputValue).trim();
+    if (!content || isLoading) return;
+
+    setInputValue("");
+    const userMsg: ChatMessage = {
+      id: `user-${Date.now()}`,
+      thread_id: MAIN_THREAD_ID,
+      role: "user",
+      content,
+      created_at: new Date().toISOString(),
+    };
+
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
+    await chatRepository.saveMessage(userMsg);
+    hapticFeedback.tap();
+
+    await executeGsTurn(updatedMessages);
+  };
+
+  const handleRegenerateLastResponse = async () => {
+    if (isLoading || messages.length === 0) return;
+
+    // Encontra a última mensagem da G.S que suceda uma mensagem do usuário
+    const lastMsg = messages[messages.length - 1];
+    if (!lastMsg || lastMsg.role !== "assistant") return;
+
+    const hasUserPrompt = messages.some((m) => m.role === "user");
+    if (!hasUserPrompt) return;
+
+    gsVoiceService.stopCurrentSpeech();
+    setCurrentlySpeakingId(null);
+
+    await chatRepository.deleteMessage(lastMsg.id);
+    const remainingMessages = messages.slice(0, -1);
+    setMessages(remainingMessages);
+    hapticFeedback.tap();
+
+    await executeGsTurn(remainingMessages);
+  };
+
+  const handleStartEditMessage = (msg: ChatMessage) => {
+    if (isLoading) return;
+    setEditingMessageId(msg.id);
+    setEditingContent(msg.content);
+  };
+
+  const handleCancelEditMessage = () => {
+    setEditingMessageId(null);
+    setEditingContent("");
+  };
+
+  const handleSaveEditAndRegenerate = async (msgId: string) => {
+    const trimmed = editingContent.trim();
+    if (!trimmed || isLoading) return;
+
+    const targetIndex = messages.findIndex((m) => m.id === msgId);
+    if (targetIndex === -1) return;
+
+    gsVoiceService.stopCurrentSpeech();
+    setCurrentlySpeakingId(null);
+    setEditingMessageId(null);
+    setEditingContent("");
+
+    await chatRepository.truncateMessagesAfter(msgId, true, MAIN_THREAD_ID);
+
+    const updatedUserMsg: ChatMessage = {
+      ...messages[targetIndex],
+      content: trimmed,
+      created_at: new Date().toISOString(),
+    };
+
+    await chatRepository.saveMessage(updatedUserMsg);
+    const updatedConversation = [...messages.slice(0, targetIndex), updatedUserMsg];
+    setMessages(updatedConversation);
+    hapticFeedback.tap();
+
+    await executeGsTurn(updatedConversation);
   };
 
   const handleAcceptProposal = async (msgId: string, proposal: Proposal) => {
@@ -393,15 +566,21 @@ export const GsChatView: React.FC = () => {
 
   const handleClearHistory = async () => {
     if (!confirm("Deseja purificar o histórico de conversas com a Grande Sábio?")) return;
+    gsVoiceService.stopCurrentSpeech();
     await chatRepository.clearThreadMessages(MAIN_THREAD_ID);
     setMessages([]);
     hapticFeedback.tap();
   };
 
+  const hasUserMessages = messages.some((m) => m.role === "user");
+  const lastAssistantMessageId = [...messages]
+    .reverse()
+    .find((m) => m.role === "assistant")?.id;
+
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] max-w-4xl mx-auto space-y-4">
+    <div className="flex flex-col flex-1 min-h-0 h-full w-full max-w-4xl mx-auto space-y-3 overflow-hidden">
       {/* Top Header */}
-      <div className="flex items-center justify-between border-b border-[#dfa86c]/30 pb-3 shrink-0">
+      <div className="flex items-center justify-between border-b border-[#dfa86c]/30 pb-3 shrink-0 gap-2">
         <div>
           <h2 className="text-xl md:text-2xl font-bold font-fantasy text-[#f8ecd5] tracking-wider uppercase flex items-center gap-2">
             <Bot className="w-6 h-6 text-[#dfa86c]" />
@@ -412,19 +591,51 @@ export const GsChatView: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={handleClearHistory}
-          title="Limpar Histórico"
-          className="p-2 text-[#c5b08f] hover:text-rose-400 border border-[#dfa86c]/30 hover:border-rose-500/50 transition-colors"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => void handleToggleAutoPlayVoice()}
+            aria-label={autoPlayVoice ? "Desativar voz automática da G.S" : "Ativar voz automática da G.S"}
+            title={autoPlayVoice ? "Voz Automática da G.S: ATIVA" : "Voz Automática da G.S: SILENCIADA"}
+            className={`px-2.5 py-1.5 text-[11px] font-mono border flex items-center gap-1.5 transition-colors ${
+              autoPlayVoice
+                ? "border-[#fde047]/60 bg-[#1c1308]/80 text-[#fde047]"
+                : "border-[#dfa86c]/30 bg-[#040814] text-[#c5b08f] hover:text-[#f8ecd5]"
+            }`}
+          >
+            {autoPlayVoice ? (
+              <Volume2 className="w-3.5 h-3.5 text-[#fde047]" />
+            ) : (
+              <VolumeX className="w-3.5 h-3.5 text-[#c5b08f]" />
+            )}
+            <span className="hidden sm:inline">
+              {autoPlayVoice ? "Voz G.S: ON" : "Voz G.S: OFF"}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleClearHistory}
+            title="Limpar Histórico"
+            aria-label="Limpar Histórico"
+            className="p-2 text-[#c5b08f] hover:text-rose-400 border border-[#dfa86c]/30 hover:border-rose-500/50 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
-      {/* Área Rolável de Mensagens */}
-      <div className="flex-1 overflow-y-auto space-y-4 pr-1.5 scrollbar-thin scrollbar-thumb-[#dfa86c]/20">
+      {/* Área Rolável de Mensagens (rola apenas se as mensagens ultrapassarem a altura disponível) */}
+      <div
+        ref={messagesContainerRef}
+        data-testid="gs-chat-messages-scroll"
+        className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1.5"
+      >
         {messages.map((msg) => {
           const isUser = msg.role === "user";
+          const isEditingThis = editingMessageId === msg.id;
+          const isLastAssistant =
+            !isUser && hasUserMessages && msg.id === lastAssistantMessageId;
 
           return (
             <div
@@ -454,25 +665,85 @@ export const GsChatView: React.FC = () => {
                       isUser ? "text-[#00f3ff]" : "text-[#dfa86c]"
                     }`}
                   >
-                    {isUser ? "VOCÊ // CAÇADOR" : "GRANDE SÁBIO (G.S)"}
+                    {isUser ? "VOCÊ // ESCOLHIDO" : "GRANDE SÁBIO (G.S)"}
                   </span>
 
-                  {!isUser && (
-                    <button
-                      onClick={() => handleToggleSpeakMessage(msg.id, msg.content)}
-                      title="Ouvir com a voz Kore"
-                      className="text-[#c5b08f] hover:text-[#fde047] transition-colors p-0.5"
-                    >
-                      {currentlySpeakingId === msg.id ? (
-                        <VolumeX className="w-3.5 h-3.5 text-[#fde047] animate-pulse" />
-                      ) : (
-                        <Volume2 className="w-3.5 h-3.5" />
-                      )}
-                    </button>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {isUser && !isEditingThis && (
+                      <button
+                        type="button"
+                        onClick={() => handleStartEditMessage(msg)}
+                        disabled={isLoading}
+                        title="Editar pergunta e regerar resposta"
+                        aria-label="Editar mensagem"
+                        className="text-[#c5b08f] hover:text-[#00f3ff] disabled:opacity-40 transition-colors p-0.5 flex items-center gap-1 text-[10px] font-mono"
+                      >
+                        <Pencil className="w-3 h-3" />
+                        <span>Editar</span>
+                      </button>
+                    )}
+
+                    {!isUser && (
+                      <button
+                        type="button"
+                        onClick={() => handleToggleSpeakMessage(msg.id, msg.content)}
+                        title={
+                          currentlySpeakingId === msg.id
+                            ? "Cancelar áudio da Grande Sábio"
+                            : "Ouvir com a voz Kore"
+                        }
+                        aria-label={
+                          currentlySpeakingId === msg.id
+                            ? "Cancelar áudio da mensagem"
+                            : "Ouvir com a voz Kore"
+                        }
+                        className="text-[#c5b08f] hover:text-[#fde047] transition-colors p-0.5 flex items-center gap-1 text-[10px] font-mono"
+                      >
+                        {currentlySpeakingId === msg.id ? (
+                          <>
+                            <VolumeX className="w-3.5 h-3.5 text-[#fde047] animate-pulse" />
+                            <span className="text-[#fde047]">Parar Voz</span>
+                          </>
+                        ) : (
+                          <Volume2 className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                <div className="whitespace-pre-wrap">{msg.content}</div>
+                {isEditingThis ? (
+                  <div className="space-y-2 mt-1.5">
+                    <textarea
+                      value={editingContent}
+                      onChange={(e) => setEditingContent(e.target.value)}
+                      rows={3}
+                      aria-label="Editar conteúdo da mensagem"
+                      className="w-full bg-[#040814] border border-[#00f3ff]/60 p-2 text-xs md:text-sm text-[#f8ecd5] font-sans focus:outline-none"
+                    />
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCancelEditMessage}
+                        className="px-2.5 py-1 text-[11px] font-mono border border-slate-700 bg-slate-900 text-[#c5b08f] hover:text-white flex items-center gap-1"
+                      >
+                        <X className="w-3 h-3" />
+                        <span>Cancelar</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleSaveEditAndRegenerate(msg.id)}
+                        disabled={!editingContent.trim()}
+                        className="px-2.5 py-1 text-[11px] font-mono border border-[#00f3ff]/60 bg-[#00f3ff]/15 text-[#00f3ff] hover:bg-[#00f3ff]/25 disabled:opacity-40 flex items-center gap-1 font-bold"
+                      >
+                        <Check className="w-3 h-3" />
+                        <span>Salvar e Regerar</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="whitespace-pre-wrap">{msg.content}</div>
+                )}
 
                 {/* Renderização do Cartão de Prévia quando houver proposta */}
                 {msg.proposal && (
@@ -485,9 +756,29 @@ export const GsChatView: React.FC = () => {
                   />
                 )}
 
-                <span className="block text-[9px] font-mono text-[#c5b08f]/50 mt-1.5 text-right">
-                  {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </span>
+                <div className="flex items-center justify-between gap-3 mt-2 pt-1 border-t border-white/5">
+                  {isLastAssistant ? (
+                    <button
+                      type="button"
+                      onClick={() => void handleRegenerateLastResponse()}
+                      disabled={isLoading}
+                      aria-label="Pedir nova resposta para a G.S"
+                      className="text-[10px] font-mono text-[#dfa86c] hover:text-[#fde047] disabled:opacity-40 flex items-center gap-1 transition-colors"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Nova Resposta (Regerar)</span>
+                    </button>
+                  ) : (
+                    <span />
+                  )}
+
+                  <span className="block text-[9px] font-mono text-[#c5b08f]/50 text-right">
+                    {new Date(msg.created_at).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
               </div>
 
               {isUser && (
@@ -500,10 +791,19 @@ export const GsChatView: React.FC = () => {
         })}
 
         {recalculatingNotice && (
-          <div className="relative p-3 bg-[#090d1f] border border-[#fde047]/60 text-xs font-mono text-[#fde047] flex items-center gap-2.5 shadow-[0_0_20px_rgba(253,224,71,0.18)] animate-pulse">
+          <div className="relative p-3 bg-[#090d1f] border border-[#fde047]/60 text-xs font-mono text-[#fde047] flex items-center justify-between gap-2.5 shadow-[0_0_20px_rgba(253,224,71,0.18)] animate-pulse">
             <GildedCorners size="xs" color="#fde047" diamondColor="#dfa86c" withInnerFrame={false} />
-            <Loader2 className="w-4 h-4 animate-spin text-[#fde047] shrink-0" />
-            <span>{recalculatingNotice}</span>
+            <div className="flex items-center gap-2.5">
+              <Loader2 className="w-4 h-4 animate-spin text-[#fde047] shrink-0" />
+              <span>{recalculatingNotice}</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleCancelRequest}
+              className="px-2 py-1 text-[10px] font-mono border border-rose-500/60 bg-rose-950/60 text-rose-300 hover:bg-rose-900/80 shrink-0"
+            >
+              Cancelar
+            </button>
           </div>
         )}
 
@@ -512,40 +812,71 @@ export const GsChatView: React.FC = () => {
             <div className="w-8 h-8 rounded-none border border-[#dfa86c] bg-[#040814] flex items-center justify-center shrink-0">
               <Bot className="w-4 h-4 text-[#fde047]" />
             </div>
-            <div className="p-3 bg-[#050a18] border border-[#dfa86c]/30 text-xs font-mono text-[#fde047] flex items-center gap-2">
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#dfa86c]" />
-              <span>Grande Sábio processando telemetria e formulando diretrizes...</span>
+            <div className="p-3 bg-[#050a18] border border-[#dfa86c]/30 text-xs font-mono text-[#fde047] flex flex-wrap items-center justify-between gap-3 flex-1 max-w-[85%] md:max-w-[75%]">
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#dfa86c] shrink-0" />
+                <span>
+                  {isSynthesizingAudio
+                    ? "Grande Sábio sincronizando síntese de voz neural..."
+                    : "Grande Sábio processando telemetria e formulando diretrizes..."}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {isSynthesizingAudio && (
+                  <button
+                    type="button"
+                    onClick={handleCancelAudioSynthesis}
+                    aria-label="Cancelar pedido de áudio"
+                    className="px-2.5 py-1 text-[10px] font-mono border border-[#fde047]/60 bg-[#1c1308] text-[#fde047] hover:bg-[#2a1d0c] transition-colors flex items-center gap-1"
+                  >
+                    <VolumeX className="w-3 h-3" />
+                    <span>Cancelar Áudio (Exibir Texto)</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleCancelRequest}
+                  aria-label="Impedir requisição"
+                  className="px-2.5 py-1 text-[10px] font-mono border border-rose-500/60 bg-rose-950/60 text-rose-300 hover:bg-rose-900/80 transition-colors flex items-center gap-1"
+                >
+                  <Square className="w-3 h-3 fill-current" />
+                  <span>Parar</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
-
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Atalhos Rápidos */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 shrink-0 scrollbar-none">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 shrink-0">
         <button
-          onClick={() => handleSendMessage("Grande Sábio, analise minhas pendências imediatas.")}
+          type="button"
+          onClick={() => void handleSendMessage("Grande Sábio, analise minhas pendências imediatas.")}
           disabled={isLoading}
-          className="px-2.5 py-1 text-[11px] font-mono border border-[#dfa86c]/30 bg-[#040814] text-[#c5b08f] hover:text-[#fde047] hover:border-[#dfa86c] transition-colors whitespace-nowrap"
+          className="px-2.5 py-1 text-[11px] font-mono border border-[#dfa86c]/30 bg-[#040814] text-[#c5b08f] hover:text-[#fde047] hover:border-[#dfa86c] disabled:opacity-40 transition-colors whitespace-nowrap"
         >
           ✦ Analisar pendências
         </button>
         <button
+          type="button"
           onClick={() =>
-            handleSendMessage("Proponha um novo projeto focado em Inteligência para aprender Rust.")
+            void handleSendMessage("Proponha um novo projeto focado em Inteligência para aprender Rust.")
           }
           disabled={isLoading}
-          className="px-2.5 py-1 text-[11px] font-mono border border-[#00f3ff]/30 bg-[#040814] text-[#c5b08f] hover:text-[#00f3ff] hover:border-[#00f3ff] transition-colors whitespace-nowrap"
+          className="px-2.5 py-1 text-[11px] font-mono border border-[#00f3ff]/30 bg-[#040814] text-[#c5b08f] hover:text-[#00f3ff] hover:border-[#00f3ff] disabled:opacity-40 transition-colors whitespace-nowrap"
         >
           ✦ Criar projeto INT
         </button>
         <button
+          type="button"
           onClick={() =>
-            handleSendMessage("Proponha um projeto de Força e Calistenia para iniciantes.")
+            void handleSendMessage("Proponha um projeto de Força e Calistenia para iniciantes.")
           }
           disabled={isLoading}
-          className="px-2.5 py-1 text-[11px] font-mono border border-[#ff3366]/30 bg-[#040814] text-[#c5b08f] hover:text-[#ff3366] hover:border-[#ff3366] transition-colors whitespace-nowrap"
+          className="px-2.5 py-1 text-[11px] font-mono border border-[#ff3366]/30 bg-[#040814] text-[#c5b08f] hover:text-[#ff3366] hover:border-[#ff3366] disabled:opacity-40 transition-colors whitespace-nowrap"
         >
           ✦ Criar projeto FOR
         </button>
@@ -571,16 +902,29 @@ export const GsChatView: React.FC = () => {
           className="flex-1 bg-transparent border-none text-[#f8ecd5] placeholder-[#c5b08f]/50 text-xs md:text-sm px-2 focus:outline-none font-sans"
         />
 
-        <SystemButton
-          variant="primary"
-          type="submit"
-          disabled={isLoading || !inputValue.trim()}
-          className="py-1.5 px-3 text-xs font-bold"
-        >
-          <Send className="w-3.5 h-3.5 mr-1" />
-          <span>Enviar</span>
-        </SystemButton>
+        {isLoading ? (
+          <button
+            type="button"
+            onClick={handleCancelRequest}
+            aria-label="Parar requisição"
+            className="py-1.5 px-3 text-xs font-mono font-bold uppercase tracking-wider border border-rose-500/70 bg-rose-950/80 text-rose-200 hover:bg-rose-900 flex items-center gap-1.5 transition-colors"
+          >
+            <Square className="w-3.5 h-3.5 fill-current" />
+            <span>Parar</span>
+          </button>
+        ) : (
+          <SystemButton
+            variant="primary"
+            type="submit"
+            disabled={!inputValue.trim()}
+            className="py-1.5 px-3 text-xs font-bold"
+          >
+            <Send className="w-3.5 h-3.5 mr-1" />
+            <span>Enviar</span>
+          </SystemButton>
+        )}
       </form>
     </div>
   );
 };
+

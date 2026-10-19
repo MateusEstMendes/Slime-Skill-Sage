@@ -33,6 +33,27 @@ export class ChatRepository {
     await localDb.put("chat_message", message);
   }
 
+  public async deleteMessage(messageId: string): Promise<void> {
+    await localDb.delete("chat_message", messageId);
+  }
+
+  public async truncateMessagesAfter(
+    messageId: string,
+    includeTarget: boolean = false,
+    threadId: string = MAIN_THREAD_ID,
+  ): Promise<ChatMessage[]> {
+    const msgs = await this.getMessages(threadId);
+    const idx = msgs.findIndex((m) => m.id === messageId);
+    if (idx === -1) return msgs;
+
+    const cutIndex = includeTarget ? idx : idx + 1;
+    const toDelete = msgs.slice(cutIndex);
+    for (const msg of toDelete) {
+      await localDb.delete("chat_message", msg.id);
+    }
+    return msgs.slice(0, cutIndex);
+  }
+
   public async updateMessageProposalStatus(
     messageId: string,
     status: ProposalStatus,

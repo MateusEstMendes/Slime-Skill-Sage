@@ -32,22 +32,29 @@ body {
 }
 
 /* Custom Dark Fantasy Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(223, 168, 108, 0.55) #03060f;
+}
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
   background: #03060f;
+  border-left: 1px solid rgba(223, 168, 108, 0.12);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(223, 168, 108, 0.35);
-  border-radius: 3px;
+  background: rgba(223, 168, 108, 0.5);
+  border: 1px solid rgba(253, 224, 71, 0.25);
+  border-radius: 0px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(223, 168, 108, 0.65);
+  background: rgba(253, 224, 71, 0.85);
 }
 
 /* Gilded double frame utility */

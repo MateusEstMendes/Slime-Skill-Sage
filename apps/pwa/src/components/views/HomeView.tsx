@@ -120,8 +120,22 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
     void fetchHomeData();
 
+    const unsubscribeGame = gameService.subscribeToGameEvents(() => {
+      if (isMounted) {
+        void loadHomeData();
+      }
+    });
+
+    const unsubscribeRepo = projectRepository.subscribe(() => {
+      if (isMounted) {
+        void loadHomeData();
+      }
+    });
+
     return () => {
       isMounted = false;
+      unsubscribeGame();
+      unsubscribeRepo();
     };
   }, [loadHomeData]);
 
@@ -169,7 +183,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
       .join(" ");
   };
 
-  const hunterRunicName = profile?.name ? toElderFuthark(profile.name) : "ᚱ ᛁ ᛗ ᚢ ᚱ ᚢ · ᛏ ᛖ ᛗ ᛈ ᛖ ᛋ ᛏ";
+  const chosenRunicName = profile?.name ? toElderFuthark(profile.name) : "ᚱ ᛁ ᛗ ᚢ ᚱ ᚢ · ᛏ ᛖ ᛗ ᛈ ᛖ ᛋ ᛏ";
 
   return (
     <div className="space-y-6">
@@ -196,13 +210,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </SystemButton>
       </div>
 
-      {/* Hunter Status Banner (Level & XP) */}
+      {/* Chosen Status Banner (Level & XP) */}
       <div className="group relative p-4 bg-gradient-to-r from-[#050c1a] via-[#0a162f] to-[#050c1a] border border-[#c89b55]/60 rounded-none shadow-[0_0_24px_rgba(223,168,108,0.14)] font-mono overflow-hidden">
         <GildedCorners
           size="md"
           withCenterNotches
           withRunes
-          runicTop={hunterRunicName}
+          runicTop={chosenRunicName}
           runicBottom="ᚾ ᛁ ᚹ ᛖ ᛚ · ᛋ ᛁ ᛋ ᛏ ᛖ ᛗ ᚨ"
         />
         <div className="relative z-10 flex items-center justify-between mb-2">
@@ -211,8 +225,20 @@ export const HomeView: React.FC<HomeViewProps> = ({
               L{levelProgress.level}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-xs font-bold font-fantasy text-[#f8ecd5] tracking-wider uppercase truncate">
-                {profile?.name ?? "Rimuru Tempest"}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold font-fantasy text-[#f8ecd5] tracking-wider uppercase truncate">
+                  {profile?.name ?? "Rimuru Tempest"}
+                </span>
+                {profile?.race && (
+                  <span className="text-[9px] font-mono px-1.5 py-0.5 bg-[#140f08] border border-[#dfa86c]/60 text-[#fde047] uppercase shrink-0">
+                    {profile.race}
+                  </span>
+                )}
+                {profile?.rank_threat && (
+                  <span className="text-[9px] font-mono px-1.5 py-0.5 bg-[#040814] border border-[#00f3ff]/50 text-[#00f3ff] uppercase shrink-0">
+                    {profile.rank_threat}
+                  </span>
+                )}
               </div>
               <div className="text-[10px] text-[#dfa86c] font-fantasy tracking-wide truncate">
                 {profile?.title ?? "Aspirante a Desperto"}

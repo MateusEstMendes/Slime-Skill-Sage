@@ -30,11 +30,17 @@ function loadEnv() {
 
 loadEnv();
 
-const API_KEY = process.env.GEMINI_API_KEY;
-if (!API_KEY) {
+const API_KEYS = [
+  process.env.GEMINI_API_KEY,
+  process.env.GEMINI_API_KEY_FALLBACK,
+  process.env.GEMINI_API_KEY_RESERVE,
+].filter(Boolean);
+
+if (API_KEYS.length === 0) {
   console.error("❌ GEMINI_API_KEY não foi encontrada em apps/api/.env");
   process.exit(1);
 }
+const API_KEY = API_KEYS[0];
 
 // 2. Carregar configuração
 if (!fs.existsSync(CONFIG_PATH)) {
@@ -111,10 +117,10 @@ function pcmToWav(pcmBuffer, sampleRate = 24000, numChannels = 1, bitsPerSample 
   return Buffer.concat([header, pcmBuffer]);
 }
 
-// Chamada direta à API do Gemini com retry para respeitar o limite do Free Tier
-async function synthesizeWithGemini(phraseText, maxRetries = 5) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash-tts:generateContent?key=${API_KEY}`;
-  
+let currentKeyIndex = 0;
+
+// Chamada direta à API do Gemini com retry e rotação de chaves
+async function synthesizeWithGemini(phraseText, maxRetries = 6) {
   const payload = {
     contents: [
       {
@@ -138,6 +144,10 @@ async function synthesizeWithGemini(phraseText, maxRetries = 5) {
   };
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const activeKey = API_KEYS[currentKeyIndex % API_KEYS.length];
+    currentKeyIndex++;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash-tts:generateContent?key=${activeKey}`;
+
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -147,8 +157,13 @@ async function synthesizeWithGemini(phraseText, maxRetries = 5) {
     });
 
     if (response.status === 429) {
-      console.log(`   ⏳ Limite de taxa da API atingido. Aguardando 60s para janela de cota reiniciar (tentativa ${attempt}/${maxRetries})...`);
-      await new Promise((r) => setTimeout(r, 60000));
+      if (API_KEYS.length > 1 && attempt <= API_KEYS.length) {
+        console.log(`   🔄 Chave ${((currentKeyIndex - 1) % API_KEYS.length) + 1} atingiu cota. Alternando para chave reserva...`);
+        await new Promise((r) => setTimeout(r, 2000));
+        continue;
+      }
+      console.log(`   ⏳ Limite de taxa da API atingido. Aguardando 20s para janela de cota reiniciar (tentativa ${attempt}/${maxRetries})...`);
+      await new Promise((r) => setTimeout(r, 20000));
       continue;
     }
 
@@ -247,8 +262,7 @@ async function main() {
     const filename = `${key}.mp3`;
     const wasGenerated = await processVoiceItem(filename, text);
     if (wasGenerated) {
-      console.log("   ⏳ Aguardando 60 segundos antes da próxima requisição para renovar a janela de cota...");
-      await new Promise((r) => setTimeout(r, 60000));
+      await new Promise((r) => setTimeout(r, 2000));
     }
   }
 

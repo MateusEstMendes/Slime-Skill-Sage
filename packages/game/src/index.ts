@@ -7,6 +7,7 @@ export * from "./ledger";
 export * from "./missionGraph";
 export * from "./preCardValidator";
 export * from "./coordinatorEvals";
+export * from "./onboarding";
 
 export const GAME_CONSTANTS = {
   APP_NAME: "Slime Sage",

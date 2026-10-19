@@ -187,5 +187,77 @@
      - Em [`worldVoiceService.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/worldVoiceService.ts): o modal cerimonial e o áudio solene de habilidade adquirida (`/audio/voice/skill-acquired.mp3`) são disparados **exclusivamente** quando `hasSkill === true`.
   5. **Planejamento da Fase 10 em `plan.md`:**
      - Documentada a mecânica de ascensão Comum → Extra aos 100 pontos de maestria consumindo o segredo previamente arquivado na criação do projeto, com modal cerimonial e anúncio solene da G.S.
-- **Status:** [/] Aguardando Validação do Usuário
+- **Status:** [x] Validado pelo Usuário
+
+## Fase 8 — Onboarding: Apresentação da G.S com Áudios Oficiais, Efeito Typewriter e Revelação Inicial via API
+
+### Rodada 1 de Testes do Usuário (Sliders/Scrollbars no Painel Dev, Voz Sincronizada da G.S, Velocidade de Fala, Cancelamento e Regeneração/Edição no Chat)
+
+- **Feedback do Usuário:**
+  - *"está tudo funcionando, agora vamos iniciar o debug, percebi que os sliders (subbir ou descer) da pagina não estão funcionando direito, como no painel de dev que quanto tem muitos elementos o slider de cima fica amassado, e no de chat, o usuario deve ter capacidade de impedir requisição, cancelar pedido de audio, e quando o usuario pergunta deve vir junto a fala da G.S junto da resposta, e a fala tem que ser mais rapida, alem disso o usuario deve ter um botão pra pedir uma nova resposta para a gs"*
+- **Decisões Alinhadas (`/grill-me`) & Causa Raiz Identificada:**
+  1. **Barras de Abas Amassadas & Sliders de Rolagem (`DevPanel.tsx`, `SettingsModal.tsx`, `index.css`):**
+     - No `DevPanel.tsx`, o cabeçalho e a barra horizontal de abas não possuíam `shrink-0` e o corpo rolável não possuía `min-h-0`, fazendo com que o Flexbox esmagasse verticalmente a barra de abas superior quando havia muitos elementos (logs, cartões de voz, etc.).
+     - Aplicado `shrink-0` no cabeçalho e na barra de abas (`flex-nowrap overflow-x-auto`) com `shrink-0` em cada botão de aba, e `flex-1 min-h-0 overflow-y-auto` no container de conteúdo. Reforçada também a barra de rolagem customizada (`::-webkit-scrollbar` com `8px` e contraste dourado `#dfa86c`/`#fde047`) em [`apps/pwa/src/index.css`](file:///workspaces/Skill-Grinding/apps/pwa/src/index.css).
+  2. **Voz Automática da G.S Sincronizada com o Texto (`GsChatView.tsx` & `gsVoiceService.ts`):**
+     - Ativada por padrão (`true`), lendo a resposta completa limpa de markdown, com botão rápido de Mute/Auto-Voz (`Voz G.S: ON/OFF`) no topo do chat e no modal de configurações.
+     - Implementado `gsVoiceService.prepareSpeech(text, signal)` + `gsVoiceService.playPreparedSpeech(speech)`: o `GsChatView` aguarda o áudio ficar pronto antes de exibir o balão da resposta, garantindo que o texto e a voz da G.S iniciem no exato mesmo instante.
+  3. **Fala Mais Rápida da G.S (1.0x a 2.0x):**
+     - Definida velocidade padrão `1.25x` (`DEFAULT_GS_PLAYBACK_RATE = 1.25`, com `preservesPitch = true`).
+     - Adicionado slider configurável de `1.0x` até `2.0x` (com botões rápidos `1.0x`, `1.2x`, `1.35x`, `1.5x`, `1.75x`, `2.0x`) tanto em [`SettingsModal.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/SettingsModal.tsx) quanto na aba "Testes de Voz" ([`VoicesView.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/views/VoicesView.tsx)).
+  4. **Impedir Requisição do Chat & Cancelar Pedido de Áudio (`GsChatView.tsx` & `apiClient.ts`):**
+     - Adicionado suporte a `AbortSignal` em `sendChatMessage` e `synthesizeSpeechApi`.
+     - Botão **"Parar (■)"** durante o processamento da requisição para abortar imediatamente o `/chat` sem poluir o histórico.
+     - Botão **"Cancelar Áudio (Exibir Texto)"** durante a sincronização da síntese neural para abortar apenas o `/tts` e exibir o texto da resposta imediatamente sem áudio, além do botão **"Parar Voz"** em cada mensagem.
+  5. **Pedir Nova Resposta (Regerar) & Editar Pergunta Anterior (`GsChatView.tsx` & `chatRepository.ts`):**
+     - Adicionado botão **"Nova Resposta (Regerar)"** na última mensagem da G.S, que apaga a resposta anterior, reenvia o contexto ao `/chat` e sintetiza a nova fala.
+     - Adicionado botão **"Editar"** nas mensagens do usuário, abrindo edição inline com **"Salvar e Regerar"** (que trunca as mensagens posteriores via `chatRepository.truncateMessagesAfter` e gera uma nova resposta sincronizada com voz).
+
+### Rodada 2 de Testes do Usuário (Rolagem Exclusiva das Mensagens no Chat G.S & Atualização Automática de Abas após Decreto)
+
+- **Feedback do Usuário:**
+  - *"Na pagina do Chat da gs,tem como rolar, mas isso só deveria acontecer apenas se as mensagens ultrapassasem o tamanho da pagina, deveria alem disos fazer slide só do chat, o bloco de texto deve sempre aparecer para o usuario, outra coisa, apos aceitar um decreto, a pagina de projetos ou a futura pagina de agenda deve atualizar automaticamente"*
+- **Causa Raiz Identificada & Correção Aplicada:**
+  1. **Rolagem da Página no Chat da G.S & Visibilidade Fixa da Caixa de Texto (`HomeScreen.tsx` & `GsChatView.tsx`):**
+     - **Causa Raiz:** Na aba `gs`, `HomeScreen.tsx` aplicava `min-h-screen pb-24 md:pb-28` somado ao `SystemHeader`, ao padding do `<main>` e ao `h-[calc(100vh-140px)]` do `GsChatView`, gerando ~84px de altura excedente no documento e criando uma barra de rolagem na janela inteira (além do uso de `scrollIntoView` que podia rolar o `window`).
+     - **Correção:** Na aba `gs`, `HomeScreen.tsx` agora trava exatamente na altura da viewport (`h-[100dvh] overflow-hidden`) com `<main className="flex-1 min-h-0 flex flex-col overflow-hidden ...">` e `GsChatView` ocupa `flex-1 min-h-0 h-full overflow-hidden`. A rolagem ocorre **exclusivamente** no container interno de mensagens (`messagesContainerRef` com `flex-1 min-h-0 overflow-y-auto`) e **somente quando `scrollHeight > clientHeight`**, mantendo a barra de entrada de texto e atalhos 100% visíveis e fixos acima da `TabBar`.
+  2. **Atualização Automática de Projetos, Árvore de Missões, Skills, Home e Futura Agenda ao Aceitar Decreto (`projectRepository.ts`, `ProjectsView.tsx`, `ProjectTreeViewer.tsx`, `HomeView.tsx`, `SkillsView.tsx`):**
+     - **Causa Raiz:** Como as abas permanecem montadas no DOM (`block`/`hidden` em `HomeScreen.tsx` para evitar flicker), quando o `GsChatView` gravava diretamente via `projectRepository` ao aceitar um decreto, o `ProjectsView` não recebia notificação de mudança.
+     - **Correção:** Implementado barramento reativo `projectRepository.subscribe(listener)` / `notifyChange()` disparado em todas as operações de escrita (`createProject`, `createProjectTree`, `updateProject`, `softDeleteProject`, `recalculateProjectProgress`, `bindSkillsAndRewardsForMissions`). Conectados `ProjectsView`, `ProjectTreeViewer`, `HomeView` e `SkillsView` a esse barramento para atualização imediata e automática assim que qualquer decreto for aceito.
+- **Status:** [x] Validado pelo Usuário
+
+### Rodada 3 de Testes do Usuário (Diagrama de Atributos Vivo, Expansão e Recuo de Patamar, Identidade "O Escolhido", Curva Exponencial e Textura de Mana/Runas)
+
+- **Feedback do Usuário:**
+  - *"vamos melhorar o diagrama de atributos, é muito monotono mude a moldura, as cores e a textura do próprio gráfico conforme o jogador atinge patamares específicos, eu não sei me dê ideias"*
+  - *"faça um plano de implementação, e tambem quero que o grafico diminua com o tempo, tipo, vai até um tamanho quando o tier de uma classe de atributo, quando chega ao maximo para evoluir pro proximo patamar o maximo do grafico volta, tipo, de 100 de 100, é 1, então é o maximo visual do atributo, mas ao evoluir, continua 100 mas 100 de 1000, que é 0.1 de 1 ou seja no mais perto do 0"*
+  - *"alem disso o crescimento da dificuldade de subir pontos deve ser exponencial, como uma curva de aprendizado que quanto maior, mais lento, mas de modo aceitavel ainda"*
+  - *"opção 1 mesmo"* (Aprovação do plano detalhado e da unificação canônica da identidade do jogador como **O Escolhido**).
+- **Causa Raiz & Melhorias Implementadas:**
+  1. **Unificação Terminológica Canônica ("O Escolhido"):**
+     - O termo "Caçador" foi substituído globalmente por **"O Escolhido"** (o ser selecionado pelas Leis da Criação para comandar o Sistema e manter o elo com a Grande Sábio e a Voz do Mundo).
+     - Atualizados: `StatusView.tsx` (*"PAINEL DE ATRIBUTOS // REGISTRO DO ESCOLHIDO"*, *"Escolhido: [Nome]"*, *"Rank do Escolhido"*), `HomeView.tsx` (*"Atributos do Escolhido"*), `HomeScreen.tsx`, `GsChatView.tsx` (*"VOCÊ // ESCOLHIDO"*, *"Qual é o seu direcionamento, Escolhido?"*), `DevPanel.tsx` (*"Snapshot de Memória do Escolhido"*), `packages/shared` (`GS_SYSTEM_PROMPT`, `GS_COORDINATOR_RULES` e alias `ChosenContext`), e `packages/game/src/attributes.ts` (`OVERALL_CHOSEN_TITLES`).
+  2. **Escala Dinâmica com Expansão e Recuo ("Horizonte Vivo"):**
+     - Criada a função pura `calculateDynamicAttributeCeiling(highestStatValue)` em `packages/game/src/attributes.ts`.
+     - Conforme o Escolhido avança no Grau ativo, o gráfico expande rumo à borda ($1.0$). Ao atingir o teto e cruzar para o próximo Grau/Tier, o teto avança cumulativamente e o polígono recua proporcionalmente de volta para perto do centro (ex: de $1.000/1.000 = 1.0$ para $1.000/3.378 = 0.296$), iniciando um novo ciclo com transição visual suave (`transition-all duration-700 ease-out`).
+     - Piso geométrico de $0.08$ garantido para evitar colapso visual do vértice no início da jornada.
+  3. **Curva de Aprendizado Exponencial Suave (Expoente 1.25):**
+     - Em `packages/game/src/attributes.ts`: `pointsRequiredForGrade(gradeIndex) = round(1000 * gradeIndex^1.25)` e `getCumulativePointsForGrade(gradeIndex)`.
+     - Em `packages/game/src/skills.ts`: `calculateMasteryGainWithDecay(currentMastery, rawDelta)` aplica retorno decrescente suave após a metade do caminho ($>150$ pts de 300) com piso mínimo de 1 pt, integrado a `calculateSkillProgression(..., { applyLearningCurve: true })`.
+  4. **Aura Sintonizada pelo Atributo Dominante:**
+     - O radar detecta o atributo com maior valor entre os 5 e ajusta dinamicamente toda a paleta visual da moldura, linhas de grade, vértices e gradientes:
+       - **INT**: Azul Celeste / Safira Arcana (`#00f3ff`, `#0284c7`, `#38bdf8`)
+       - **FOR**: Carmesim Titânico / Rubi de Batalha (`#ff3366`, `#e11d48`, `#fb7185`)
+       - **DIS**: Ouro Solar Imperial (`#fde047`, `#dfa86c`, `#eab308`)
+       - **CRI**: Violeta Cósmico / Ametista Etérea (`#c084fc`, `#9333ea`, `#a855f7`)
+       - **SOC**: Esmeralda Primordial da Harmonia (`#34d399`, `#059669`, `#10b981`)
+  5. **Textura: Nebulosa de Mana Orgânica & Partículas Rúnicas Flutuantes:**
+     - `<radialGradient id="manaNebulaGradient">` com ponto focal no centro do polígono e pulso de mana.
+     - Glifos em Elder Futhark nórdico (`ᚠ ᚢ ᚦ ᚨ ᚱ ᛋ ᛏ ᛟ ᛗ`) flutuando organicamente no interior do pentágono com animação suave via `@keyframes floatRuneAnim`.
+  6. **Círculos Mágicos e Molduras por Patamar:**
+     - Círculos celestiais concêntricos que ganham anéis rúnicos no Tier II+ e círculos de invocação suprema com entalhes no Tier VI+ (Transcendental / O Absoluto).
+  7. **Interação Rúnica Completa (Hover / Touch):**
+     - Clique ou toque em qualquer vértice, eixo ou label destaca o caminho com halo luminoso e expande o Card/Tooltip Rúnico com o título do Grau, maestria atual, pontos restantes para o próximo grau, teto do horizonte vivo e barra de progresso do Grau.
+- **Status:** [x] Validado com 100% de Testes Monorepo Passando (120 testes PWA, 71 testes Game, 11 testes Shared, 11 testes API).
+
 
