@@ -19,6 +19,7 @@ describe("SkillsView", () => {
       area_id: "INT",
       tier: "comum",
       mastery: 45,
+      tags: [],
       description: "Capacidade analítica de decompor problemas",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -29,6 +30,7 @@ describe("SkillsView", () => {
       area_id: "DIS",
       tier: "extra",
       mastery: 180,
+      tags: [],
       description: "Estado de fluxo sustentado",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -45,7 +47,7 @@ describe("SkillsView", () => {
       expect(screen.getAllByText(/Habilidade Comum/i).length).toBeGreaterThan(0);
       expect(screen.getAllByText(/Habilidade Extra/i).length).toBeGreaterThan(0);
       expect(screen.getByText("45 / 100 pts (45%)")).toBeInTheDocument();
-      expect(screen.getByText("180 / 300 pts (60%)")).toBeInTheDocument();
+      expect(screen.getByText("180 / 600 pts (30%)")).toBeInTheDocument();
     });
   });
 
@@ -56,6 +58,7 @@ describe("SkillsView", () => {
       area_id: "INT",
       tier: "comum",
       mastery: 20,
+      tags: [],
       description: "Análise profunda",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -66,6 +69,7 @@ describe("SkillsView", () => {
       area_id: "FOR",
       tier: "comum",
       mastery: 30,
+      tags: [],
       description: "Treino resistido",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -135,6 +139,7 @@ describe("SkillsView", () => {
       area_id: "INT",
       tier: "comum",
       mastery: 40,
+      tags: [],
       description: "Design de software modular",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),

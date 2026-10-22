@@ -59,6 +59,7 @@ export const StatusView: React.FC<StatusViewProps> = ({ isActive }) => {
   const [activeChallenge, setActiveChallenge] = useState<ClassChallenge | null>(null);
   const [isTitleModalOpen, setIsTitleModalOpen] = useState(false);
   const [isProcessingChallenge, setIsProcessingChallenge] = useState(false);
+  const [challengeError, setChallengeError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   const isMountedRef = React.useRef(true);
@@ -131,6 +132,26 @@ export const StatusView: React.FC<StatusViewProps> = ({ isActive }) => {
     }
   }, [isActive, loadStatusData]);
 
+  /**
+   * Runs a challenge action with a shared processing flag and user-visible error handling.
+   * Prevents unhandled promise rejections (e.g. invalid status transitions).
+   */
+  const runChallengeAction = async (action: () => Promise<void>) => {
+    try {
+      setIsProcessingChallenge(true);
+      setChallengeError(null);
+      await action();
+      await loadStatusData();
+    } catch (err) {
+      console.error("Erro na provação de classe:", err);
+      setChallengeError(
+        err instanceof Error ? err.message : "Falha desconhecida ao processar a provação."
+      );
+    } finally {
+      setIsProcessingChallenge(false);
+    }
+  };
+
   const handleRequestChallenge = async (areaId: AreaCode) => {
     const currentClass = highestClasses[areaId];
     const currentTier = currentClass?.tier ?? 1;
@@ -138,55 +159,35 @@ export const StatusView: React.FC<StatusViewProps> = ({ isActive }) => {
     const eligibility = checkClassEligibility(areaId, currentTier, masteryVal);
 
     if (!eligibility.isEligible || !eligibility.nextTier) return;
+    const nextTier = eligibility.nextTier;
 
-    try {
-      setIsProcessingChallenge(true);
-      const template = generateDeterministicChallenge(areaId, eligibility.nextTier);
+    await runChallengeAction(async () => {
+      const template = generateDeterministicChallenge(areaId, nextTier);
       const challenge = await classRepository.proposeChallenge({
         areaId,
-        targetTier: eligibility.nextTier,
+        targetTier: nextTier,
         name_class: template.name_class,
         challenge_title: template.challenge_title,
         challenge_description: template.challenge_description,
       });
       await classRepository.acceptChallenge(challenge.id);
-      await loadStatusData();
-    } catch (err) {
-      console.error("Erro ao solicitar desafio:", err);
-    } finally {
-      setIsProcessingChallenge(false);
-    }
+    });
   };
 
-  const handleAcceptChallenge = async (challengeId: string) => {
-    try {
-      setIsProcessingChallenge(true);
+  const handleAcceptChallenge = (challengeId: string) =>
+    runChallengeAction(async () => {
       await classRepository.acceptChallenge(challengeId);
-      await loadStatusData();
-    } finally {
-      setIsProcessingChallenge(false);
-    }
-  };
+    });
 
-  const handleCompleteChallenge = async (challengeId: string) => {
-    try {
-      setIsProcessingChallenge(true);
+  const handleCompleteChallenge = (challengeId: string) =>
+    runChallengeAction(async () => {
       await gameService.completeClassChallenge(challengeId, { autoEquipTitle: true });
-      await loadStatusData();
-    } finally {
-      setIsProcessingChallenge(false);
-    }
-  };
+    });
 
-  const handleAbandonChallenge = async (challengeId: string) => {
-    try {
-      setIsProcessingChallenge(true);
+  const handleAbandonChallenge = (challengeId: string) =>
+    runChallengeAction(async () => {
       await classRepository.abandonChallenge(challengeId);
-      await loadStatusData();
-    } finally {
-      setIsProcessingChallenge(false);
-    }
-  };
+    });
 
   const handleEquipTitle = async (title: string) => {
     try {
@@ -206,6 +207,22 @@ export const StatusView: React.FC<StatusViewProps> = ({ isActive }) => {
 
   return (
     <div className="space-y-6">
+      {challengeError && (
+        <div
+          role="alert"
+          className="flex items-start justify-between gap-3 border border-red-500/50 bg-red-950/40 px-4 py-3 text-xs font-mono text-red-200"
+        >
+          <span>[SISTEMA // ERRO] {challengeError}</span>
+          <button
+            type="button"
+            onClick={() => setChallengeError(null)}
+            className="text-red-300 hover:text-red-100 uppercase tracking-wider"
+            aria-label="Fechar aviso de erro"
+          >
+            Fechar
+          </button>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl md:text-2xl font-bold font-fantasy text-[#f8ecd5] tracking-wider uppercase flex items-center gap-2">

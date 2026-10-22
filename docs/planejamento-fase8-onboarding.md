@@ -105,7 +105,7 @@ Cada pergunta possui 4 a 5 alternativas temáticas pontuando determinísticament
 ## 4. Plano de Implementação por Módulo
 
 ### 4.1. Pacote Compartilhado (`@slime-sage/shared`)
-- Atualizar [`ProfileSchema`](file:///workspaces/Skill-Grinding/packages/shared/src/index.ts#L83-L96) adicionando:
+- Atualizar [`ProfileSchema`](file:///workspaces/Slime-Skill-Sage/packages/shared/src/index.ts#L83-L96) adicionando:
   - `race: z.string().default("Slime")`
   - `rank_threat: z.string().default("Classe Menor")`
 - Exportar constantes `TENSU_RACES`, `THREAT_RANKS` e `ONBOARDING_QUESTIONS`.
@@ -116,7 +116,7 @@ Cada pergunta possui 4 a 5 alternativas temáticas pontuando determinísticament
   - Cobertura de testes unitários com Vitest em `onboarding.test.ts` (100% de cobertura).
 
 ### 4.3. Áudios Oficiais da G.S (`apps/pwa/public/audio/voice/`)
-- Atualizar [`scripts/voice-config.json`](file:///workspaces/Skill-Grinding/scripts/voice-config.json) com as falas das 5 perguntas e da consagração.
+- Atualizar [`scripts/voice-config.json`](file:///workspaces/Slime-Skill-Sage/scripts/voice-config.json) com as falas das 5 perguntas e da consagração.
 - Gerar os clipes oficiais em MP3 via Gemini Kore voice (`onboarding-q1.mp3` até `onboarding-q5.mp3` e `onboarding-reveal.mp3`).
 
 ### 4.4. Interface PWA (`apps/pwa`)
@@ -127,8 +127,8 @@ Cada pergunta possui 4 a 5 alternativas temáticas pontuando determinísticament
   - Seletor de alternativas com cartelas góticas e losangos dourados.
   - Ritual de Revelação com círculo mágico esotérico concêntrico em SVG e proclamação da G.S.
   - Transição para o Chat da G.S ao concluir.
-- Adicionar no [`DevPanel.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/DevPanel.tsx) a ação **"Resetar Onboarding (Re-despertar)"**.
-- Exibir a Raça e o Rank de Ameaça no banner do Caçador em [`HomeView.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/views/HomeView.tsx) e [`StatusView.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/views/StatusView.tsx).
+- Adicionar no [`DevPanel.tsx`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/components/DevPanel.tsx) a ação **"Resetar Onboarding (Re-despertar)"**.
+- Exibir a Raça e o Rank de Ameaça no banner do Caçador em [`HomeView.tsx`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/components/views/HomeView.tsx) e [`StatusView.tsx`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/components/views/StatusView.tsx).
 
 ---
 

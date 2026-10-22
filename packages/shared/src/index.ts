@@ -172,7 +172,15 @@ export const ClassChallengeSchema = z.object({
 export type ClassChallenge = z.infer<typeof ClassChallengeSchema>;
 
 // 5. Skill
-export const SkillTierSchema = z.enum(["comum", "extra", "unica"]);
+export const SkillTierSchema = z.enum([
+  "intrinseca",
+  "comum",
+  "especial",
+  "extra",
+  "unica",
+  "suprema",
+  "primordial",
+]);
 export type SkillTier = z.infer<typeof SkillTierSchema>;
 
 export const SkillSchema = z.object({
@@ -181,7 +189,9 @@ export const SkillSchema = z.object({
   name: z.string(),
   description: z.string(),
   tier: SkillTierSchema.default("comum"),
-  mastery: z.number().int().min(0).max(300).default(0),
+  mastery: z.number().int().min(0).default(0),
+  domain: z.string().optional(),
+  tags: z.array(z.string()).default([]),
   icon: z.string().optional(),
   next_evolution_name: z.string().optional(),
   next_evolution_description: z.string().optional(),
@@ -200,10 +210,29 @@ export const EvolutionAttemptSchema = z.object({
   final_chance: z.number().min(0).max(1),
   rolled_value: z.number().min(0).max(1),
   success: z.boolean(),
-  cooldown_until: z.string(),
+  cooldown_until: z.string().nullable().default(null),
   created_at: z.string(),
 });
 export type EvolutionAttempt = z.infer<typeof EvolutionAttemptSchema>;
+
+// Harvest Festival State
+export const HarvestFestivalStateSchema = z.object({
+  is_active: z.boolean().default(false),
+  activated_at: z.string().nullable().default(null),
+  xp_multiplier: z.number().default(2.0),
+  completed_goals_count: z.number().int().default(0),
+  total_goals_count: z.number().int().default(0),
+});
+export type HarvestFestivalState = z.infer<typeof HarvestFestivalStateSchema>;
+
+export const SkillSynergyAffinitySchema = z.enum([
+  "Elemental",
+  "Resonancia",
+  "Convergencia",
+  "Dominio",
+  "Dissonante",
+]);
+export type SkillSynergyAffinity = z.infer<typeof SkillSynergyAffinitySchema>;
 
 // 7. Project
 export const ProjectStatusSchema = z.enum(["ativo", "concluido", "pausado", "arquivado"]);

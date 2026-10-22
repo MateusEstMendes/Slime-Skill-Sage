@@ -230,6 +230,24 @@ export class GsVoiceService {
       };
 
       await localDb.setKv<CachedSpeech>(cacheKey, entry);
+
+      // LRU eviction: limit cached audio files to prevent IndexedDB storage exhaustion
+      try {
+        const cachedKeys = (await localDb.getKv<string[]>("tts_audio_cache_index")) || [];
+        const updatedKeys = [...cachedKeys.filter((k) => k !== cacheKey), cacheKey];
+        if (updatedKeys.length > 40) {
+          const keysToRemove = updatedKeys.slice(0, updatedKeys.length - 40);
+          for (const oldKey of keysToRemove) {
+            await localDb.setKv(oldKey, null);
+          }
+          await localDb.setKv("tts_audio_cache_index", updatedKeys.slice(-40));
+        } else {
+          await localDb.setKv("tts_audio_cache_index", updatedKeys);
+        }
+      } catch {
+        // Ignora erro de limpeza de cache
+      }
+
       return entry;
     } catch (err: unknown) {
       this.currentAbortController = null;

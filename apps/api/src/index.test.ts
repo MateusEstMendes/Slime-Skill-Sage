@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { app } from "./index";
+import { safeEqual } from "./auth";
 
 describe("API Endpoints", () => {
   const originalEnv = { ...process.env };
@@ -15,12 +16,37 @@ describe("API Endpoints", () => {
     vi.restoreAllMocks();
   });
 
+  describe("safeEqual Timing Safe Comparison", () => {
+    it("returns true for identical strings", () => {
+      expect(safeEqual("abc123XYZ", "abc123XYZ")).toBe(true);
+      expect(safeEqual("", "")).toBe(true);
+    });
+
+    it("returns false for different strings or different lengths", () => {
+      expect(safeEqual("abc123XYZ", "abc123XYw")).toBe(false);
+      expect(safeEqual("abc", "abcdef")).toBe(false);
+      expect(safeEqual("abcdef", "abc")).toBe(false);
+      expect(safeEqual("token", "")).toBe(false);
+    });
+  });
+
   describe("GET /health Endpoint", () => {
     it("should return 401 when Authorization header is missing", async () => {
       const res = await app.request("/health");
       expect(res.status).toBe(401);
       const body = await res.json();
       expect(body).toHaveProperty("error");
+    });
+
+    it("should return 401 when Authorization header is malformed (missing Bearer prefix)", async () => {
+      const res = await app.request("/health", {
+        headers: {
+          Authorization: "Token super-secret-system-key",
+        },
+      });
+      expect(res.status).toBe(401);
+      const body = await res.json();
+      expect(body.error).toBe("Missing or malformed Authorization header");
     });
 
     it("should return 401 when token is invalid", async () => {
@@ -56,6 +82,20 @@ describe("API Endpoints", () => {
         body: JSON.stringify({ text: "Missão concluída." }),
       });
       expect(res.status).toBe(401);
+    });
+
+    it("should return 401 when token is invalid", async () => {
+      const res = await app.request("/tts", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer token-errado",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text: "Missão concluída." }),
+      });
+      expect(res.status).toBe(401);
+      const body = await res.json();
+      expect(body.error).toBe("Invalid secret token");
     });
 
     it("should return 400 when body is invalid", async () => {
@@ -194,6 +234,22 @@ describe("API Endpoints", () => {
         }),
       });
       expect(res.status).toBe(401);
+    });
+
+    it("should return 401 when token is invalid", async () => {
+      const res = await app.request("/chat", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer token-errado",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: [{ role: "user", content: "Olá G.S" }],
+        }),
+      });
+      expect(res.status).toBe(401);
+      const body = await res.json();
+      expect(body.error).toBe("Invalid secret token");
     });
 
     it("should return 400 when messages array is missing or empty", async () => {

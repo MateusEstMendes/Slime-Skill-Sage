@@ -74,10 +74,10 @@ Legenda: `[ ]` Pendente | `[/]` Em andamento | `[x]` Concluído e Aprovado pelo 
 
 ## Fase 10 — Evolução de Habilidades (7 Níveis Canônicos), Roleta Animada (SVG + Framer Motion) e Festival da Colheita com Altar de Fusão/Sacrifício
 
-- [ ] 10.1 Desenvolvimento
-- [ ] 10.2 Testes Automáticos
+- [x] 10.1 Desenvolvimento
+- [x] 10.2 Testes Automáticos
 - [ ] 10.3 Testes do Usuário
-- [ ] 10.4 Debug e Atualização de Handoff/Feedback
+- [x] 10.4 Debug e Atualização de Handoff/Feedback (Auditoria Lógica e Hardening de Confiabilidade)
 
 ## Fase 11 — Sistema de Agenda Independente, Tarefas Recorrentes, Hábitos (Barra 0-100% e Check-in Semanal) e Passivas
 

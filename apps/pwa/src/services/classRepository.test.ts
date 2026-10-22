@@ -92,4 +92,60 @@ describe("ClassRepository (IndexedDB Integration)", () => {
     const profile = await localDb.get<{ title: string }>("profile", "profile_main");
     expect(profile?.title).toBe("[Mestre Supremo da Criação IV]");
   });
+
+  it("prevents creating duplicate active challenges in the same area", async () => {
+    await classRepository.initBaseClasses();
+    await classRepository.proposeChallenge({
+      areaId: "INT",
+      targetTier: 2,
+      name_class: "Erudito Arcano",
+      challenge_title: "Provação Um",
+      challenge_description: "Estude por 30m",
+    });
+
+    await expect(
+      classRepository.proposeChallenge({
+        areaId: "INT",
+        targetTier: 2,
+        name_class: "Segundo Erudito",
+        challenge_title: "Provação Dois",
+        challenge_description: "Estude mais 30m",
+      })
+    ).rejects.toThrow("Já existe uma provação ativa na área INT");
+  });
+
+  it("rejects challenge targeting an invalid tier leap", async () => {
+    await classRepository.initBaseClasses(); // Base tier is 1
+
+    await expect(
+      classRepository.proposeChallenge({
+        areaId: "INT",
+        targetTier: 4, // Attempting to leap directly from 1 to 4
+        name_class: "Arquimago",
+        challenge_title: "Salto Ilegal",
+        challenge_description: "Tentando burlar os patamares",
+      })
+    ).rejects.toThrow("Tier alvo inválido para INT");
+  });
+
+  it("deactivates older classes when a new tier is completed and unlocked", async () => {
+    await classRepository.initBaseClasses();
+
+    const proposed = await classRepository.proposeChallenge({
+      areaId: "DIS",
+      targetTier: 2,
+      name_class: "Sentinela de Ferro",
+      challenge_title: "Vigília Constante",
+      challenge_description: "Mantenha o foco sem interrupções",
+    });
+
+    await classRepository.acceptChallenge(proposed.id);
+    await classRepository.completeChallenge(proposed.id);
+
+    const disClasses = await classRepository.getClasses("DIS");
+    const activeClasses = disClasses.filter((c) => c.is_active);
+    expect(activeClasses.length).toBe(1);
+    expect(activeClasses[0].tier).toBe(2);
+    expect(activeClasses[0].name).toBe("[Sentinela de Ferro II]");
+  });
 });

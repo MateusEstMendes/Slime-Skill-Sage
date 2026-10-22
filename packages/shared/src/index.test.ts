@@ -33,6 +33,8 @@ import {
   ChatResponseSchema,
   TtsRequestSchema,
   TtsResponseSchema,
+  HarvestFestivalStateSchema,
+  SkillSynergyAffinitySchema,
   GS_SYSTEM_PROMPT,
   BASE_AREAS,
   TABLE_NAMES,
@@ -459,5 +461,52 @@ describe("Shared Schemas", () => {
 
     expect(GS_SYSTEM_PROMPT).toContain("Grande Sábio (G.S)");
     expect(GS_SYSTEM_PROMPT).toContain("REGRA DE OURO #1");
+  });
+
+  it("validates 7 canonical skill tiers, harvest festival state and skill synergy schemas", () => {
+    const tiers = [
+      "intrinseca",
+      "comum",
+      "especial",
+      "extra",
+      "unica",
+      "suprema",
+      "primordial",
+    ];
+    for (const tier of tiers) {
+      const parsedSkill = SkillSchema.safeParse({
+        id: `sk-${tier}`,
+        area_id: "INT",
+        name: `Habilidade ${tier}`,
+        description: `Descrição ${tier}`,
+        tier,
+        mastery: 500,
+        domain: "Arcana",
+        tags: ["magia", "logica"],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      expect(parsedSkill.success).toBe(true);
+    }
+
+    const harvestActive = HarvestFestivalStateSchema.safeParse({
+      is_active: true,
+      activated_at: new Date().toISOString(),
+      xp_multiplier: 2.0,
+      completed_goals_count: 10,
+      total_goals_count: 10,
+    });
+    expect(harvestActive.success).toBe(true);
+
+    const affinities = [
+      "Elemental",
+      "Resonancia",
+      "Convergencia",
+      "Dominio",
+      "Dissonante",
+    ];
+    for (const aff of affinities) {
+      expect(SkillSynergyAffinitySchema.safeParse(aff).success).toBe(true);
+    }
   });
 });

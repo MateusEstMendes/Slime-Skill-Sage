@@ -19,6 +19,8 @@ import {
   RotateCcw,
   Scale,
   Bot,
+  Flame,
+  Plus,
 } from "lucide-react";
 import {
   type AppLogEntry,
@@ -37,6 +39,7 @@ import {
 } from "../services/notificationService";
 import { localDb } from "../services/db";
 import { gameService } from "../services/gameService";
+import { evolutionRepository } from "../services/evolutionRepository";
 import { buildMemorySnapshot } from "../services/memorySnapshotBuilder";
 import { type LedgerAuditResult } from "@slime-sage/game";
 import { VoicesView } from "./views/VoicesView";
@@ -47,7 +50,7 @@ interface DevPanelProps {
   onClose: () => void;
 }
 
-type TabKey = "logs" | "snapshot" | "ledger" | "time" | "db" | "voices" | "notif";
+type TabKey = "logs" | "snapshot" | "ledger" | "time" | "db" | "voices" | "notif" | "phase10";
 
 export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<TabKey>("logs");
@@ -57,6 +60,19 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
   const [levelFilter, setLevelFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedLogIds, setExpandedLogIds] = useState<Set<string>>(new Set());
+
+  // Phase 10 state
+  const [forcedRoulette, setForcedRoulette] = useState<"success" | "failure" | null>(
+    gameService.getForcedRouletteResult()
+  );
+  const [harvestFestivalActive, setHarvestFestivalActive] = useState<boolean>(false);
+  const [phase10Message, setPhase10Message] = useState<string>("");
+
+  const refreshPhase10State = useCallback(async () => {
+    setForcedRoulette(gameService.getForcedRouletteResult());
+    const hState = await gameService.getHarvestFestivalState();
+    setHarvestFestivalActive(hState.is_active);
+  }, []);
 
   // Snapshot state
   const [snapshotData, setSnapshotData] = useState<HunterContext | null>(null);
@@ -182,9 +198,11 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
         void loadLedgerData();
       } else if (activeTab === "time") {
         refreshTimeState();
+      } else if (activeTab === "phase10") {
+        void refreshPhase10State();
       }
     }
-  }, [isOpen, activeTab, loadLogs, loadSnapshot, loadTableCounts, loadLedgerData, refreshTimeState]);
+  }, [isOpen, activeTab, loadLogs, loadSnapshot, loadTableCounts, loadLedgerData, refreshTimeState, refreshPhase10State]);
 
   // Live real-time ticking for Clock display
   useEffect(() => {
@@ -371,6 +389,64 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
     setTimeout(() => setNotifMessage(""), 4000);
   };
 
+  const handleSetForcedRoulette = (result: "success" | "failure" | null) => {
+    gameService.setForcedRouletteResult(result);
+    setForcedRoulette(result);
+    setPhase10Message(
+      result
+        ? `Roleta configurada para: FORÇAR ${result === "success" ? "SUCESSO (100%)" : "FALHA (0%)"}`
+        : "Roleta configurada para: MODO RNG NORMAL"
+    );
+    setTimeout(() => setPhase10Message(""), 4000);
+  };
+
+  const handleClearCooldowns = async () => {
+    try {
+      await evolutionRepository.clearCooldowns();
+      setPhase10Message("Todos os cooldowns de 48h da Roleta foram zerados!");
+      setTimeout(() => setPhase10Message(""), 4000);
+    } catch {
+      setPhase10Message("Erro ao zerar cooldowns.");
+    }
+  };
+
+  const handleSeedRouletteSkill = async () => {
+    try {
+      const sk = await gameService.seedRouletteTestSkill();
+      setPhase10Message(`Habilidade Extra elegível criada: '${sk.name}' (600/600 pts) + 1 Projeto Concluído!`);
+      setTimeout(() => setPhase10Message(""), 4000);
+    } catch {
+      setPhase10Message("Erro ao criar habilidade de teste.");
+    }
+  };
+
+  const handleToggleHarvestFestival = async () => {
+    try {
+      if (harvestFestivalActive) {
+        await gameService.deactivateHarvestFestival();
+        setHarvestFestivalActive(false);
+        setPhase10Message("Festival da Colheita encerrado (1x XP padrão).");
+      } else {
+        await gameService.activateHarvestFestival();
+        setHarvestFestivalActive(true);
+        setPhase10Message("Festival da Colheita ativado (2.0x XP e Altar aberto)!");
+      }
+      setTimeout(() => setPhase10Message(""), 4000);
+    } catch {
+      setPhase10Message("Erro ao alterar estado do Festival da Colheita.");
+    }
+  };
+
+  const handleSeedSynergySkills = async () => {
+    try {
+      const pair = await gameService.seedSynergySkills();
+      setPhase10Message(`Par sinérgico criado: '${pair.skillA.name}' (Arcana) + '${pair.skillB.name}' (Elemental)!`);
+      setTimeout(() => setPhase10Message(""), 4000);
+    } catch {
+      setPhase10Message("Erro ao criar par de habilidades sinérgicas.");
+    }
+  };
+
   const filteredLogs = logs.filter((log) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
@@ -515,6 +591,18 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
           >
             <Bell className="w-3.5 h-3.5" />
             <span>Web Notifications</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("phase10")}
+            className={`shrink-0 px-3.5 py-2.5 text-xs font-fantasy uppercase tracking-wider font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+              activeTab === "phase10"
+                ? "border-[#fde047] text-[#fde047] bg-[#1c1308]/50"
+                : "border-transparent text-[#a39171] hover:text-[#f3e5cc]"
+            }`}
+          >
+            <Flame className="w-3.5 h-3.5 text-[#dfa86c]" />
+            <span>Evolução & Colheita</span>
           </button>
         </div>
 
@@ -1347,6 +1435,165 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                       <span>Disparar Notificação Imediata</span>
                     </button>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: PHASE 10 (EVOLUTION & HARVEST) */}
+          {activeTab === "phase10" && (
+            <div className="space-y-5 max-w-2xl mx-auto">
+              <div className="relative bg-[#060e20]/95 border border-[#c89b55]/60 rounded-none p-5 space-y-5 shadow-[0_0_25px_rgba(223,168,108,0.12)] overflow-hidden">
+                <GildedCorners size="sm" color="#dfa86c" diamondColor="#fde047" glow={true} />
+
+                {/* Section Header */}
+                <div className="relative z-10 flex items-center gap-3">
+                  <div className="p-2.5 bg-[#140f08] border border-[#dfa86c]/60 text-[#fde047] shadow-[0_0_12px_rgba(223,168,108,0.25)]">
+                    <Flame className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold font-fantasy text-[#f8ecd5] tracking-wider uppercase">
+                      Evolução de Habilidades & Festival da Colheita (Fase 10)
+                    </h3>
+                    <p className="text-xs text-[#c5b08f]">
+                      Simulação da Roleta Esotérica Hardcore, Cooldown de 48h, 2x XP e Fusão no Altar.
+                    </p>
+                  </div>
+                </div>
+
+                {phase10Message && (
+                  <div className="relative z-10 p-2.5 bg-[#241909] border border-[#dfa86c] text-[#fde047] font-mono text-xs shadow-[0_0_10px_rgba(223,168,108,0.2)]">
+                    {phase10Message}
+                  </div>
+                )}
+
+                {/* Section 1: Roleta Esotérica */}
+                <div className="relative z-10 space-y-3 font-mono text-xs border-t border-[#966422]/40 pt-4">
+                  <div className="font-fantasy uppercase tracking-wider text-xs font-bold text-[#fde047] flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#dfa86c]" />
+                    <span>Controles da Roleta Esotérica (20% Base, +10% Pity, 48h Cooldown)</span>
+                  </div>
+
+                  <div className="bg-slate-950/80 p-3 rounded-none border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <span className="text-slate-400">Modo de Teste de RNG:</span>
+                      <span
+                        className={`font-bold px-2 py-0.5 rounded text-[11px] uppercase border ${
+                          forcedRoulette === "success"
+                            ? "bg-emerald-950 border-emerald-600/60 text-emerald-300"
+                            : forcedRoulette === "failure"
+                            ? "bg-red-950 border-red-600/60 text-red-300"
+                            : "bg-slate-900 border-slate-700 text-[#fde047]"
+                        }`}
+                      >
+                        {forcedRoulette === "success"
+                          ? "Forçar Sucesso (100%)"
+                          : forcedRoulette === "failure"
+                          ? "Forçar Falha (0%)"
+                          : "Aleatório Real (RNG Padrão)"}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => handleSetForcedRoulette(null)}
+                        className={`py-2 px-2 border text-xs font-fantasy uppercase tracking-wider transition-colors ${
+                          forcedRoulette === null
+                            ? "bg-[#241909] border-[#dfa86c] text-[#fde047]"
+                            : "bg-[#040814] border-[#966422]/50 text-[#a39171] hover:text-[#f3e5cc]"
+                        }`}
+                      >
+                        RNG Normal
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSetForcedRoulette("success")}
+                        className={`py-2 px-2 border text-xs font-fantasy uppercase tracking-wider transition-colors ${
+                          forcedRoulette === "success"
+                            ? "bg-emerald-950 border-emerald-500 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                            : "bg-[#040814] border-emerald-800/40 text-emerald-400 hover:border-emerald-600"
+                        }`}
+                      >
+                        Forçar Sucesso
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSetForcedRoulette("failure")}
+                        className={`py-2 px-2 border text-xs font-fantasy uppercase tracking-wider transition-colors ${
+                          forcedRoulette === "failure"
+                            ? "bg-red-950 border-red-500 text-red-300 shadow-[0_0_10px_rgba(239,68,68,0.3)]"
+                            : "bg-[#040814] border-red-800/40 text-red-400 hover:border-red-600"
+                        }`}
+                      >
+                        Forçar Falha
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleClearCooldowns}
+                      className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#040814] border border-[#dfa86c]/50 hover:border-[#fde047] hover:bg-[#1a1208] text-[#fde047] text-xs font-mono transition-colors"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Zerar Cooldown de 48h de Todas as Habilidades</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleSeedRouletteSkill}
+                      className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#1c1308] border border-[#dfa86c] hover:bg-[#2b1c0a] text-[#fde047] text-xs font-mono font-bold transition-colors shadow-[0_0_12px_rgba(223,168,108,0.2)]"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Criar Skill Extra Elegível (600/600 + Proj.)</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Section 2: Festival da Colheita & Altar de Sacrifício */}
+                <div className="relative z-10 space-y-3 font-mono text-xs border-t border-[#966422]/40 pt-4">
+                  <div className="font-fantasy uppercase tracking-wider text-xs font-bold text-[#fde047] flex items-center gap-2">
+                    <Flame className="w-4 h-4 text-[#dfa86c]" />
+                    <span>Festival da Colheita & Altar de Sacrifício</span>
+                  </div>
+
+                  <div className="bg-slate-950/80 p-3 rounded-none border border-slate-800 flex items-center justify-between flex-wrap gap-2">
+                    <div>
+                      <span className="text-slate-400">Estado Atual: </span>
+                      <span
+                        className={`font-bold px-2 py-0.5 rounded text-[11px] uppercase border ${
+                          harvestFestivalActive
+                            ? "bg-[#3d1c05] border-[#fde047] text-[#fde047]"
+                            : "bg-slate-900 border-slate-700 text-slate-400"
+                        }`}
+                      >
+                        {harvestFestivalActive ? "ATIVO (Multiplicador 2.0x XP)" : "INATIVO (1.0x XP)"}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleToggleHarvestFestival}
+                      className={`px-3 py-1.5 border text-xs font-fantasy uppercase tracking-wider transition-colors ${
+                        harvestFestivalActive
+                          ? "bg-red-950/60 border-red-500/70 text-red-300 hover:bg-red-900/60"
+                          : "bg-[#241909] border-[#dfa86c] text-[#fde047] hover:bg-[#33220c]"
+                      }`}
+                    >
+                      {harvestFestivalActive ? "Desativar Festival" : "Ativar Festival (2x XP)"}
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleSeedSynergySkills}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 px-3 bg-[#0a1428] border border-cyan-500/60 hover:border-cyan-400 text-cyan-300 text-xs font-mono transition-colors shadow-[0_0_12px_rgba(6,182,212,0.15)]"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Criar Par de Habilidades Sinérgicas (Arcana + Elemental)</span>
+                  </button>
                 </div>
               </div>
             </div>

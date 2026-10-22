@@ -9,13 +9,55 @@ import {
   BASE_CLASS_NAMES,
   transitionChallengeStatus,
   formatClassTitle,
+  type Clock,
+  RealClock,
 } from "@slime-sage/game";
 import { localDb } from "./db";
 import { logger } from "./logger";
+import { createDefaultProfile, MAIN_PROFILE_ID } from "./profileDefaults";
+
+const ACTIVE_CHALLENGE_STATUSES: ReadonlyArray<ClassChallenge["status"]> = [
+  "proposta",
+  "aceita",
+  "pendente",
+];
+
+/** Thrown when a new challenge is requested for an area that already has one in progress. */
+export class ActiveChallengeExistsError extends Error {
+  constructor(public readonly areaId: AreaCode, public readonly existingChallengeId: string) {
+    super(`Já existe uma provação ativa na área ${areaId} (${existingChallengeId}).`);
+    this.name = "ActiveChallengeExistsError";
+  }
+}
+
+/** Thrown when a challenge targets a tier that is not exactly the next tier of the area. */
+export class InvalidChallengeTierError extends Error {
+  constructor(
+    public readonly areaId: AreaCode,
+    public readonly currentTier: number,
+    public readonly targetTier: number
+  ) {
+    super(
+      `Tier alvo inválido para ${areaId}: atual ${currentTier}, solicitado ${targetTier} (esperado ${currentTier + 1}).`
+    );
+    this.name = "InvalidChallengeTierError";
+  }
+}
 
 export class ClassRepository {
   private db = localDb;
+  private clock: Clock = new RealClock();
   private listeners: Array<() => void> = [];
+  private initPromise: Promise<void> | null = null;
+
+  /** Keeps the repository in sync with GameService's clock (FakeClock support). */
+  public setClock(clock: Clock): void {
+    this.clock = clock;
+  }
+
+  private nowIso(): string {
+    return new Date(this.clock.now()).toISOString();
+  }
 
   public subscribe(listener: () => void): () => void {
     this.listeners.push(listener);
@@ -36,11 +78,21 @@ export class ClassRepository {
 
   /**
    * Initializes default Tier 1 (Aprendiz) classes for all 5 base areas if not already present.
+   * Concurrent callers share the same in-flight promise to avoid redundant writes.
    */
-  public async initBaseClasses(): Promise<void> {
+  public initBaseClasses(): Promise<void> {
+    if (!this.initPromise) {
+      this.initPromise = this.doInitBaseClasses().finally(() => {
+        this.initPromise = null;
+      });
+    }
+    return this.initPromise;
+  }
+
+  private async doInitBaseClasses(): Promise<void> {
     const existing = await this.db.getAll<Class>("class");
     const existingAreaTiers = new Set(existing.map((c) => `${c.area_id}_${c.tier}`));
-    const nowIso = new Date().toISOString();
+    const nowIso = this.nowIso();
     const toInsert: Class[] = [];
 
     for (const area of BASE_AREAS) {
@@ -80,7 +132,7 @@ export class ClassRepository {
     if (classes.length > 0) {
       return classes[0]; // sorted descending by tier
     }
-    const nowIso = new Date().toISOString();
+    const nowIso = this.nowIso();
     const baseClass: Class = {
       id: `cls_base_${areaId.toLowerCase()}`,
       area_id: areaId,
@@ -127,10 +179,23 @@ export class ClassRepository {
     challenge_title: string;
     challenge_description: string;
   }): Promise<ClassChallenge> {
-    const nowIso = new Date().toISOString();
+    // Guard 1: only one in-progress challenge per area.
+    const areaChallenges = await this.getChallenges(params.areaId);
+    const inProgress = areaChallenges.find((c) => ACTIVE_CHALLENGE_STATUSES.includes(c.status));
+    if (inProgress) {
+      throw new ActiveChallengeExistsError(params.areaId, inProgress.id);
+    }
+
+    // Guard 2: target tier must be exactly the next tier (no duplicates, no skipping).
+    const highest = await this.getHighestUnlockedClass(params.areaId);
+    if (params.targetTier !== highest.tier + 1) {
+      throw new InvalidChallengeTierError(params.areaId, highest.tier, params.targetTier);
+    }
+
+    const nowIso = this.nowIso();
     const formattedClassName = formatClassTitle(params.name_class, params.targetTier);
     const newChallenge: ClassChallenge = {
-      id: `clc_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      id: `clc_${this.clock.now()}_${Math.random().toString(36).slice(2, 7)}`,
       area_id: params.areaId,
       target_tier: params.targetTier,
       name_class: formattedClassName,
@@ -183,17 +248,26 @@ export class ClassRepository {
     }
 
     const nextStatus = transitionChallengeStatus(challenge.status, "concluida");
-    const nowIso = new Date().toISOString();
+    const nowIso = this.nowIso();
 
-    challenge.status = nextStatus;
-    challenge.completed_at = nowIso;
-    await this.db.put("class_challenge", challenge);
+    // Guard: never create a duplicate class for an already unlocked tier.
+    const areaClasses = await this.getClasses(challenge.area_id);
+    const highestTier = areaClasses[0]?.tier ?? 1;
+    if (challenge.target_tier !== highestTier + 1) {
+      throw new InvalidChallengeTierError(challenge.area_id, highestTier, challenge.target_tier);
+    }
+
+    const completedChallenge: ClassChallenge = {
+      ...challenge,
+      status: nextStatus,
+      completed_at: nowIso,
+    };
 
     const formattedClassName = formatClassTitle(challenge.name_class, challenge.target_tier);
 
-    // Create the newly unlocked class
+    // Create the newly unlocked class (only the newest class of the area stays active)
     const newClass: Class = {
-      id: `cls_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      id: `cls_${this.clock.now()}_${Math.random().toString(36).slice(2, 6)}`,
       area_id: challenge.area_id,
       tier: challenge.target_tier,
       name: formattedClassName,
@@ -202,34 +276,28 @@ export class ClassRepository {
       is_active: true,
       created_at: nowIso,
     };
-    await this.db.put("class", newClass);
+    const deactivated = areaClasses
+      .filter((c) => c.is_active)
+      .map((c) => ({ ...c, is_active: false }));
 
     // Update profile title if requested (default: true)
-    let profile = await this.db.get<Profile>("profile", "profile_main");
-    if (!profile) {
-      profile = {
-        id: "profile_main",
-        name: "Rimuru Tempest",
-        title: formattedClassName,
-        race: "Slime",
-        rank_threat: "Classe Menor",
-        level: 1,
-        current_xp: 0,
-        total_xp: 0,
-        streak_count: 0,
-        last_active_date: nowIso.slice(0, 10),
-        onboarding_done: true,
-        created_at: nowIso,
-        updated_at: nowIso,
-      };
+    const storedProfile = await this.db.get<Profile>("profile", MAIN_PROFILE_ID);
+    let profile: Profile;
+    if (!storedProfile) {
+      profile = createDefaultProfile(nowIso, { title: formattedClassName });
     } else if (options?.autoEquipTitle !== false) {
-      profile = {
-        ...profile,
-        title: formattedClassName,
-        updated_at: nowIso,
-      };
+      profile = { ...storedProfile, title: formattedClassName, updated_at: nowIso };
+    } else {
+      profile = storedProfile;
     }
-    await this.db.put("profile", profile);
+
+    // Single atomic transaction: challenge + classes + profile
+    await this.db.putAtomic([
+      { table: "class_challenge", item: completedChallenge },
+      ...deactivated.map((item) => ({ table: "class" as const, item })),
+      { table: "class", item: newClass },
+      { table: "profile", item: profile },
+    ]);
 
     void logger.info("game", `[Classe Ascendida] O Escolhido ascendeu a ${newClass.name} (Tier ${newClass.tier})`, {
       areaId: newClass.area_id,
@@ -239,7 +307,7 @@ export class ClassRepository {
     });
 
     this.notifyChange();
-    return { challenge, unlockedClass: newClass, profile };
+    return { challenge: completedChallenge, unlockedClass: newClass, profile };
   }
 
   public async abandonChallenge(challengeId: string): Promise<ClassChallenge> {
@@ -266,30 +334,16 @@ export class ClassRepository {
     if (!cleanTitle) {
       throw new Error("Título não pode ser vazio.");
     }
-    let profile = await this.db.get<Profile>("profile", "profile_main");
-    const now = new Date().toISOString();
+    const profile = await this.db.get<Profile>("profile", MAIN_PROFILE_ID);
+    const now = this.nowIso();
     if (!profile) {
-      profile = {
-        id: "profile_main",
-        name: "Rimuru Tempest",
-        title: cleanTitle,
-        race: "Slime",
-        rank_threat: "Classe Menor",
-        level: 1,
-        current_xp: 0,
-        total_xp: 0,
-        streak_count: 0,
-        last_active_date: now.slice(0, 10),
-        onboarding_done: true,
-        created_at: now,
-        updated_at: now,
-      };
-      await this.db.put("profile", profile);
+      const created = createDefaultProfile(now, { title: cleanTitle });
+      await this.db.put("profile", created);
       void logger.info("game", `[Título Equipado] Perfil criado e título equipado: ${cleanTitle}`, {
         title: cleanTitle,
       });
       this.notifyChange();
-      return profile;
+      return created;
     }
 
     const updated: Profile = {

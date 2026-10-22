@@ -9,9 +9,9 @@
 - **Causa Raiz Identificada (Debug):**
   - No ambiente de nuvem (GitHub Codespaces), a PWA aberta no navegador do cliente tentava fazer requisição direta para `http://localhost:3000/health`, que apontava para a máquina local do usuário em vez do container do Codespace, além de sofrer restrições de Mixed Content (navegador em HTTPS tentando acessar HTTP inseguro).
 - **Correção Aplicada + Teste de Regressão Criado:**
-  - Configurado proxy reverso no Vite (`/api` -> `http://127.0.0.1:3000`) em [`apps/pwa/vite.config.ts`](file:///workspaces/Skill-Grinding/apps/pwa/vite.config.ts).
-  - Atualizado [`authStorage.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/authStorage.ts) para usar `/api` como padrão automático em ambientes remotos.
-  - Adicionado fallback automático transparente no cliente HTTP ([`apiClient.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/apiClient.ts)) para tentar o proxy `/api` caso `localhost:3000` sofra falha de rede.
+  - Configurado proxy reverso no Vite (`/api` -> `http://127.0.0.1:3000`) em [`apps/pwa/vite.config.ts`](file:///workspaces/Slime-Skill-Sage/apps/pwa/vite.config.ts).
+  - Atualizado [`authStorage.ts`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/services/authStorage.ts) para usar `/api` como padrão automático em ambientes remotos.
+  - Adicionado fallback automático transparente no cliente HTTP ([`apiClient.ts`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/services/apiClient.ts)) para tentar o proxy `/api` caso `localhost:3000` sofra falha de rede.
 - **Status:** [x] Validado pelo Usuário
 
 ## Fase 1 — Logger Local, Error Boundary, Painel Dev e Spike de Notificações + TTS
@@ -25,9 +25,9 @@
   1. **Notificações no Mobile:** Em navegadores móveis (especialmente Chrome no Android e Safari em modo PWA no iOS), a API W3C restringe o construtor direto `new Notification()` em contexto de janela (lançando `Illegal constructor` ou descartando silenciosamente o alerta). É estritamente exigido o uso de `ServiceWorkerRegistration.showNotification()`.
   2. **Pronúncia em Termos em Inglês:** O sintetizador de voz `pt-BR` nativo do sistema operacional aplica regras ortográficas do português brasileiro aos termos anglófonos terminados em "-ge" (como "bege" / "rege" -> "seje").
 - **Correção Aplicada + Teste de Regressão Criado:**
-  1. Em [`notificationService.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/notificationService.ts): implementado suporte prioritário a `ServiceWorkerRegistration.showNotification()` via `navigator.serviceWorker.ready`, mantendo fallback retrocompatível para desktop.
-  2. Em [`vite.config.ts`](file:///workspaces/Skill-Grinding/apps/pwa/vite.config.ts): ativado `devOptions: { enabled: true }` no plugin `VitePWA` para garantir registro ativo do Service Worker no celular durante o desenvolvimento.
-  3. Criado [`phoneticNormalizer.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/phoneticNormalizer.ts) e testes em [`phoneticNormalizer.test.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/phoneticNormalizer.test.ts): mapeia termos como "Slime Sage" -> "Slime Séidji", "XP" -> "Xis Pê", "Skill" -> "Isquil", "Solo Leveling" -> "Sôulo Léveling", etc., purificando o texto antes do envio à Web Speech API.
+  1. Em [`notificationService.ts`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/services/notificationService.ts): implementado suporte prioritário a `ServiceWorkerRegistration.showNotification()` via `navigator.serviceWorker.ready`, mantendo fallback retrocompatível para desktop.
+  2. Em [`vite.config.ts`](file:///workspaces/Slime-Skill-Sage/apps/pwa/vite.config.ts): ativado `devOptions: { enabled: true }` no plugin `VitePWA` para garantir registro ativo do Service Worker no celular durante o desenvolvimento.
+  3. Criado [`phoneticNormalizer.ts`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/services/phoneticNormalizer.ts) e testes em [`phoneticNormalizer.test.ts`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/services/phoneticNormalizer.test.ts): mapeia termos como "Slime Sage" -> "Slime Séidji", "XP" -> "Xis Pê", "Skill" -> "Isquil", "Solo Leveling" -> "Sôulo Léveling", etc., purificando o texto antes do envio à Web Speech API.
   4. **Decisão Arquitetural de Áudio (Definida pelo Usuário):**
      - O sistema usará a **Voz Neural da API do Gemini** (`@ai-sdk/google`) com a voz **`Kore`** tanto para a **Grande Sábio (G.S)** quanto para a **Voz do Mundo** (fiel à concepção de *Tensura*, variando a solene reverbação e ritmo).
      - O utilitário local com normalizador fonético atuará como fallback 100% offline.
@@ -101,10 +101,10 @@
 - **Causa Raiz & Melhoria Aplicada:**
   1. **Bordas Retas (`rounded-none`)**: `SystemPanel.tsx`, `ProjectModal.tsx`, `DevPanel.tsx`, cartões de missões e projetos ainda continham classes residuais de cantos arredondados (`rounded-xl` / `rounded-lg`). Foram todos convertidos estritamente para `rounded-none`, mantendo cantos arredondados/chanfrados apenas em botões menores (`SystemButton`) por ergonomia.
   2. **Padding nos Skill Cards**: A classe `p-4.5` não fazia parte do Tailwind padrão gerando inconsistência. Foi atualizada para `p-[18px]` exatos com separação vertical estendida `space-y-5`.
-  3. **Inscrições Rúnicas Arcanas**: O componente [`GildedCorners.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/system/GildedCorners.tsx) foi enriquecido com inscrições nórdicas em Elder Futhark (`withRunes`, `runicTop`, `runicBottom`), entalhes centrais luminosos no topo e base (`withCenterNotches`), glifos `✦` nas laterais e brilho intensificado ao foco/hover (`opacity-45 group-hover:opacity-90 drop-shadow-[0_0_4px_currentColor]`).
+  3. **Inscrições Rúnicas Arcanas**: O componente [`GildedCorners.tsx`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/components/system/GildedCorners.tsx) foi enriquecido com inscrições nórdicas em Elder Futhark (`withRunes`, `runicTop`, `runicBottom`), entalhes centrais luminosos no topo e base (`withCenterNotches`), glifos `✦` nas laterais e brilho intensificado ao foco/hover (`opacity-45 group-hover:opacity-90 drop-shadow-[0_0_4px_currentColor]`).
   4. **Runas Dinâmicas por Tier de Habilidade**: Comum (`᚛ ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚜` / `✦ ᛋ ᛚ ᛁ ᛗ ᛖ · ᛋ ᚨ ᚷ ᛖ ✦`), Extra (`᚛ ✦ ᛖ ᛪ ᛏ ᚱ ᚨ ✦ ᚜` / `✦ ᛈ ᛟ ᚹ ᛖ ᚱ ✦`) e Única (`᚛ ✦ ᚢ ᚾ ᛁ ᚲ ᚨ ✦ ᚜` / `✦ ᚨ ᚱ ᚲ ᚨ ᚾ ᚢ ᛗ ✦`).
-  5. **Banner do Caçador com Transliteração Dinâmica**: Criada função pura `toElderFuthark` em [`HomeView.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/views/HomeView.tsx) que translitera em tempo real o nome do caçador no perfil para o alfabeto rúnico nórdico na borda superior do banner de status.
-  6. **Decreto Rúnico em Modais**: [`SystemModal.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/system/SystemModal.tsx) atualizado com moldura rúnica sagrada `✦ ᛋ ᚨ ᚲ ᚱ ᛖ ᛞ · ᛟ ᚱ ᛞ ᛖ ᚱ ✦`.
+  5. **Banner do Caçador com Transliteração Dinâmica**: Criada função pura `toElderFuthark` em [`HomeView.tsx`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/components/views/HomeView.tsx) que translitera em tempo real o nome do caçador no perfil para o alfabeto rúnico nórdico na borda superior do banner de status.
+  6. **Decreto Rúnico em Modais**: [`SystemModal.tsx`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/components/system/SystemModal.tsx) atualizado com moldura rúnica sagrada `✦ ᛋ ᚨ ᚲ ᚱ ᛖ ᛞ · ᛟ ᚱ ᛞ ᛖ ᚱ ✦`.
 - **Status:** [x] Validado pelo Usuário
 
 ## Fase 6 — Backend `/chat`, Síntese de Voz G.S, Cartões de Prévia e Pop-up de Pendências
@@ -118,10 +118,10 @@
   2. **Compatibilidade de Chave Reserva:** O arquivo `.env` continha a chave reserva com o nome `GEMINI_API_KEY_RESERVE`, enquanto `getApiKeys()` buscava apenas `GEMINI_API_KEY_FALLBACK`.
   3. **Diagnóstico do Proxy Vite & Falha de Conexão:** Caso o backend na porta 3000 não respondesse de imediato, o proxy do Vite retornava erro HTTP 500 cru em texto puro sem JSON, fazendo com que o cliente exibisse a mensagem genérica `Erro no canal neural da Grande Sábio (500)`.
 - **Correção Aplicada + Testes de Regressão Criados:**
-  1. Em [`geminiService.ts`](file:///workspaces/Skill-Grinding/apps/api/src/services/geminiService.ts): sanitização ativa de mensagens antes do envio à API Gemini, removendo mensagens de assistente no início para assegurar que a conversa sempre inicie com o turno do `user`, e adicionado suporte a `GEMINI_API_KEY_RESERVE` no failover de credenciais.
-  2. Em [`geminiService.ts`](file:///workspaces/Skill-Grinding/apps/api/src/services/geminiService.ts): proteção defensiva completa com validação de nulos em `toolCalls` para todas as ferramentas (`create_project_tree`, `add_missions`, `update_mission`, `delete_mission`).
-  3. Em [`vite.config.ts`](file:///workspaces/Skill-Grinding/apps/pwa/vite.config.ts) e [`apiClient.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/apiClient.ts): configurado listener de erro no proxy do Vite para retornar HTTP 503 com payload JSON descritivo (`BACKEND_OFFLINE`), e mensagens de erro no frontend agora instruem com clareza a verificação do comando `pnpm dev`.
-  4. Em [`server.ts`](file:///workspaces/Skill-Grinding/apps/api/src/server.ts): suporte a múltiplos caminhos de resolução do arquivo `.env`.
+  1. Em [`geminiService.ts`](file:///workspaces/Slime-Skill-Sage/apps/api/src/services/geminiService.ts): sanitização ativa de mensagens antes do envio à API Gemini, removendo mensagens de assistente no início para assegurar que a conversa sempre inicie com o turno do `user`, e adicionado suporte a `GEMINI_API_KEY_RESERVE` no failover de credenciais.
+  2. Em [`geminiService.ts`](file:///workspaces/Slime-Skill-Sage/apps/api/src/services/geminiService.ts): proteção defensiva completa com validação de nulos em `toolCalls` para todas as ferramentas (`create_project_tree`, `add_missions`, `update_mission`, `delete_mission`).
+  3. Em [`vite.config.ts`](file:///workspaces/Slime-Skill-Sage/apps/pwa/vite.config.ts) e [`apiClient.ts`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/services/apiClient.ts): configurado listener de erro no proxy do Vite para retornar HTTP 503 com payload JSON descritivo (`BACKEND_OFFLINE`), e mensagens de erro no frontend agora instruem com clareza a verificação do comando `pnpm dev`.
+  4. Em [`server.ts`](file:///workspaces/Slime-Skill-Sage/apps/api/src/server.ts): suporte a múltiplos caminhos de resolução do arquivo `.env`.
   5. Suíte completa de testes executada e 100% verde (161/161 testes passando).
 - **Status:** [x] Validado pelo Usuário
 
@@ -133,8 +133,8 @@
   - O modelo configurado no código era `gemini-2.0-flash`. A API do Google Generative Language descontinuou esse identificador, retornando HTTP 404: *"This model models/gemini-2.0-flash is no longer available. Please update your code to use models/gemini-3.8-flash"*.
   - O mecanismo de resiliência da Grande Sábio capturou a resposta e entrou em modo de hibernação neural gracioso (HTTP 200), evitando queda do servidor.
 - **Correção Aplicada + Teste de Integração Real:**
-  1. Em [`geminiService.ts`](file:///workspaces/Skill-Grinding/apps/api/src/services/geminiService.ts): atualizado o modelo de chat para `gemini-3.8-flash`.
-  2. Em [`geminiService.ts`](file:///workspaces/Skill-Grinding/apps/api/src/services/geminiService.ts): atualizado o modelo de síntese de voz Kore para `gemini-3.8-flash-tts`.
+  1. Em [`geminiService.ts`](file:///workspaces/Slime-Skill-Sage/apps/api/src/services/geminiService.ts): atualizado o modelo de chat para `gemini-3.8-flash`.
+  2. Em [`geminiService.ts`](file:///workspaces/Slime-Skill-Sage/apps/api/src/services/geminiService.ts): atualizado o modelo de síntese de voz Kore para `gemini-3.8-flash-tts`.
   3. Teste real de integração executado com sucesso: geração da árvore estruturada de projeto (`create_project_tree`) e síntese de áudio WAV via voz Kore (607KB gerados).
 - **Status:** [x] Validado pelo Usuário
 
@@ -144,10 +144,10 @@
   - "como posso ver o usage da api key?" e "Não há logs de chamadas neurais"
 - **Causa Raiz & Solução Aplicada:**
   - Não havia agregação visual e persistente de consumo de tokens (prompt, completion, total) acessível diretamente na interface do app.
-  - Implementado em [`packages/shared/src/index.ts`](file:///workspaces/Skill-Grinding/packages/shared/src/index.ts) o schema `ChatUsageSchema`.
-  - Em [`geminiService.ts`](file:///workspaces/Skill-Grinding/apps/api/src/services/geminiService.ts): extração e devolução precisa de `usage: { prompt_tokens, completion_tokens, total_tokens }`.
-  - Em [`GsChatView.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/views/GsChatView.tsx): persistência de estatísticas acumuladas no IndexedDB (`localDb.setKv("ai_usage_stats", ...)`).
-  - Em [`DevPanel.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/DevPanel.tsx): adição de banner dourado de telemetria de tokens com totalizador de tokens consumidos, requisições feitas e modelos ativos, além de logs sob o filtro `ai (Canal Neural & Gemini)`.
+  - Implementado em [`packages/shared/src/index.ts`](file:///workspaces/Slime-Skill-Sage/packages/shared/src/index.ts) o schema `ChatUsageSchema`.
+  - Em [`geminiService.ts`](file:///workspaces/Slime-Skill-Sage/apps/api/src/services/geminiService.ts): extração e devolução precisa de `usage: { prompt_tokens, completion_tokens, total_tokens }`.
+  - Em [`GsChatView.tsx`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/components/views/GsChatView.tsx): persistência de estatísticas acumuladas no IndexedDB (`localDb.setKv("ai_usage_stats", ...)`).
+  - Em [`DevPanel.tsx`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/components/DevPanel.tsx): adição de banner dourado de telemetria de tokens com totalizador de tokens consumidos, requisições feitas e modelos ativos, além de logs sob o filtro `ai (Canal Neural & Gemini)`.
 - **Status:** [x] Validado pelo Usuário
 
 ### Rodada 4 de Testes do Usuário (Estética dos Botões & Remoção de Cantos Arredondados)
@@ -156,13 +156,13 @@
   - "não gostei dos botões, muito redondos, não tem a estetica de rpg"
 - **Causa Raiz & Redesign Aplicado:**
   - `SystemButton.tsx` utilizava classes residuais de cantos arredondados (`rounded-md`, `rounded-lg`, `rounded-xl`), que quebravam a imersão gótica/medieval inspirada em *Tensura* e `docs/design.png`.
-  - Em [`SystemButton.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/system/SystemButton.tsx):
+  - Em [`SystemButton.tsx`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/components/system/SystemButton.tsx):
     1. Removidas todas as classes arredondadas, aplicando estritamente `rounded-none`.
     2. Adicionada moldura interna decorativa fina estilo placa/cartouche de RPG (`inset-[2px] border border-current opacity-20`).
     3. Adicionados ornamentos de diamante nos cantos da cartela (`-top-[2px] -left-[2px] w-1 h-1 bg-[#dfa86c]`).
     4. Adicionados entalhes centrais em losango cartouche (`rotate-45`) nos botões de destaque (primário e ouro).
     5. Gradientes e bordas refinados em ouro antigo e obsidiana profunda.
-  - Em [`SystemBadge.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/system/SystemBadge.tsx): todos os badges convertidos de `rounded` para `rounded-none`.
+  - Em [`SystemBadge.tsx`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/components/system/SystemBadge.tsx): todos os badges convertidos de `rounded` para `rounded-none`.
   - Suíte completa de testes executada com 100% de aprovação (161/161 testes passando).
 - **Status:** [x] Validado pelo Usuário
 
@@ -175,16 +175,16 @@
   - "então as coisas da fase 10 coloque no plan.md e começe a fazer os outros 2 topicos"
 - **Implementações e Soluções Aplicadas:**
   1. **Densificação de Missões do Modo Coordenador (7 a 12 atividades em DAG Misto):**
-     - Em [`packages/shared/src/index.ts`](file:///workspaces/Skill-Grinding/packages/shared/src/index.ts) e [`apps/api/src/services/geminiService.ts`](file:///workspaces/Skill-Grinding/apps/api/src/services/geminiService.ts): atualizadas as diretrizes da G.S (`GS_COORDINATOR_RULES` e schema de `create_project_tree`) para que tópicos amplos/técnicos gerem planos granulares e realistas com entre 7 e 12 missões dispostas em topologia DAG mista (paralelas + dependências lineares onde essencial).
+     - Em [`packages/shared/src/index.ts`](file:///workspaces/Slime-Skill-Sage/packages/shared/src/index.ts) e [`apps/api/src/services/geminiService.ts`](file:///workspaces/Slime-Skill-Sage/apps/api/src/services/geminiService.ts): atualizadas as diretrizes da G.S (`GS_COORDINATOR_RULES` e schema de `create_project_tree`) para que tópicos amplos/técnicos gerem planos granulares e realistas com entre 7 e 12 missões dispostas em topologia DAG mista (paralelas + dependências lineares onde essencial).
   2. **Preparação Oculta de Evolução de Habilidade:**
      - A G.S gera silenciosamente `next_evolution_name` e `next_evolution_description` para `target_skill` durante a formulação do plano e **nunca** revela esse nome no chat para preservar o mistério arcano.
      - Persistência garantida no IndexedDB (`projectRepository.ts`) e preservação no diff de habilidades (`classifySkillsDiff` e `preCardValidator.ts`).
   3. **Áudio de Início de Projeto (`project-start.mp3`):**
-     - Gerado clipe de voz oficial com o modelo `gemini-3.8-flash-tts` e voz neural `Kore`: *"Aviso da Grande Sábio. Parâmetros do projeto aceitos. Protocolo de treino iniciado."* salvo em [`apps/pwa/public/audio/voice/project-start.mp3`](file:///workspaces/Skill-Grinding/apps/pwa/public/audio/voice/project-start.mp3).
-     - Em [`GsChatView.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/views/GsChatView.tsx): ao aceitar uma proposta (`handleAcceptProposal`), se o projeto possuir `target_skill`, dispara `worldVoiceService.playVoiceClip("/audio/voice/project-start.mp3")`.
+     - Gerado clipe de voz oficial com o modelo `gemini-3.8-flash-tts` e voz neural `Kore`: *"Aviso da Grande Sábio. Parâmetros do projeto aceitos. Protocolo de treino iniciado."* salvo em [`apps/pwa/public/audio/voice/project-start.mp3`](file:///workspaces/Slime-Skill-Sage/apps/pwa/public/audio/voice/project-start.mp3).
+     - Em [`GsChatView.tsx`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/components/views/GsChatView.tsx): ao aceitar uma proposta (`handleAcceptProposal`), se o projeto possuir `target_skill`, dispara `worldVoiceService.playVoiceClip("/audio/voice/project-start.mp3")`.
   4. **Áudio Solene de Conclusão de Projeto Vinculado a Skill:**
-     - Ao concluir a última missão de um projeto no [`gameService.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/gameService.ts), o evento `PROJECT_COMPLETE` é emitido com `hasSkill: true/false`.
-     - Em [`worldVoiceService.ts`](file:///workspaces/Skill-Grinding/apps/pwa/src/services/worldVoiceService.ts): o modal cerimonial e o áudio solene de habilidade adquirida (`/audio/voice/skill-acquired.mp3`) são disparados **exclusivamente** quando `hasSkill === true`.
+     - Ao concluir a última missão de um projeto no [`gameService.ts`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/services/gameService.ts), o evento `PROJECT_COMPLETE` é emitido com `hasSkill: true/false`.
+     - Em [`worldVoiceService.ts`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/services/worldVoiceService.ts): o modal cerimonial e o áudio solene de habilidade adquirida (`/audio/voice/skill-acquired.mp3`) são disparados **exclusivamente** quando `hasSkill === true`.
   5. **Planejamento da Fase 10 em `plan.md`:**
      - Documentada a mecânica de ascensão Comum → Extra aos 100 pontos de maestria consumindo o segredo previamente arquivado na criação do projeto, com modal cerimonial e anúncio solene da G.S.
 - **Status:** [x] Validado pelo Usuário
@@ -198,13 +198,13 @@
 - **Decisões Alinhadas (`/grill-me`) & Causa Raiz Identificada:**
   1. **Barras de Abas Amassadas & Sliders de Rolagem (`DevPanel.tsx`, `SettingsModal.tsx`, `index.css`):**
      - No `DevPanel.tsx`, o cabeçalho e a barra horizontal de abas não possuíam `shrink-0` e o corpo rolável não possuía `min-h-0`, fazendo com que o Flexbox esmagasse verticalmente a barra de abas superior quando havia muitos elementos (logs, cartões de voz, etc.).
-     - Aplicado `shrink-0` no cabeçalho e na barra de abas (`flex-nowrap overflow-x-auto`) com `shrink-0` em cada botão de aba, e `flex-1 min-h-0 overflow-y-auto` no container de conteúdo. Reforçada também a barra de rolagem customizada (`::-webkit-scrollbar` com `8px` e contraste dourado `#dfa86c`/`#fde047`) em [`apps/pwa/src/index.css`](file:///workspaces/Skill-Grinding/apps/pwa/src/index.css).
+     - Aplicado `shrink-0` no cabeçalho e na barra de abas (`flex-nowrap overflow-x-auto`) com `shrink-0` em cada botão de aba, e `flex-1 min-h-0 overflow-y-auto` no container de conteúdo. Reforçada também a barra de rolagem customizada (`::-webkit-scrollbar` com `8px` e contraste dourado `#dfa86c`/`#fde047`) em [`apps/pwa/src/index.css`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/index.css).
   2. **Voz Automática da G.S Sincronizada com o Texto (`GsChatView.tsx` & `gsVoiceService.ts`):**
      - Ativada por padrão (`true`), lendo a resposta completa limpa de markdown, com botão rápido de Mute/Auto-Voz (`Voz G.S: ON/OFF`) no topo do chat e no modal de configurações.
      - Implementado `gsVoiceService.prepareSpeech(text, signal)` + `gsVoiceService.playPreparedSpeech(speech)`: o `GsChatView` aguarda o áudio ficar pronto antes de exibir o balão da resposta, garantindo que o texto e a voz da G.S iniciem no exato mesmo instante.
   3. **Fala Mais Rápida da G.S (1.0x a 2.0x):**
      - Definida velocidade padrão `1.25x` (`DEFAULT_GS_PLAYBACK_RATE = 1.25`, com `preservesPitch = true`).
-     - Adicionado slider configurável de `1.0x` até `2.0x` (com botões rápidos `1.0x`, `1.2x`, `1.35x`, `1.5x`, `1.75x`, `2.0x`) tanto em [`SettingsModal.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/SettingsModal.tsx) quanto na aba "Testes de Voz" ([`VoicesView.tsx`](file:///workspaces/Skill-Grinding/apps/pwa/src/components/views/VoicesView.tsx)).
+     - Adicionado slider configurável de `1.0x` até `2.0x` (com botões rápidos `1.0x`, `1.2x`, `1.35x`, `1.5x`, `1.75x`, `2.0x`) tanto em [`SettingsModal.tsx`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/components/SettingsModal.tsx) quanto na aba "Testes de Voz" ([`VoicesView.tsx`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/components/views/VoicesView.tsx)).
   4. **Impedir Requisição do Chat & Cancelar Pedido de Áudio (`GsChatView.tsx` & `apiClient.ts`):**
      - Adicionado suporte a `AbortSignal` em `sendChatMessage` e `synthesizeSpeechApi`.
      - Botão **"Parar (■)"** durante o processamento da requisição para abortar imediatamente o `/chat` sem poluir o histórico.
@@ -308,6 +308,31 @@
   3. **Legenda Desatualizada em `StatusView.tsx`:**
      - Atualizado o subtítulo de `Classes por Área` para refletir os *"10 Patamares Canônicos de Maestria (1 a 50.000 pts · Escala do Escolhido I a X)"*.
 - **Status:** [x] Validado pelo Usuário (100% de testes aprovados — 235/235 testes monorepo, 97.3% cobertura em game).
+
+## Fase 10 — Auditoria de Confiabilidade e Hardening Lógico do Sistema
+
+### Rodada 1 de Auditoria Interna de Lógica de Programação
+
+- **Solicitação do Usuário:**
+  - *"analise a logica de programação do app e crie um relatorio com os erros achados que podem quebrar o app"*
+  - *"aplique as correções e não interfira no trabalho da equipe teamwork, eles são muito importantes"*
+- **Vulnerabilidades Identificadas e Sanadas:**
+  1. **Atomicidade no Altar de Fusão ([`fuseSkills`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/services/gameService.ts)):**
+     - O sacrifício de duas habilidades e inserção da habilidade fundida era realizado em 3 etapas assíncronas separadas. Se houvesse queda de energia, fechamento do app ou falha no meio, o usuário perdia as habilidades originais sem receber a nova.
+     - **Correção:** `LocalDatabase.putAtomic` foi estendido com suporte a operações mistas (`put` + `delete`) em uma única transação atômica do IndexedDB, migrando automaticamente chaves estrangeiras em `mission_reward.skill_id`.
+  2. **Cascata e Integridade do Ledger ao Desfazer Missões ([`undoMissionCompletion`](file:///workspaces/Slime-Skill-Sage/apps/pwa/src/services/gameService.ts)):**
+     - A reversão de uma missão pré-requisito resetava missões dependentes para `bloqueada` sem estornar o XP delas no Ledger. Ao refazê-las, o usuário duplicava XP, quebrando a Regra de Ouro #2 (Ledger).
+     - **Correção:** Implementada trava impeditiva que bloqueia o desfecho de missões pré-requisito caso existam dependentes já concluídas.
+  3. **Concorrência e Locks Assíncronos (`AsyncMutex`):**
+     - Cliques múltiplos e rápidos em missões paralelas causavam divergência de XP entre o cálculo em memória e o total do Ledger.
+     - **Correção:** Fila serializada assíncrona (`AsyncMutex`) implementada para operações de mutação do Ledger e Perfil.
+  4. **Reconciliação Dinâmica da Ofensiva Diária (Streak):**
+     - O campo `streak_count` nunca era recalculado pelo ciclo de vida da aplicação.
+     - **Correção:** Implementada reconciliação de calendário para incrementar ofensiva em dias consecutivos e resetar em caso de hiato superior a 1 dia.
+  5. **Controle de Memória e I/O de Áudio e Logs:**
+     - A rotação de logs foi desacoplada da escrita individual para lotes de 25 registros, e o cache de áudio neural da G.S recebeu política LRU limitando o armazenamento a 40 mensagens.
+- **Status:** [x] Implementado com Sucesso e Validado pela Suíte de Testes (100% de testes verdes).
+
 
 
 

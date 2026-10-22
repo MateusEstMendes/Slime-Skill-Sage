@@ -7,3 +7,8 @@ dist
 coverage
 test-results
 playwright-report
+
+# Lockfiles de outros gerenciadores (este monorepo usa apenas pnpm)
+package-lock.json
+yarn.lock
+

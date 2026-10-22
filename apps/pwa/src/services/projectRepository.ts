@@ -528,6 +528,7 @@ export class ProjectRepository {
             description: `Habilidade despertada via Decreto da Grande Sábio [${areaId}]`,
             tier: "comum",
             mastery: 0,
+            tags: [],
             next_evolution_name: binding.next_evolution_name,
             next_evolution_description: binding.next_evolution_description,
             created_at: now,

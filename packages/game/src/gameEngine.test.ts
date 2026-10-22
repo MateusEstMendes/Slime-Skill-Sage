@@ -11,7 +11,7 @@ import {
   DIFFICULTY_XP,
   XP_BY_DIFFICULTY,
   COMMON_TO_EXTRA_MASTERY_THRESHOLD,
-  EXTRA_TO_UNIQUE_MASTERY_THRESHOLD,
+  SKILL_TIER_THRESHOLDS,
   MAX_SKILL_MASTERY,
   xpRequiredForLevel,
   getTotalXpForLevel,
@@ -125,8 +125,11 @@ describe("Game Engine: Config & Level Progression", () => {
     expect(DIFFICULTY_XP.dificil).toBe(55);
     expect(DIFFICULTY_XP.lendaria).toBe(80);
     expect(COMMON_TO_EXTRA_MASTERY_THRESHOLD).toBe(100);
-    expect(EXTRA_TO_UNIQUE_MASTERY_THRESHOLD).toBe(300);
-    expect(MAX_SKILL_MASTERY).toBe(300);
+    expect(SKILL_TIER_THRESHOLDS.comum).toBe(100);
+    expect(SKILL_TIER_THRESHOLDS.especial).toBe(300);
+    expect(SKILL_TIER_THRESHOLDS.extra).toBe(600);
+    expect(SKILL_TIER_THRESHOLDS.unica).toBe(1200);
+    expect(SKILL_TIER_THRESHOLDS.suprema).toBe(2500);
   });
 
   it("evaluates xpRequiredForLevel according to round(300 * n^1.5)", () => {
@@ -223,73 +226,84 @@ describe("Game Engine: Skills & Mastery Transitions", () => {
     expect(normalizeSkillName("")).toBe("");
   });
 
-  it("tests transition boundary Comum -> Extra strictly at 99 vs 100 mastery", () => {
+  it("tests transition boundary Comum -> Especial strictly at 99 vs 100 mastery", () => {
     // 99 mastery: remains comum
     const at99 = calculateSkillProgression("comum", 90, 9);
     expect(at99.newMastery).toBe(99);
     expect(at99.newTier).toBe("comum");
-    expect(at99.hasEvolvedToExtra).toBe(false);
+    expect(at99.hasEvolved).toBe(false);
 
-    // 100 mastery: evolves to extra
+    // 100 mastery: evolves to especial
     const at100 = calculateSkillProgression("comum", 99, 1);
     expect(at100.newMastery).toBe(100);
-    expect(at100.newTier).toBe("extra");
-    expect(at100.hasEvolvedToExtra).toBe(true);
+    expect(at100.newTier).toBe("especial");
+    expect(at100.hasEvolved).toBe(true);
+    expect(at100.evolutionType).toBe("comum_to_especial");
 
-    // >100 mastery from comum: evolves directly to extra
-    const at150 = calculateSkillProgression("comum", 50, 100);
-    expect(at150.newMastery).toBe(150);
-    expect(at150.newTier).toBe("extra");
-    expect(at150.hasEvolvedToExtra).toBe(true);
+    // Especial -> Extra at 300 mastery
+    const at300 = calculateSkillProgression("especial", 290, 10);
+    expect(at300.newMastery).toBe(300);
+    expect(at300.newTier).toBe("extra");
+    expect(at300.hasEvolved).toBe(true);
+    expect(at300.hasEvolvedToExtra).toBe(true);
+    expect(at300.evolutionType).toBe("especial_to_extra");
   });
 
-  it("caps mastery at MAX_SKILL_MASTERY (300) and clamps to 0", () => {
-    const capped = calculateSkillProgression("extra", 290, 50);
-    expect(capped.newMastery).toBe(300);
+  it("caps mastery at tier ceiling for extra (600) and clamps to 0", () => {
+    const capped = calculateSkillProgression("extra", 590, 50);
+    expect(capped.newMastery).toBe(600);
 
     const clamped = calculateSkillProgression("comum", 20, -50);
     expect(clamped.newMastery).toBe(0);
   });
 
-  it("demotes from extra back to comum when mastery drops below 100 upon undo", () => {
-    const demoted = calculateSkillProgression("extra", 105, -10);
-    expect(demoted.newMastery).toBe(95);
-    expect(demoted.newTier).toBe("comum");
+  it("demotes from extra back to especial when mastery drops below 300 upon undo", () => {
+    const demoted = calculateSkillProgression("extra", 305, -10);
+    expect(demoted.newMastery).toBe(295);
+    expect(demoted.newTier).toBe("especial");
     expect(demoted.hasDegradedFromExtra).toBe(true);
+
+    const demotedComum = calculateSkillProgression("especial", 105, -10);
+    expect(demotedComum.newMastery).toBe(95);
+    expect(demotedComum.newTier).toBe("comum");
+    expect(demotedComum.hasDegraded).toBe(true);
   });
 
-  it("applies diminishing returns after 150 pts halfway mark with learning curve option", () => {
-    // Below 150: 100% full gain
-    expect(calculateMasteryGainWithDecay(0, 20)).toBe(20);
-    expect(calculateMasteryGainWithDecay(100, 20)).toBe(20);
-    expect(calculateMasteryGainWithDecay(150, 20)).toBe(20);
+  it("applies diminishing returns after halfway mark with learning curve option", () => {
+    // Below halfway mark: 100% full gain
+    expect(calculateMasteryGainWithDecay(0, 20, 300)).toBe(20);
+    expect(calculateMasteryGainWithDecay(100, 20, 300)).toBe(20);
+    expect(calculateMasteryGainWithDecay(150, 20, 300)).toBe(20);
 
-    // Above 150: smooth decay
-    const gainAt225 = calculateMasteryGainWithDecay(225, 20);
+    // Above 150 (halfway of 300): smooth decay
+    const gainAt225 = calculateMasteryGainWithDecay(225, 20, 300);
     expect(gainAt225).toBeLessThan(20);
     expect(gainAt225).toBeGreaterThanOrEqual(10);
 
     // Guaranteed floor of at least 1 pt
-    expect(calculateMasteryGainWithDecay(299, 1)).toBeGreaterThanOrEqual(1);
+    expect(calculateMasteryGainWithDecay(299, 1, 300)).toBeGreaterThanOrEqual(1);
 
     // calculateSkillProgression with applyLearningCurve
-    const withCurve = calculateSkillProgression("extra", 200, 20, { applyLearningCurve: true });
+    const withCurve = calculateSkillProgression("especial", 200, 20, { applyLearningCurve: true });
     expect(withCurve.actualDelta).toBeLessThan(20);
     expect(withCurve.newMastery).toBe(200 + withCurve.actualDelta);
   });
 
-  it("property: skill mastery is always within [0, 300] (fast-check)", () => {
+  it("property: skill mastery respects bounds and progression rules (fast-check)", () => {
     fc.assert(
       fc.property(
-        fc.constantFrom<SkillTier>("comum", "extra", "unica"),
-        fc.integer({ min: 0, max: 300 }),
+        fc.constantFrom<SkillTier>("intrinseca", "comum", "especial", "extra", "unica", "suprema", "primordial"),
+        fc.integer({ min: 0, max: 2500 }),
         fc.integer({ min: -500, max: 500 }),
         (tier, curMastery, delta) => {
           const res = calculateSkillProgression(tier, curMastery, delta);
           expect(res.newMastery).toBeGreaterThanOrEqual(0);
           expect(res.newMastery).toBeLessThanOrEqual(MAX_SKILL_MASTERY);
 
-          if (tier === "comum" && res.newMastery >= COMMON_TO_EXTRA_MASTERY_THRESHOLD) {
+          if (tier === "comum" && res.newMastery >= 100) {
+            expect(res.newTier).toBe("especial");
+            expect(res.hasEvolved).toBe(true);
+          } else if (tier === "especial" && res.newMastery >= 300) {
             expect(res.newTier).toBe("extra");
             expect(res.hasEvolvedToExtra).toBe(true);
           }
@@ -532,8 +546,12 @@ describe("Game Engine: Ledger and Audit Properties", () => {
             mastery: fc.integer({ min: 0, max: 99 }),
           }),
           fc.record({
+            tier: fc.constant<SkillTier>("especial"),
+            mastery: fc.integer({ min: 100, max: 299 }),
+          }),
+          fc.record({
             tier: fc.constant<SkillTier>("extra"),
-            mastery: fc.integer({ min: 100, max: 300 }),
+            mastery: fc.integer({ min: 300, max: 590 }),
           })
         ),
         fc.constantFrom<AreaCode>("INT", "FOR", "DIS", "CRI", "SOC"),

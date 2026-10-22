@@ -102,21 +102,34 @@ export const TokenAuthScreen: React.FC<TokenAuthScreenProps> = ({
 
             {/* Token Secret Field */}
             <div>
-              <label
-                htmlFor="app-token"
-                className="block text-xs font-fantasy uppercase tracking-widest text-[#dfa86c] mb-1.5 flex items-center gap-1.5"
-              >
-                <KeyRound className="w-3.5 h-3.5 text-[#fde047]" />
-                Chave Secreta do Sistema (APP_SECRET)
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label
+                  htmlFor="app-token"
+                  className="block text-xs font-fantasy uppercase tracking-widest text-[#dfa86c] flex items-center gap-1.5"
+                >
+                  <KeyRound className="w-3.5 h-3.5 text-[#fde047]" />
+                  Chave Secreta do Sistema (APP_SECRET)
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setToken("super-secret-system-key")}
+                  className="text-[10px] text-[#fde047] hover:underline font-mono"
+                  title="Preencher com a chave padrão de desenvolvimento local"
+                >
+                  Usar padrão dev
+                </button>
+              </div>
               <input
                 id="app-token"
                 type="password"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
-                placeholder="Insira seu token secreto..."
+                placeholder="Ex: super-secret-system-key"
                 className="w-full px-3.5 py-2.5 bg-[#040814]/90 border border-[#966422]/60 rounded-none text-[#f3e5cc] placeholder-[#8c7a5b] text-sm focus:outline-none focus:border-[#dfa86c] focus:ring-1 focus:ring-[#dfa86c]/50 transition-all font-mono"
               />
+              <p className="text-[10px] text-[#a39171] mt-1 font-mono">
+                Padrão de desenvolvimento: <code className="text-[#fde047]">super-secret-system-key</code>
+              </p>
             </div>
 
             {/* Error Message */}

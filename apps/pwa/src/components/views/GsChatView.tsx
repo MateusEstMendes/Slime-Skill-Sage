@@ -294,6 +294,11 @@ export const GsChatView: React.FC = () => {
 
       setRecalculatingNotice(null);
 
+      if (!finalReplyContent && !finalProposal) {
+        finalReplyContent =
+          "Aviso do Sistema: O cálculo estrutural da proposta de projeto encontrou anomalias em sua topologia e foi suspenso para manter a estabilidade do Sistema. Por favor, reenvie seu comando indicando os objetivos centrais do projeto.";
+      }
+
       if (chatAbortController.signal.aborted) {
         return;
       }

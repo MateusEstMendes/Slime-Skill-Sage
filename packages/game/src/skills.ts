@@ -1,8 +1,30 @@
-import type { AreaCode, MissionSkillBinding, SkillTier } from "@slime-sage/shared";
+import type { AreaCode, MissionSkillBinding, SkillTier, TensuraRace } from "@slime-sage/shared";
 import {
-  COMMON_TO_EXTRA_MASTERY_THRESHOLD,
+  SKILL_TIER_THRESHOLDS,
+  RACIAL_AFFINITY_AREAS,
+  RACIAL_AFFINITY_BONUS,
   MAX_SKILL_MASTERY,
 } from "./config";
+
+/**
+ * Calculates racial affinity bonus for mission completion.
+ * Grants +2 fixed mastery when the mission belongs to the primary area of the hunter's race.
+ */
+export function calculateRacialAffinityBonus(
+  race: TensuraRace | undefined,
+  missionArea: AreaCode
+): number {
+  if (!race) return 0;
+  const primaryArea = RACIAL_AFFINITY_AREAS[race];
+  return primaryArea === missionArea ? RACIAL_AFFINITY_BONUS : 0;
+}
+
+/**
+ * Returns the maximum mastery threshold for a given skill tier.
+ */
+export function getSkillTierCeiling(tier: SkillTier): number {
+  return SKILL_TIER_THRESHOLDS[tier] ?? 100;
+}
 
 /**
  * Normalizes a skill name by trimming whitespace and collapsing multiple consecutive spaces.
@@ -88,38 +110,57 @@ export function classifySkillsDiff(
   return result;
 }
 
+export type SkillEvolutionType =
+  | "none"
+  | "intrinseca_to_especial"
+  | "comum_to_especial"
+  | "especial_to_extra"
+  | "extra_to_unica"
+  | "unica_to_suprema"
+  | "suprema_to_primordial";
+
 export interface MasteryUpdateResult {
   previousMastery: number;
   newMastery: number;
   actualDelta: number;
   previousTier: SkillTier;
   newTier: SkillTier;
+  hasEvolved: boolean;
+  hasDegraded: boolean;
   hasEvolvedToExtra: boolean;
   hasDegradedFromExtra: boolean;
+  evolutionType: SkillEvolutionType;
 }
 
 /**
- * Applies diminishing returns to mastery gain after the halfway point (150 pts out of 300).
- * - Full 100% gain when currentMastery <= 150.
- * - Gentle proficiency decay above 150 pts with guaranteed minimum floor (1 pt).
+ * Applies diminishing returns to mastery gain after the halfway point of the tier.
+ * - Full 100% gain when currentMastery <= halfway mark (e.g. 150 for 300, 300 for 600).
+ * - Gentle proficiency decay above halfway mark with guaranteed minimum floor (1 pt).
  */
-export function calculateMasteryGainWithDecay(currentMastery: number, rawDelta: number): number {
+export function calculateMasteryGainWithDecay(
+  currentMastery: number,
+  rawDelta: number,
+  tierCeiling: number = 300
+): number {
   if (rawDelta <= 0) return 0;
-  if (currentMastery <= 150) {
+  const halfway = Math.max(50, Math.round(tierCeiling / 2));
+  if (currentMastery <= halfway) {
     return rawDelta;
   }
-  const excess = Math.min(150, currentMastery - 150);
-  const decayFactor = Math.max(0.5, 1 / (1 + 0.5 * (excess / 150)));
+  const excess = Math.min(halfway, currentMastery - halfway);
+  const decayFactor = Math.max(0.5, 1 / (1 + 0.5 * (excess / halfway)));
   return Math.max(1, Math.round(rawDelta * decayFactor));
 }
 
 /**
- * Calculates updated skill mastery and tier progression.
- * - Caps mastery between 0 and 300.
- * - Automatically evolves "comum" to "extra" when mastery >= 100.
- * - If reversing/undoing and mastery drops below 100, demotes "extra" back to "comum".
- * - Evolution to "unica" requires 300 mastery + project + roulette (Phase 10),
- *   so it does not happen automatically here.
+ * Calculates updated skill mastery and tier progression across the 7 canonical tiers:
+ * `intrinseca` -> `comum` -> `especial` -> `extra` -> `unica` -> `suprema` -> `primordial`.
+ * - Automatically evolves:
+ *   - `intrinseca` -> `especial` at 100 pts
+ *   - `comum` -> `especial` at 100 pts
+ *   - `especial` -> `extra` at 300 pts
+ * - From `extra` and above (`extra`, `unica`, `suprema`), tier evolution requires
+ *   the Esoteric Roulette with 48h cooldown and pity system, capping mastery at each tier ceiling.
  */
 export function calculateSkillProgression(
   currentTier: SkillTier,
@@ -129,26 +170,51 @@ export function calculateSkillProgression(
 ): MasteryUpdateResult {
   const previousMastery = currentMastery;
   const previousTier = currentTier;
+  const tierCeiling = getSkillTierCeiling(currentTier);
 
   const effectiveDelta =
     options?.applyLearningCurve && deltaMastery > 0
-      ? calculateMasteryGainWithDecay(currentMastery, deltaMastery)
+      ? calculateMasteryGainWithDecay(currentMastery, deltaMastery, tierCeiling)
       : deltaMastery;
 
   const rawMastery = currentMastery + effectiveDelta;
-  const newMastery = Math.min(MAX_SKILL_MASTERY, Math.max(0, rawMastery));
+  const maxAllowed =
+    currentTier === "extra" || currentTier === "unica" || currentTier === "suprema"
+      ? tierCeiling
+      : MAX_SKILL_MASTERY;
+  const newMastery = Math.min(maxAllowed, Math.max(0, rawMastery));
   const actualDelta = newMastery - previousMastery;
 
   let newTier = currentTier;
+  let hasEvolved = false;
+  let hasDegraded = false;
   let hasEvolvedToExtra = false;
   let hasDegradedFromExtra = false;
+  let evolutionType: SkillEvolutionType = "none";
 
-  if (currentTier === "comum" && newMastery >= COMMON_TO_EXTRA_MASTERY_THRESHOLD) {
+  // Automatic progression for lower tiers
+  if (currentTier === "intrinseca" && newMastery >= 100) {
+    newTier = "especial";
+    hasEvolved = true;
+    evolutionType = "intrinseca_to_especial";
+  } else if (currentTier === "comum" && newMastery >= 100) {
+    newTier = "especial";
+    hasEvolved = true;
+    evolutionType = "comum_to_especial";
+  } else if (currentTier === "especial" && newMastery >= 300) {
     newTier = "extra";
+    hasEvolved = true;
     hasEvolvedToExtra = true;
-  } else if (currentTier === "extra" && newMastery < COMMON_TO_EXTRA_MASTERY_THRESHOLD) {
-    newTier = "comum";
+    evolutionType = "especial_to_extra";
+  }
+  // Demotions upon undo / negative mastery delta
+  else if (currentTier === "extra" && newMastery < 300) {
+    newTier = "especial";
+    hasDegraded = true;
     hasDegradedFromExtra = true;
+  } else if (currentTier === "especial" && newMastery < 100) {
+    newTier = "comum";
+    hasDegraded = true;
   }
 
   return {
@@ -157,7 +223,10 @@ export function calculateSkillProgression(
     actualDelta,
     previousTier,
     newTier,
+    hasEvolved,
+    hasDegraded,
     hasEvolvedToExtra,
     hasDegradedFromExtra,
+    evolutionType,
   };
 }

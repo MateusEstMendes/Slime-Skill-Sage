@@ -20,6 +20,7 @@ describe("MemorySnapshotBuilder", () => {
       description: "",
       tier: i < 2 ? "extra" : "comum",
       mastery: (15 - i) * 10, // sk_1 has 150, sk_5 has 110, sk_10 has 60...
+      tags: [],
       created_at: "2026-10-01T00:00:00Z",
       updated_at: "2026-10-01T00:00:00Z",
     }));

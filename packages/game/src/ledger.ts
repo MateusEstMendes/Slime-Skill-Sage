@@ -147,5 +147,36 @@ export type GameEvent =
         totalXp: number;
         level: number;
       };
+    }
+  | {
+      type: "HARVEST_FESTIVAL_ACTIVATED";
+      payload: {
+        multiplier: number;
+        activatedAt: string;
+      };
+    }
+  | {
+      type: "HARVEST_FESTIVAL_DEACTIVATED";
+      payload: Record<string, never>;
+    }
+  | {
+      type: "SKILL_EVOLVED_ROULETTE";
+      payload: {
+        skillId: string;
+        skillName: string;
+        previousTier: string;
+        newTier: string;
+        finalChance: number;
+      };
+    }
+  | {
+      type: "SKILL_FUSED";
+      payload: {
+        fusedSkillId: string;
+        fusedSkillName: string;
+        targetTier: string;
+        skillAId: string;
+        skillBId: string;
+      };
     };
 

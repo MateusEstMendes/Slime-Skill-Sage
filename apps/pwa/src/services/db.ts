@@ -24,6 +24,10 @@ export interface LogFilterOptions {
   offset?: number;
 }
 
+export type AtomicOperation =
+  | { type?: "put"; table: TableName; item: { id?: string; key?: string } }
+  | { type: "delete"; table: TableName; key: string };
+
 export class LocalDatabase {
   private dbPromise: Promise<IDBDatabase> | null = null;
   private memoryTables: Map<TableName, Map<string, unknown>> = new Map();
@@ -288,6 +292,66 @@ export class LocalDatabase {
     } catch {
       // Memory fallback was set
     }
+  }
+
+  /**
+   * Atomically writes or deletes items across multiple tables in a single IndexedDB transaction.
+   * Either every operation is committed or none is (the transaction is aborted on failure).
+   * Unlike `put`/`putBatch`, real IndexedDB errors are propagated to the caller.
+   * The in-memory mirror is only updated after a successful commit (or when IndexedDB
+   * is unavailable and memory is the source of truth).
+   */
+  public async putAtomic(
+    operations: ReadonlyArray<AtomicOperation>
+  ): Promise<void> {
+    if (operations.length === 0) return;
+
+    const applyToMemory = () => {
+      for (const op of operations) {
+        if (op.type === "delete") {
+          this.memoryTables.get(op.table)?.delete(op.key);
+        } else {
+          const key = (op.item.id ?? op.item.key) as string;
+          this.memoryTables.get(op.table)?.set(key, op.item);
+        }
+      }
+    };
+
+    let db: IDBDatabase;
+    try {
+      db = await this.getDb();
+    } catch {
+      // IndexedDB unavailable: memory is the only storage.
+      applyToMemory();
+      return;
+    }
+
+    const tables = Array.from(new Set(operations.map((op) => op.table)));
+    await new Promise<void>((resolve, reject) => {
+      let tx: IDBTransaction;
+      try {
+        tx = db.transaction(tables, "readwrite");
+      } catch (err) {
+        reject(err instanceof Error ? err : new Error(String(err)));
+        return;
+      }
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error ?? new Error("Falha na transação atômica"));
+      tx.onabort = () => reject(tx.error ?? new Error("Transação atômica abortada"));
+      try {
+        for (const op of operations) {
+          if (op.type === "delete") {
+            tx.objectStore(op.table).delete(op.key);
+          } else {
+            tx.objectStore(op.table).put(op.item);
+          }
+        }
+      } catch (err) {
+        tx.abort();
+        reject(err instanceof Error ? err : new Error(String(err)));
+      }
+    });
+    applyToMemory();
   }
 
   public async delete(table: TableName, key: string): Promise<void> {
@@ -583,6 +647,8 @@ export class LocalDatabase {
 
   // --- LOG STORE METHODS (Retrocompatível com Fase 1) ---
 
+  private logOperationCounter = 0;
+
   public async addLog(entry: AppLogEntry): Promise<void> {
     try {
       const db = await this.getDb();
@@ -595,7 +661,10 @@ export class LocalDatabase {
         addReq.onerror = () => reject(addReq.error);
       });
 
-      await this.enforceLogRotation();
+      this.logOperationCounter++;
+      if (this.logOperationCounter % 25 === 0) {
+        void this.enforceLogRotation();
+      }
     } catch {
       const logMap = this.memoryTables.get("app_log");
       if (logMap) {

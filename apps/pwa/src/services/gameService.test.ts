@@ -58,15 +58,16 @@ describe("GameService & Transactional Ledger", () => {
     unsubscribe();
   });
 
-  it("evolves skill from comum to extra when mastery crosses 100 threshold", async () => {
-    // 1. Setup Skill
+  it("evolves skill from especial to extra when mastery crosses 300 threshold", async () => {
+    // 1. Setup Skill close to 300 (tier: especial)
     const skill: Skill = {
       id: "skill_magic_sense",
-      area_id: "INT",
+      area_id: "FOR",
       name: "Percepção Mágica",
       description: "Capacidade de sentir magia",
-      tier: "comum",
-      mastery: 95,
+      tier: "especial",
+      mastery: 290,
+      tags: [],
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -74,7 +75,7 @@ describe("GameService & Transactional Ledger", () => {
 
     // 2. Setup project and mission
     const project = await projectRepository.createProject({
-      area_id: "INT",
+      area_id: "FOR",
       title: "Estudo Mágico",
     });
 
@@ -83,7 +84,7 @@ describe("GameService & Transactional Ledger", () => {
       xp_reward: 40,
     });
 
-    // 3. Complete mission granting 10 mastery (95 + 10 = 105 -> Extra)
+    // 3. Complete mission granting 10 mastery (290 + 10 = 300 -> extra)
     const receivedEvents: GameEvent[] = [];
     const unsubscribe = gameService.subscribeToGameEvents((e) => {
       receivedEvents.push(e);
@@ -94,9 +95,9 @@ describe("GameService & Transactional Ledger", () => {
       masteryAmount: 10,
     });
 
-    // Check skill in db
+    // Check skill in db (290 + 10 = 300)
     const updatedSkill = await localDb.get<Skill>("skill", skill.id);
-    expect(updatedSkill?.mastery).toBe(105);
+    expect(updatedSkill?.mastery).toBe(300);
     expect(updatedSkill?.tier).toBe("extra");
 
     // Check event dispatched
@@ -104,7 +105,7 @@ describe("GameService & Transactional Ledger", () => {
     expect(evoEvent).toBeDefined();
     if (evoEvent && evoEvent.type === "SKILL_EVOLVED_EXTRA") {
       expect(evoEvent.payload.skillId).toBe(skill.id);
-      expect(evoEvent.payload.mastery).toBe(105);
+      expect(evoEvent.payload.mastery).toBe(300);
     }
 
     unsubscribe();
@@ -219,6 +220,40 @@ describe("GameService & Transactional Ledger", () => {
     expect(receivedEvents.length).toBeGreaterThan(0);
 
     unsubscribe();
+  });
+
+  it("ensures a brand new player starts with onboarding_done = false", async () => {
+    const profile = await gameService.getProfile();
+    expect(profile.onboarding_done).toBe(false);
+    expect(profile.level).toBe(1);
+    expect(profile.total_xp).toBe(0);
+  });
+
+  it("safely handles undo of a 0-XP mission and associates it with the project's area", async () => {
+    const project = await projectRepository.createProject({
+      area_id: "FOR",
+      title: "Treino de Força",
+    });
+
+    const { mission } = await projectRepository.addMission(project.id, {
+      title: "Alongamento Rápido",
+      xp_reward: 0,
+    });
+
+    // Complete 0-XP mission
+    await gameService.completeMission(mission.id);
+    const auditBefore = await gameService.auditLedger();
+    expect(auditBefore.isConsistent).toBe(true);
+
+    // Undo 0-XP mission
+    const undoRes = await gameService.undoMissionCompletion(mission.id);
+    expect(undoRes.mission.status).toBe("disponivel");
+    expect(undoRes.xpEvent.area_id).toBe("FOR");
+    expect(undoRes.xpEvent.xp_amount).toBe(-0);
+
+    const auditAfter = await gameService.auditLedger();
+    expect(auditAfter.isConsistent).toBe(true);
+    expect(auditAfter.ledgerTotalXp).toBe(0);
   });
 });
 
