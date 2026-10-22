@@ -647,8 +647,6 @@ export class LocalDatabase {
 
   // --- LOG STORE METHODS (Retrocompatível com Fase 1) ---
 
-  private logOperationCounter = 0;
-
   public async addLog(entry: AppLogEntry): Promise<void> {
     try {
       const db = await this.getDb();
@@ -661,10 +659,7 @@ export class LocalDatabase {
         addReq.onerror = () => reject(addReq.error);
       });
 
-      this.logOperationCounter++;
-      if (this.logOperationCounter % 25 === 0) {
-        void this.enforceLogRotation();
-      }
+      await this.enforceLogRotation();
     } catch {
       const logMap = this.memoryTables.get("app_log");
       if (logMap) {

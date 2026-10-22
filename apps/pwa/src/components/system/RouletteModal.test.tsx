@@ -48,6 +48,7 @@ describe("RouletteModal", () => {
       expect(screen.getByText("Base: 20%")).toBeInTheDocument();
       expect(screen.getByText("Total: 20%")).toBeInTheDocument();
       expect(screen.getByTestId("roulette-wheel")).toBeInTheDocument();
+      expect(screen.getByTestId("roulette-pointer")).toBeInTheDocument();
     });
   });
 
