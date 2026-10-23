@@ -1,0 +1,72 @@
+:root {
+  color-scheme: dark;
+  /* Paleta aproximada da referência; o ouro dos ornamentos é sempre o mesmo. */
+  --color-bg: #02020e;
+  --color-surface: #060b1a;
+  --color-gold: #fec077;
+  --color-title: #fbfad0;
+  --color-text: #e7e3d6;
+  --color-blue: #153d6e;
+  --color-blue-diffuse: #112347;
+  --color-star: #ebcb9a;
+  --color-focus: #fbfad0;
+
+  --font-display: "Cinzel", Georgia, serif;
+  --font-body: "Source Sans 3", "Trebuchet MS", sans-serif;
+  --font-body-size: 1.0625rem;
+  --font-label-size: 0.9375rem;
+  --font-size-title: clamp(2.3rem, 5vw, 4.3rem);
+  --font-size-section: clamp(1.65rem, 3vw, 2.3rem);
+  --font-size-heading: 1.3rem;
+  --font-size-intro: 1.15rem;
+  --font-size-button: 0.95rem;
+  --font-size-button-small: 0.875rem;
+  --font-size-button-large: 1.06rem;
+  --font-size-meta: 0.85rem;
+  --font-size-badge: 0.9rem;
+  --font-size-base: 1rem;
+  --font-size-subtitle: 1.1rem;
+  --font-size-result: 1.2rem;
+  --font-size-attribute-mobile: 1.35rem;
+  --font-size-pointer: 1.5rem;
+  --font-size-sheet-title: 1.6rem;
+  --font-size-attribute: 1.65rem;
+  --font-size-record-title: 1.7rem;
+  --font-size-symbol: 2rem;
+  --font-size-avatar: 2.5rem;
+  --font-size-wheel-number: 19px;
+  --font-size-ornament-small: 0.55rem;
+  --font-size-ornament-tiny: 0.4rem;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --line-height-body: 1.55;
+  --line-height-heading: 1.2;
+  --line-height-control: 1.15;
+  --line-height-help: 1.45;
+  --line-height-symbol: 1;
+
+  --stroke-fine: 1px;
+  --stroke-frame: 1.25px;
+  --stroke-icon: 1.5px;
+  --stroke-focus: 2px;
+  --line-gold: var(--stroke-frame) solid var(--color-gold);
+  --line-muted: var(--stroke-fine) solid var(--color-gold);
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --radius-field: 2px;
+  --corner-size: 28px;
+  --cap-width: 32px;
+
+  --duration-fast: 140ms;
+  --duration-panel: 220ms;
+  --duration-wheel: 1500ms;
+  --duration-star: 7s;
+}
